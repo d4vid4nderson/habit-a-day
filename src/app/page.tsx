@@ -82,8 +82,8 @@ export default function Home() {
             {/* Today's Stats */}
             <Stats entries={data.entries} />
 
-            {/* Big Buttons */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Big Buttons - stacked on mobile, side by side on larger screens */}
+            <div className="flex flex-col gap-4 sm:flex-row">
               <LogButton type="poop" onLog={handleLog} />
               <LogButton type="pee" onLog={handleLog} />
             </div>
