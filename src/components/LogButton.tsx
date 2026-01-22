@@ -25,18 +25,11 @@ const config = {
 
 export function LogButton({ type, onLog }: LogButtonProps) {
   const [isPressed, setIsPressed] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const { emoji, bg, activeBg, ring } = config[type];
-
-  const handleClick = () => {
-    onLog(type);
-    setShowConfirm(true);
-    setTimeout(() => setShowConfirm(false), 1000);
-  };
 
   return (
     <button
-      onClick={handleClick}
+      onClick={() => onLog(type)}
       onTouchStart={() => setIsPressed(true)}
       onTouchEnd={() => setIsPressed(false)}
       onMouseDown={() => setIsPressed(true)}
@@ -44,10 +37,10 @@ export function LogButton({ type, onLog }: LogButtonProps) {
       onMouseLeave={() => setIsPressed(false)}
       className={`relative flex aspect-square w-full flex-1 items-center justify-center rounded-3xl transition-all duration-150 ${
         isPressed ? `${activeBg} scale-95 ${ring} ring-4` : bg
-      } ${showConfirm ? 'ring-4 ring-emerald-500' : ''}`}
+      }`}
     >
       <span className={`text-8xl transition-transform ${isPressed ? 'scale-90' : ''}`}>
-        {showConfirm ? '✓' : emoji}
+        {emoji}
       </span>
     </button>
   );

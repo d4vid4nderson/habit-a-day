@@ -36,26 +36,28 @@ export function History({ entries, onDelete }: HistoryProps) {
             {dayEntries.map((entry) => (
               <div
                 key={entry.id}
-                className="flex items-center justify-between rounded-xl bg-zinc-50 px-4 py-3 dark:bg-zinc-800"
+                className="rounded-xl bg-zinc-50 px-4 py-3 dark:bg-zinc-800"
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{typeConfig[entry.type].emoji}</span>
-                  <div>
-                    <p className="font-medium text-zinc-800 dark:text-zinc-200">
-                      {typeConfig[entry.type].label}
-                    </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{typeConfig[entry.type].emoji}</span>
                     <p className="text-sm text-zinc-500">{formatTime(entry.timestamp)}</p>
                   </div>
+                  <button
+                    onClick={() => onDelete(entry.id)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 active:bg-zinc-200 dark:active:bg-zinc-700"
+                    aria-label="Delete entry"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-                <button
-                  onClick={() => onDelete(entry.id)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 active:bg-zinc-200 dark:active:bg-zinc-700"
-                  aria-label="Delete entry"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                {entry.notes && (
+                  <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    {entry.notes}
+                  </p>
+                )}
               </div>
             ))}
           </div>

@@ -24,11 +24,12 @@ export function saveData(data: TrackerData): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-export function createEntry(type: BathroomType): BathroomEntry {
+export function createEntry(type: BathroomType, notes?: string): BathroomEntry {
   return {
     id: Date.now().toString(),
     type,
     timestamp: Date.now(),
+    notes: notes?.trim() || undefined,
   };
 }
 
