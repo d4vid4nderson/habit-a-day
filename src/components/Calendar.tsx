@@ -66,13 +66,13 @@ export function Calendar({ entries, selectedDate, onSelectDate }: CalendarProps)
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <button
           onClick={() => navigateMonth(-1)}
-          className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          className="flex h-10 w-10 items-center justify-center rounded-full active:bg-zinc-100 dark:active:bg-zinc-700"
         >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
@@ -81,17 +81,17 @@ export function Calendar({ entries, selectedDate, onSelectDate }: CalendarProps)
         </h2>
         <button
           onClick={() => navigateMonth(1)}
-          className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          className="flex h-10 w-10 items-center justify-center rounded-full active:bg-zinc-100 dark:active:bg-zinc-700"
         >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center text-xs text-zinc-500">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-          <div key={d} className="py-1">
+      <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium text-zinc-500">
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+          <div key={i} className="py-2">
             {d}
           </div>
         ))}
@@ -99,16 +99,16 @@ export function Calendar({ entries, selectedDate, onSelectDate }: CalendarProps)
 
       <div className="grid grid-cols-7 gap-1">
         {days.map((day, i) => (
-          <div key={i} className="aspect-square">
+          <div key={i} className="aspect-square p-0.5">
             {day && (
               <button
                 onClick={() => onSelectDate(getDateString(day))}
-                className={`flex h-full w-full flex-col items-center justify-center rounded-lg text-sm transition-colors ${
+                className={`flex h-full w-full flex-col items-center justify-center rounded-full text-sm transition-colors ${
                   isSelected(day)
-                    ? 'bg-emerald-600 text-white'
+                    ? 'bg-emerald-600 font-semibold text-white'
                     : isToday(day)
-                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
-                    : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                    ? 'bg-emerald-100 font-semibold text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
+                    : 'active:bg-zinc-100 dark:active:bg-zinc-700'
                 }`}
               >
                 <span>{day}</span>

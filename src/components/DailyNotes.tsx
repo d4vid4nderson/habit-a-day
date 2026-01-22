@@ -15,8 +15,8 @@ export function DailyNotes({ notes, onNotesChange }: DailyNotesProps) {
       <textarea
         value={notes}
         onChange={(e) => onNotesChange(e.target.value)}
-        placeholder="How was your day? Any thoughts or reflections..."
-        className="h-32 w-full resize-none rounded-lg border border-zinc-300 p-3 text-sm focus:border-emerald-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500"
+        placeholder="How was your day? Any thoughts..."
+        className="min-h-[120px] w-full resize-none rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-base leading-relaxed focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-700/50 dark:text-zinc-200 dark:placeholder-zinc-500 dark:focus:bg-zinc-700"
       />
     </div>
   );

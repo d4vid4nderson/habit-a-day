@@ -25,13 +25,13 @@ export function MoodTracker({ mood, onMoodChange }: MoodTrackerProps) {
           <button
             key={m.value}
             onClick={() => onMoodChange(m.value)}
-            className={`flex flex-1 flex-col items-center gap-1 rounded-lg py-3 transition-all ${
+            className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-4 transition-all active:scale-95 ${
               mood === m.value
                 ? 'bg-emerald-100 ring-2 ring-emerald-500 dark:bg-emerald-900/30'
-                : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                : 'bg-zinc-50 active:bg-zinc-100 dark:bg-zinc-700/50 dark:active:bg-zinc-700'
             }`}
           >
-            <span className="text-2xl">{m.emoji}</span>
+            <span className="text-3xl">{m.emoji}</span>
             <span className="text-xs text-zinc-600 dark:text-zinc-400">{m.label}</span>
           </button>
         ))}
