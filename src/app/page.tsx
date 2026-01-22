@@ -6,7 +6,7 @@ import { History } from '@/components/History';
 import { Stats } from '@/components/Stats';
 import { Calendar } from '@/components/Calendar';
 import { Menu } from '@/components/Menu';
-import { Footer } from '@/components/Footer';
+import { Footer, FOOTER_HEIGHT } from '@/components/Footer';
 import { TrackerData, BathroomType } from '@/lib/types';
 import { loadData, saveData, createEntry } from '@/lib/storage';
 
@@ -135,7 +135,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-4">
+        <main className={`mx-auto max-w-lg px-4 py-4 ${FOOTER_HEIGHT}`}>
           <div className="space-y-4">
             {/* Calendar */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
@@ -157,10 +157,10 @@ export default function Home() {
                 <p className="py-4 text-center text-zinc-400">No entries</p>
               )}
             </div>
-
-            <Footer />
           </div>
         </main>
+
+        <Footer />
       </div>
     );
   }
@@ -178,7 +178,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-6">
+        <main className={`mx-auto max-w-lg px-4 py-6 ${FOOTER_HEIGHT}`}>
           <div className="space-y-6">
             <div className="flex justify-center py-8">
               <span className="text-[12rem]">{typeConfig[selectedType].emoji}</span>
@@ -206,10 +206,10 @@ export default function Home() {
                 Save
               </button>
             </div>
-
-            <Footer />
           </div>
         </main>
+
+        <Footer />
       </div>
     );
   }
@@ -242,7 +242,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 py-6">
+      <main className={`mx-auto max-w-lg px-4 py-6 ${FOOTER_HEIGHT}`}>
         <div className="space-y-6">
           <Stats entries={data.entries} />
 
@@ -271,9 +271,10 @@ export default function Home() {
             </div>
           )}
 
-          <Footer />
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }
