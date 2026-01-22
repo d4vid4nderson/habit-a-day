@@ -1,11 +1,11 @@
 {
-  "name": "Habit-a-Day",
-  "short_name": "Habit-a-Day",
-  "description": "Track your daily habits, mood, and thoughts",
+  "name": "Potty Time",
+  "short_name": "Potty Time",
+  "description": "Track your bathroom visits",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#18181b",
-  "theme_color": "#10b981",
+  "theme_color": "#8b5cf6",
   "icons": [
     {
       "src": "/icon-192.png",

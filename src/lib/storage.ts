@@ -1,14 +1,9 @@
-import { TrackerData, DayEntry } from './types';
+import { TrackerData, BathroomEntry, BathroomType } from './types';
 
-const STORAGE_KEY = 'habit-a-day-data';
+const STORAGE_KEY = 'bathroom-tracker-data';
 
 const defaultData: TrackerData = {
-  habits: [
-    { id: '1', name: 'Exercise' },
-    { id: '2', name: 'Read' },
-    { id: '3', name: 'Meditate' },
-  ],
-  entries: {},
+  entries: [],
 };
 
 export function loadData(): TrackerData {
@@ -29,24 +24,58 @@ export function saveData(data: TrackerData): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-export function getToday(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
-export function getEmptyEntry(date: string): DayEntry {
+export function createEntry(type: BathroomType): BathroomEntry {
   return {
-    date,
-    habits: {},
-    mood: null,
-    notes: '',
+    id: Date.now().toString(),
+    type,
+    timestamp: Date.now(),
   };
 }
 
-export function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00');
+export function formatTime(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+export function formatDate(timestamp: number): string {
+  const date = new Date(timestamp);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return 'Today';
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  }
+
   return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
+    weekday: 'short',
+    month: 'short',
     day: 'numeric',
   });
+}
+
+export function getDateKey(timestamp: number): string {
+  return new Date(timestamp).toDateString();
+}
+
+export function groupEntriesByDate(entries: BathroomEntry[]): Map<string, BathroomEntry[]> {
+  const grouped = new Map<string, BathroomEntry[]>();
+
+  // Sort by most recent first
+  const sorted = [...entries].sort((a, b) => b.timestamp - a.timestamp);
+
+  for (const entry of sorted) {
+    const key = getDateKey(entry.timestamp);
+    if (!grouped.has(key)) {
+      grouped.set(key, []);
+    }
+    grouped.get(key)!.push(entry);
+  }
+
+  return grouped;
 }

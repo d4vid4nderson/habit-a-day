@@ -13,13 +13,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Habit-a-Day",
-  description: "Track your daily habits, mood, and thoughts",
+  title: "Potty Time",
+  description: "Track your bathroom visits",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Habit-a-Day",
+    title: "Potty Time",
   },
 };
 
@@ -28,7 +28,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#10b981",
+  themeColor: "#8b5cf6",
 };
 
 export default function RootLayout({
