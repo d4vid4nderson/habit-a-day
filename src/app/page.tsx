@@ -97,7 +97,7 @@ export default function Home() {
         {selectedType ? (
           /* Entry Mode - type selected, add notes */
           <div className="space-y-6">
-            <div className={`flex aspect-square w-full items-center justify-center rounded-3xl ${typeConfig[selectedType].bg}`}>
+            <div className="flex justify-center py-8">
               <span className="text-9xl">{typeConfig[selectedType].emoji}</span>
             </div>
 
