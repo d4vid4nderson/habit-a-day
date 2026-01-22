@@ -13,13 +13,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Potty Tracker",
+  title: "Potty Logger",
   description: "Track your bathroom visits",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Potty Tracker",
+    title: "Potty Logger",
   },
 };
 

@@ -6,6 +6,7 @@ import { History } from '@/components/History';
 import { Stats } from '@/components/Stats';
 import { Calendar } from '@/components/Calendar';
 import { Menu } from '@/components/Menu';
+import { Footer } from '@/components/Footer';
 import { TrackerData, BathroomType } from '@/lib/types';
 import { loadData, saveData, createEntry } from '@/lib/storage';
 
@@ -156,6 +157,8 @@ export default function Home() {
                 <p className="py-4 text-center text-zinc-400">No entries</p>
               )}
             </div>
+
+            <Footer />
           </div>
         </main>
       </div>
@@ -170,7 +173,7 @@ export default function Home() {
           <div className="flex items-center justify-between px-4 py-3">
             <h1 className="flex items-center gap-2 text-xl font-bold text-zinc-900 dark:text-zinc-100">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 text-sm">🚽</span>
-            Potty Tracker
+            Potty Logger
             </h1>
           </div>
         </header>
@@ -203,6 +206,8 @@ export default function Home() {
                 Save
               </button>
             </div>
+
+            <Footer />
           </div>
         </main>
       </div>
@@ -223,7 +228,7 @@ export default function Home() {
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="flex items-center gap-2 text-xl font-bold text-zinc-900 dark:text-zinc-100">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 text-sm">🚽</span>
-            Potty Tracker
+            Potty Logger
           </h1>
           <button
             onClick={() => setMenuOpen(true)}
@@ -265,6 +270,8 @@ export default function Home() {
               />
             </div>
           )}
+
+          <Footer />
         </div>
       </main>
     </div>
