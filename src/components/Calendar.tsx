@@ -92,15 +92,15 @@ export function Calendar({ selectedDate, onSelectDate, hasEntries }: CalendarPro
                 onClick={() => onSelectDate(getDateString(day))}
                 className={`flex h-full w-full flex-col items-center justify-center rounded-full text-sm transition-colors ${
                   isSelected(day)
-                    ? 'bg-purple-600 font-semibold text-white'
+                    ? 'bg-violet-600 font-semibold text-white'
                     : isToday(day)
-                    ? 'bg-purple-100 font-semibold text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                    ? 'bg-violet-100 font-semibold text-violet-800 dark:bg-violet-900/30 dark:text-violet-400'
                     : 'active:bg-zinc-100 dark:active:bg-zinc-700'
                 }`}
               >
                 <span>{day}</span>
                 {hasEntries(getDateString(day)) && !isSelected(day) && (
-                  <span className="mt-0.5 h-1 w-1 rounded-full bg-purple-500" />
+                  <span className="mt-0.5 h-1 w-1 rounded-full bg-violet-500" />
                 )}
               </button>
             )}

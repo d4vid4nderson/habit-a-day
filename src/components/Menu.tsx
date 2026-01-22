@@ -87,7 +87,7 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
               onClick={() => handleNavigation('log')}
               className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
                 currentView === 'log'
-                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                  ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
                   : 'text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800'
               }`}
             >
@@ -101,7 +101,7 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
               onClick={() => handleNavigation('history')}
               className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
                 currentView === 'history'
-                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                  ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
                   : 'text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800'
               }`}
             >
@@ -150,7 +150,7 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
                     onClick={() => handleThemeChange(option.value)}
                     className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
                       theme === option.value
-                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                        ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
                         : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
                     }`}
                   >

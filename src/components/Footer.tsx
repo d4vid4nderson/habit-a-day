@@ -4,7 +4,7 @@ export function Footer() {
   return (
     <footer className="fixed bottom-0 left-0 right-0 border-t border-zinc-200 bg-white/80 backdrop-blur-lg dark:border-zinc-700 dark:bg-zinc-900/80">
       <div className="mx-auto max-w-lg px-4 py-4 text-sm">
-        <h3 className="font-semibold bg-gradient-to-r from-teal-500 to-purple-500 bg-clip-text text-transparent">Potty Logger</h3>
+        <h3 className="font-semibold bg-gradient-to-r from-cyan-500 to-violet-500 bg-clip-text text-transparent">Potty Logger</h3>
         <p className="mt-1 text-zinc-500 dark:text-zinc-400">
           Simple bathroom tracking for health and wellness.
         </p>

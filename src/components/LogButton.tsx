@@ -11,15 +11,15 @@ interface LogButtonProps {
 const config = {
   poop: {
     emoji: '💩',
-    bg: 'bg-teal-100 dark:bg-teal-900/30',
-    activeBg: 'bg-teal-200 dark:bg-teal-800/50',
-    ring: 'ring-teal-400',
+    bg: 'bg-cyan-100 dark:bg-cyan-900/30',
+    activeBg: 'bg-cyan-200 dark:bg-cyan-800/50',
+    ring: 'ring-cyan-400',
   },
   pee: {
     emoji: '🍆',
-    bg: 'bg-purple-100 dark:bg-purple-900/30',
-    activeBg: 'bg-purple-200 dark:bg-purple-800/50',
-    ring: 'ring-purple-400',
+    bg: 'bg-violet-100 dark:bg-violet-900/30',
+    activeBg: 'bg-violet-200 dark:bg-violet-800/50',
+    ring: 'ring-violet-400',
   },
 };
 

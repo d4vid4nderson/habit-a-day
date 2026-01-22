@@ -108,8 +108,8 @@ export default function Home() {
   };
 
   const typeConfig = {
-    poop: { emoji: '💩', bg: 'bg-teal-100 dark:bg-teal-900/30' },
-    pee: { emoji: '🍆', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+    poop: { emoji: '💩', bg: 'bg-cyan-100 dark:bg-cyan-900/30' },
+    pee: { emoji: '🍆', bg: 'bg-violet-100 dark:bg-violet-900/30' },
   };
 
   // History View
@@ -172,7 +172,7 @@ export default function Home() {
         <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur-lg dark:border-zinc-800 dark:bg-zinc-900/80">
           <div className="flex items-center justify-between px-4 py-3">
             <h1 className="flex items-center gap-2 text-xl font-bold text-zinc-900 dark:text-zinc-100">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 text-sm">🚽</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-violet-700 text-sm">🚽</span>
             Potty Logger
             </h1>
           </div>
@@ -188,7 +188,7 @@ export default function Home() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add notes (optional)..."
-              className="min-h-[120px] w-full resize-none rounded-xl border border-zinc-200 bg-white p-4 text-base leading-relaxed focus:border-purple-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500"
+              className="min-h-[120px] w-full resize-none rounded-xl border border-zinc-200 bg-white p-4 text-base leading-relaxed focus:border-violet-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500"
               autoFocus
             />
 
@@ -258,7 +258,7 @@ export default function Home() {
                 </h2>
                 <button
                   onClick={() => setShowHistory(true)}
-                  className="text-sm text-purple-600 dark:text-purple-400"
+                  className="text-sm text-violet-600 dark:text-violet-400"
                 >
                   See all
                 </button>
