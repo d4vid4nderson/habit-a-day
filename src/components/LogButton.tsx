@@ -42,7 +42,7 @@ export function LogButton({ type, onLog }: LogButtonProps) {
       onMouseDown={() => setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
       onMouseLeave={() => setIsPressed(false)}
-      className={`relative flex h-36 w-full flex-1 items-center justify-center rounded-3xl transition-all duration-150 ${
+      className={`relative flex aspect-square w-full flex-1 items-center justify-center rounded-3xl transition-all duration-150 ${
         isPressed ? `${activeBg} scale-95 ${ring} ring-4` : bg
       } ${showConfirm ? 'ring-4 ring-emerald-500' : ''}`}
     >
