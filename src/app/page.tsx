@@ -118,14 +118,14 @@ export default function Home() {
 
     return (
       <div className="min-h-screen bg-zinc-50 pb-safe dark:bg-zinc-900">
-        <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur-lg dark:border-zinc-800 dark:bg-zinc-900/80">
-          <div className="flex items-center px-4 py-3">
+        <header className="sticky top-0 z-10 bg-gradient-to-r from-indigo-800 to-amber-800">
+          <div className="flex items-center px-4 py-5">
             <button
               onClick={() => {
                 setShowHistory(false);
                 setSelectedDate(getToday());
               }}
-              className="flex items-center gap-1 text-purple-600 dark:text-purple-400"
+              className="flex items-center gap-1 text-white/90 hover:text-white"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -224,18 +224,17 @@ export default function Home() {
         currentView={showHistory ? 'history' : 'log'}
       />
 
-      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur-lg dark:border-zinc-800 dark:bg-zinc-900/80">
-        <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="flex items-center gap-2 text-xl font-bold text-zinc-900 dark:text-zinc-100">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 text-sm">🚽</span>
+      <header className="sticky top-0 z-10 bg-gradient-to-r from-indigo-800 to-amber-800">
+        <div className="flex items-center justify-between px-4 py-5">
+          <h1 className="text-2xl font-bold text-white">
             Potty Logger
           </h1>
           <button
             onClick={() => setMenuOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 active:bg-zinc-200 dark:bg-zinc-800 dark:active:bg-zinc-700"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 active:bg-white/30"
             aria-label="Open menu"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
