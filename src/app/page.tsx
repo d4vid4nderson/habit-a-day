@@ -5,6 +5,7 @@ import { LogButton } from '@/components/LogButton';
 import { History } from '@/components/History';
 import { Stats } from '@/components/Stats';
 import { Calendar } from '@/components/Calendar';
+import { Menu } from '@/components/Menu';
 import { TrackerData, BathroomType } from '@/lib/types';
 import { loadData, saveData, createEntry } from '@/lib/storage';
 
@@ -37,6 +38,7 @@ export default function Home() {
   const [selectedType, setSelectedType] = useState<BathroomType | null>(null);
   const [notes, setNotes] = useState('');
   const [selectedDate, setSelectedDate] = useState(getToday());
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     setData(loadData());
@@ -210,6 +212,13 @@ export default function Home() {
   // Main Log View
   return (
     <div className="min-h-screen bg-zinc-50 pb-safe dark:bg-zinc-900">
+      <Menu
+        isOpen={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onNavigate={(view) => setShowHistory(view === 'history')}
+        currentView={showHistory ? 'history' : 'log'}
+      />
+
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur-lg dark:border-zinc-800 dark:bg-zinc-900/80">
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="flex items-center gap-2 text-xl font-bold text-zinc-900 dark:text-zinc-100">
@@ -217,10 +226,13 @@ export default function Home() {
             Potty Tracker
           </h1>
           <button
-            onClick={() => setShowHistory(true)}
-            className="rounded-full bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
+            onClick={() => setMenuOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 active:bg-zinc-200 dark:bg-zinc-800 dark:active:bg-zinc-700"
+            aria-label="Open menu"
           >
-            History
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
           </button>
         </div>
       </header>
