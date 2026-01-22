@@ -98,7 +98,7 @@ export default function Home() {
           /* Entry Mode - type selected, add notes */
           <div className="space-y-6">
             <div className="flex justify-center py-8">
-              <span className="text-9xl">{typeConfig[selectedType].emoji}</span>
+              <span className="text-[12rem]">{typeConfig[selectedType].emoji}</span>
             </div>
 
             <textarea
