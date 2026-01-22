@@ -11,9 +11,9 @@ interface LogButtonProps {
 const config = {
   poop: {
     emoji: '💩',
-    bg: 'bg-amber-100 dark:bg-amber-900/30',
-    activeBg: 'bg-amber-200 dark:bg-amber-800/50',
-    ring: 'ring-amber-400',
+    bg: 'bg-teal-100 dark:bg-teal-900/30',
+    activeBg: 'bg-teal-200 dark:bg-teal-800/50',
+    ring: 'ring-teal-400',
   },
   pee: {
     emoji: '🍆',

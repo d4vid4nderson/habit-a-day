@@ -105,7 +105,7 @@ export default function Home() {
   };
 
   const typeConfig = {
-    poop: { emoji: '💩', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+    poop: { emoji: '💩', bg: 'bg-teal-100 dark:bg-teal-900/30' },
     pee: { emoji: '🍆', bg: 'bg-purple-100 dark:bg-purple-900/30' },
   };
 
