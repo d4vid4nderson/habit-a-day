@@ -1,6 +1,6 @@
 {
-  "name": "Potty Time",
-  "short_name": "Potty Time",
+  "name": "Potty Tracker",
+  "short_name": "Potty Tracker",
   "description": "Track your bathroom visits",
   "start_url": "/",
   "display": "standalone",
