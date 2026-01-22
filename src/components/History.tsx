@@ -2,16 +2,12 @@
 
 import { BathroomEntry } from '@/lib/types';
 import { formatTime, formatDate, groupEntriesByDate } from '@/lib/storage';
+import { PoopIcon } from './icons/PoopIcon';
 
 interface HistoryProps {
   entries: BathroomEntry[];
   onDelete: (id: string) => void;
 }
-
-const typeConfig = {
-  poop: { emoji: '💩', label: 'Poop' },
-  pee: { emoji: '🍆', label: 'Pee' },
-};
 
 export function History({ entries, onDelete }: HistoryProps) {
   const grouped = groupEntriesByDate(entries);
@@ -40,7 +36,11 @@ export function History({ entries, onDelete }: HistoryProps) {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{typeConfig[entry.type].emoji}</span>
+                    {entry.type === 'poop' ? (
+                      <PoopIcon className="w-7 h-7 text-cyan-600 dark:text-cyan-400" />
+                    ) : (
+                      <span className="text-2xl">🍆</span>
+                    )}
                     <p className="text-sm text-zinc-500">{formatTime(entry.timestamp)}</p>
                   </div>
                   <button

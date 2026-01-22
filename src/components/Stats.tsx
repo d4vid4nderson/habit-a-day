@@ -1,6 +1,7 @@
 'use client';
 
 import { BathroomEntry } from '@/lib/types';
+import { PoopIcon } from './icons/PoopIcon';
 
 interface StatsProps {
   entries: BathroomEntry[];
@@ -18,7 +19,9 @@ export function Stats({ entries }: StatsProps) {
     <div className="flex gap-4">
       <div className="flex-1 rounded-xl bg-cyan-50 p-3 text-center dark:bg-cyan-900/20">
         <p className="text-2xl font-bold text-cyan-700 dark:text-cyan-400">{todayPoop}</p>
-        <p className="text-xs text-cyan-600 dark:text-cyan-500">💩 today</p>
+        <p className="flex items-center justify-center gap-1 text-xs text-cyan-600 dark:text-cyan-500">
+          <PoopIcon className="w-4 h-4" /> today
+        </p>
       </div>
       <div className="flex-1 rounded-xl bg-violet-50 p-3 text-center dark:bg-violet-900/20">
         <p className="text-2xl font-bold text-violet-700 dark:text-violet-400">{todayPee}</p>

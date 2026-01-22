@@ -9,6 +9,7 @@ import { Menu } from '@/components/Menu';
 import { Footer, FOOTER_HEIGHT } from '@/components/Footer';
 import { TrackerData, BathroomType } from '@/lib/types';
 import { loadData, saveData, createEntry } from '@/lib/storage';
+import { PoopIcon } from '@/components/icons/PoopIcon';
 
 function getToday(): string {
   return new Date().toISOString().split('T')[0];
@@ -108,8 +109,8 @@ export default function Home() {
   };
 
   const typeConfig = {
-    poop: { emoji: '💩', bg: 'bg-cyan-100 dark:bg-cyan-900/30' },
-    pee: { emoji: '🍆', bg: 'bg-violet-100 dark:bg-violet-900/30' },
+    poop: { emoji: '💩', bg: 'bg-cyan-100 dark:bg-cyan-900/30', isIcon: true },
+    pee: { emoji: '🍆', bg: 'bg-violet-100 dark:bg-violet-900/30', isIcon: false },
   };
 
   // History View
@@ -181,7 +182,11 @@ export default function Home() {
         <main className={`mx-auto max-w-lg px-4 py-6 ${FOOTER_HEIGHT}`}>
           <div className="space-y-6">
             <div className="flex justify-center py-8">
-              <span className="text-[12rem]">{typeConfig[selectedType].emoji}</span>
+              {selectedType === 'poop' ? (
+                <PoopIcon className="w-48 h-48 text-cyan-600 dark:text-cyan-400" />
+              ) : (
+                <span className="text-[12rem]">{typeConfig[selectedType].emoji}</span>
+              )}
             </div>
 
             <textarea
