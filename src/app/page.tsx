@@ -167,7 +167,7 @@ export default function Home() {
         <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur-lg dark:border-zinc-800 dark:bg-zinc-900/80">
           <div className="flex items-center justify-between px-4 py-3">
             <h1 className="flex items-center gap-2 text-xl font-bold text-zinc-900 dark:text-zinc-100">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600 text-sm">🚽</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 text-sm">🚽</span>
             Potty Tracker
             </h1>
           </div>
@@ -213,7 +213,7 @@ export default function Home() {
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur-lg dark:border-zinc-800 dark:bg-zinc-900/80">
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="flex items-center gap-2 text-xl font-bold text-zinc-900 dark:text-zinc-100">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600 text-sm">🚽</span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 text-sm">🚽</span>
             Potty Tracker
           </h1>
           <button
