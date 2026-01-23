@@ -85,10 +85,6 @@ export default function Home() {
   const [notes, setNotes] = useState('');
   const [poopConsistency, setPoopConsistency] = useState('');
   const [peeStream, setPeeStream] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [peeDropdownOpen, setPeeDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const peeDropdownRef = useRef<HTMLDivElement | null>(null);
   const [selectedDate, setSelectedDate] = useState(getToday());
   const [menuOpen, setMenuOpen] = useState(false);
   const [faqTab, setFaqTab] = useState<'poop' | 'pee'>('poop');
@@ -101,11 +97,7 @@ export default function Home() {
   const [addEntryNotes, setAddEntryNotes] = useState('');
   const [addEntryConsistency, setAddEntryConsistency] = useState('');
   const [addEntryStream, setAddEntryStream] = useState('');
-  const [addConsistencyDropdownOpen, setAddConsistencyDropdownOpen] = useState(false);
-  const [addStreamDropdownOpen, setAddStreamDropdownOpen] = useState(false);
   const addDropdownRef = useRef<HTMLDivElement | null>(null);
-  const addConsistencyRef = useRef<HTMLDivElement | null>(null);
-  const addStreamRef = useRef<HTMLDivElement | null>(null);
   const { gender } = useGender();
 
   const headerGradient = gender === 'female'
@@ -137,38 +129,6 @@ export default function Home() {
   }, [data]);
 
   useEffect(() => {
-    if (!dropdownOpen) return;
-    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
-      const target = event.target as Node;
-      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown);
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('touchstart', handlePointerDown);
-    };
-  }, [dropdownOpen]);
-
-  useEffect(() => {
-    if (!peeDropdownOpen) return;
-    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
-      const target = event.target as Node;
-      if (peeDropdownRef.current && !peeDropdownRef.current.contains(target)) {
-        setPeeDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown);
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('touchstart', handlePointerDown);
-    };
-  }, [peeDropdownOpen]);
-
-  useEffect(() => {
     if (!addDropdownOpen || addEntryType) return;
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
       const target = event.target as Node;
@@ -184,38 +144,6 @@ export default function Home() {
     };
   }, [addDropdownOpen, addEntryType]);
 
-  useEffect(() => {
-    if (!addConsistencyDropdownOpen) return;
-    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
-      const target = event.target as Node;
-      if (addConsistencyRef.current && !addConsistencyRef.current.contains(target)) {
-        setAddConsistencyDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown);
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('touchstart', handlePointerDown);
-    };
-  }, [addConsistencyDropdownOpen]);
-
-  useEffect(() => {
-    if (!addStreamDropdownOpen) return;
-    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
-      const target = event.target as Node;
-      if (addStreamRef.current && !addStreamRef.current.contains(target)) {
-        setAddStreamDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown);
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('touchstart', handlePointerDown);
-    };
-  }, [addStreamDropdownOpen]);
-
   if (!data) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -229,8 +157,6 @@ export default function Home() {
     setNotes('');
     setPoopConsistency('');
     setPeeStream('');
-    setDropdownOpen(false);
-    setPeeDropdownOpen(false);
   };
 
   const handleSave = () => {
@@ -247,8 +173,6 @@ export default function Home() {
     setNotes('');
     setPoopConsistency('');
     setPeeStream('');
-    setDropdownOpen(false);
-    setPeeDropdownOpen(false);
   };
 
   const handleManualAdd = (type: BathroomType) => {
@@ -286,8 +210,6 @@ export default function Home() {
     setAddEntryNotes('');
     setAddEntryConsistency('');
     setAddEntryStream('');
-    setAddConsistencyDropdownOpen(false);
-    setAddStreamDropdownOpen(false);
   };
 
   const handleCancelManualAdd = () => {
@@ -299,8 +221,6 @@ export default function Home() {
     setAddEntryNotes('');
     setAddEntryConsistency('');
     setAddEntryStream('');
-    setAddConsistencyDropdownOpen(false);
-    setAddStreamDropdownOpen(false);
   };
 
   const handleCancel = () => {
@@ -308,8 +228,6 @@ export default function Home() {
     setNotes('');
     setPoopConsistency('');
     setPeeStream('');
-    setDropdownOpen(false);
-    setPeeDropdownOpen(false);
   };
 
   const handleDelete = (id: string) => {
@@ -852,63 +770,22 @@ export default function Home() {
                     {addEntryType === 'poop' && (
                       <div>
                         <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Consistency</label>
-                        <div className="relative" ref={addConsistencyRef}>
-                          <button
-                            type="button"
-                            onClick={() => setAddConsistencyDropdownOpen(!addConsistencyDropdownOpen)}
-                            className={`w-full cursor-pointer rounded-xl border-2 bg-white p-4 text-base flex items-center justify-between focus:outline-none dark:bg-zinc-800 dark:text-zinc-200 ${
-                              addConsistencyDropdownOpen
-                                ? gender === 'female'
-                                  ? 'border-pink-500'
-                                  : 'border-teal-500'
-                                : 'border-zinc-200 dark:border-zinc-700'
-                            }`}
-                          >
-                            <span className={`text-left ${addEntryConsistency ? '' : 'text-zinc-400'}`}>
-                              {addEntryConsistency === 'hard-lumps' && 'Separate hard lumps'}
-                              {addEntryConsistency === 'lumpy-sausage' && 'A lumpy, sausage-like clump'}
-                              {addEntryConsistency === 'cracked-sausage' && 'A sausage shape with cracks'}
-                              {addEntryConsistency === 'smooth-sausage' && 'Smooth sausage-shaped'}
-                              {addEntryConsistency === 'soft-blobs' && 'Soft blobs with clear edges'}
-                              {addEntryConsistency === 'mushy-mass' && 'A mushy, ragged mass'}
-                              {addEntryConsistency === 'liquid' && 'Liquid'}
-                              {!addEntryConsistency && 'Select consistency...'}
-                            </span>
-                            <svg className={`h-5 w-5 text-zinc-400 transition-transform ${addConsistencyDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                          {addConsistencyDropdownOpen && (
-                            <div className="absolute z-20 mt-2 w-full rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800 overflow-hidden">
-                              {[
-                                { value: '', label: 'Select consistency...' },
-                                { value: 'hard-lumps', label: 'Separate hard lumps' },
-                                { value: 'lumpy-sausage', label: 'A lumpy, sausage-like clump' },
-                                { value: 'cracked-sausage', label: 'A sausage shape with cracks' },
-                                { value: 'smooth-sausage', label: 'Smooth sausage-shaped' },
-                                { value: 'soft-blobs', label: 'Soft blobs with clear edges' },
-                                { value: 'mushy-mass', label: 'A mushy, ragged mass' },
-                                { value: 'liquid', label: 'Liquid' },
-                              ].map((option) => (
-                                <button
-                                  key={option.value}
-                                  type="button"
-                                  onClick={() => {
-                                    setAddEntryConsistency(option.value);
-                                    setAddConsistencyDropdownOpen(false);
-                                  }}
-                                  className={`w-full px-4 py-3 text-left text-base transition-colors ${
-                                    addEntryConsistency === option.value
-                                      ? `${gender === 'female' ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400' : 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400'}`
-                                      : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700'
-                                  }`}
-                                >
-                                  {option.label}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
+                        <select
+                          value={addEntryConsistency}
+                          onChange={(e) => setAddEntryConsistency(e.target.value)}
+                          className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        >
+                          <option value="">Select consistency...</option>
+                          <option value="hard-lumps">Separate hard lumps</option>
+                          <option value="lumpy-sausage">A lumpy, sausage-like clump</option>
+                          <option value="cracked-sausage">A sausage shape with cracks</option>
+                          <option value="smooth-sausage">Smooth sausage-shaped</option>
+                          <option value="soft-blobs">Soft blobs with clear edges</option>
+                          <option value="mushy-mass">A mushy, ragged mass</option>
+                          <option value="liquid">Liquid</option>
+                        </select>
                         <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 px-4 min-h-[40px]">
                           {addEntryConsistency === 'hard-lumps' && "Indicates constipation. You may need more fiber and water in your diet."}
                           {addEntryConsistency === 'lumpy-sausage' && "Slightly constipated. Try increasing your fiber and fluid intake."}
@@ -926,59 +803,20 @@ export default function Home() {
                     {addEntryType === 'pee' && (
                       <div>
                         <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Stream Strength</label>
-                        <div className="relative" ref={addStreamRef}>
-                          <button
-                            type="button"
-                            onClick={() => setAddStreamDropdownOpen(!addStreamDropdownOpen)}
-                            className={`w-full cursor-pointer rounded-xl border-2 bg-white p-4 text-base flex items-center justify-between focus:outline-none dark:bg-zinc-800 dark:text-zinc-200 ${
-                              addStreamDropdownOpen
-                                ? gender === 'female'
-                                  ? 'border-purple-500'
-                                  : 'border-blue-500'
-                                : 'border-zinc-200 dark:border-zinc-700'
-                            }`}
-                          >
-                            <span className={`text-left ${addEntryStream ? '' : 'text-zinc-400'}`}>
-                              {addEntryStream === 'strong' && 'Strong'}
-                              {addEntryStream === 'normal' && 'Normal'}
-                              {addEntryStream === 'weak' && 'Weak'}
-                              {addEntryStream === 'intermittent' && 'Intermittent'}
-                              {addEntryStream === 'dribbling' && 'Dribbling'}
-                              {!addEntryStream && 'Select stream strength...'}
-                            </span>
-                            <svg className={`h-5 w-5 text-zinc-400 transition-transform ${addStreamDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                          {addStreamDropdownOpen && (
-                            <div className="absolute z-20 mt-2 w-full rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800 overflow-hidden">
-                              {[
-                                { value: '', label: 'Select stream strength...' },
-                                { value: 'strong', label: 'Strong' },
-                                { value: 'normal', label: 'Normal' },
-                                { value: 'weak', label: 'Weak' },
-                                { value: 'intermittent', label: 'Intermittent' },
-                                { value: 'dribbling', label: 'Dribbling' },
-                              ].map((option) => (
-                                <button
-                                  key={option.value}
-                                  type="button"
-                                  onClick={() => {
-                                    setAddEntryStream(option.value);
-                                    setAddStreamDropdownOpen(false);
-                                  }}
-                                  className={`w-full px-4 py-3 text-left text-base transition-colors ${
-                                    addEntryStream === option.value
-                                      ? `${gender === 'female' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'}`
-                                      : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700'
-                                  }`}
-                                >
-                                  {option.label}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
+                        <select
+                          value={addEntryStream}
+                          onChange={(e) => setAddEntryStream(e.target.value)}
+                          className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                            gender === 'female' ? 'focus:border-purple-500' : 'focus:border-blue-500'
+                          }`}
+                        >
+                          <option value="">Select stream strength...</option>
+                          <option value="strong">Strong</option>
+                          <option value="normal">Normal</option>
+                          <option value="weak">Weak</option>
+                          <option value="intermittent">Intermittent</option>
+                          <option value="dribbling">Dribbling</option>
+                        </select>
                         <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 px-4 min-h-[40px]">
                           {addEntryStream === 'strong' && "Forceful, steady stream. Good bladder pressure and pelvic floor function."}
                           {addEntryStream === 'normal' && "Comfortable, consistent flow. Healthy urination pattern."}
@@ -1111,59 +949,20 @@ export default function Home() {
 
             {selectedType === 'pee' && (
               <div className="space-y-2">
-                <div className="relative" ref={peeDropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() => setPeeDropdownOpen(!peeDropdownOpen)}
-                    className={`w-full cursor-pointer rounded-xl border-2 bg-white p-4 text-base flex items-center justify-between focus:outline-none dark:bg-zinc-800 dark:text-zinc-200 ${
-                      peeDropdownOpen
-                        ? gender === 'female'
-                          ? 'border-purple-500'
-                          : 'border-blue-500'
-                        : 'border-zinc-200 dark:border-zinc-700'
-                    }`}
-                  >
-                    <span className={`text-left ${peeStream ? '' : 'text-zinc-400'}`}>
-                      {peeStream === 'strong' && 'Strong'}
-                      {peeStream === 'normal' && 'Normal'}
-                      {peeStream === 'weak' && 'Weak'}
-                      {peeStream === 'intermittent' && 'Intermittent'}
-                      {peeStream === 'dribbling' && 'Dribbling'}
-                      {!peeStream && 'Select stream strength...'}
-                    </span>
-                    <svg className={`h-5 w-5 text-zinc-400 transition-transform ${peeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {peeDropdownOpen && (
-                    <div className="absolute z-20 mt-2 w-full rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800 overflow-hidden">
-                      {[
-                        { value: '', label: 'Select stream strength...' },
-                        { value: 'strong', label: 'Strong' },
-                        { value: 'normal', label: 'Normal' },
-                        { value: 'weak', label: 'Weak' },
-                        { value: 'intermittent', label: 'Intermittent' },
-                        { value: 'dribbling', label: 'Dribbling' },
-                      ].map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => {
-                            setPeeStream(option.value);
-                            setPeeDropdownOpen(false);
-                          }}
-                          className={`w-full px-4 py-3 text-left text-base transition-colors ${
-                            peeStream === option.value
-                              ? `${gender === 'female' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'}`
-                              : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700'
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <select
+                  value={peeStream}
+                  onChange={(e) => setPeeStream(e.target.value)}
+                  className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                    gender === 'female' ? 'focus:border-purple-500' : 'focus:border-blue-500'
+                  }`}
+                >
+                  <option value="">Select stream strength...</option>
+                  <option value="strong">Strong</option>
+                  <option value="normal">Normal</option>
+                  <option value="weak">Weak</option>
+                  <option value="intermittent">Intermittent</option>
+                  <option value="dribbling">Dribbling</option>
+                </select>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 px-4 min-h-[40px]">
                   {peeStream === 'strong' && "Forceful, steady stream. Good bladder pressure and pelvic floor function."}
                   {peeStream === 'normal' && "Comfortable, consistent flow. Healthy urination pattern."}
@@ -1184,63 +983,22 @@ export default function Home() {
 
             {selectedType === 'poop' && (
               <div className="space-y-2">
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className={`w-full cursor-pointer rounded-xl border-2 bg-white p-4 text-base flex items-center justify-between focus:outline-none dark:bg-zinc-800 dark:text-zinc-200 ${
-                      dropdownOpen
-                        ? gender === 'female'
-                          ? 'border-pink-500'
-                          : 'border-teal-500'
-                        : 'border-zinc-200 dark:border-zinc-700'
-                    }`}
-                  >
-                    <span className={`text-left ${poopConsistency ? '' : 'text-zinc-400'}`}>
-                      {poopConsistency === 'hard-lumps' && 'Separate hard lumps'}
-                      {poopConsistency === 'lumpy-sausage' && 'A lumpy, sausage-like clump'}
-                      {poopConsistency === 'cracked-sausage' && 'A sausage shape with cracks'}
-                      {poopConsistency === 'smooth-sausage' && 'Smooth sausage-shaped'}
-                      {poopConsistency === 'soft-blobs' && 'Soft blobs with clear edges'}
-                      {poopConsistency === 'mushy-mass' && 'A mushy, ragged mass'}
-                      {poopConsistency === 'liquid' && 'Liquid'}
-                      {!poopConsistency && 'Select consistency...'}
-                    </span>
-                    <svg className={`h-5 w-5 text-zinc-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {dropdownOpen && (
-                    <div className="absolute z-20 mt-2 w-full rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800 overflow-hidden">
-                      {[
-                        { value: '', label: 'Select consistency...' },
-                        { value: 'hard-lumps', label: 'Separate hard lumps' },
-                        { value: 'lumpy-sausage', label: 'A lumpy, sausage-like clump' },
-                        { value: 'cracked-sausage', label: 'A sausage shape with cracks' },
-                        { value: 'smooth-sausage', label: 'Smooth sausage-shaped' },
-                        { value: 'soft-blobs', label: 'Soft blobs with clear edges' },
-                        { value: 'mushy-mass', label: 'A mushy, ragged mass' },
-                        { value: 'liquid', label: 'Liquid' },
-                      ].map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => {
-                            setPoopConsistency(option.value);
-                            setDropdownOpen(false);
-                          }}
-                          className={`w-full px-4 py-3 text-left text-base transition-colors ${
-                            poopConsistency === option.value
-                              ? `${gender === 'female' ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400' : 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400'}`
-                              : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700'
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <select
+                  value={poopConsistency}
+                  onChange={(e) => setPoopConsistency(e.target.value)}
+                  className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                    gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                  }`}
+                >
+                  <option value="">Select consistency...</option>
+                  <option value="hard-lumps">Separate hard lumps</option>
+                  <option value="lumpy-sausage">A lumpy, sausage-like clump</option>
+                  <option value="cracked-sausage">A sausage shape with cracks</option>
+                  <option value="smooth-sausage">Smooth sausage-shaped</option>
+                  <option value="soft-blobs">Soft blobs with clear edges</option>
+                  <option value="mushy-mass">A mushy, ragged mass</option>
+                  <option value="liquid">Liquid</option>
+                </select>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 px-4 min-h-[40px]">
                   {poopConsistency === 'hard-lumps' && "Indicates constipation. You may need more fiber and water in your diet."}
                   {poopConsistency === 'lumpy-sausage' && "Slightly constipated. Try increasing your fiber and fluid intake."}
