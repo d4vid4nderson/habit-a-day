@@ -1225,7 +1225,7 @@ export default function Home() {
                 onClick={handleCancel}
                 className="flex-1 cursor-pointer rounded-xl bg-zinc-200 py-4 text-base font-medium text-zinc-700 active:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300 dark:active:bg-zinc-600"
               >
-                Flush
+                Flush It
               </button>
               <button
                 onClick={handleSave}
