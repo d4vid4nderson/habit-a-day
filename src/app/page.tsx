@@ -767,7 +767,7 @@ export default function Home() {
 
               {/* Full-width Add Entry Form */}
               {addEntryType && (
-                <div className="mb-4 rounded-2xl border-2 border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900">
+                <div className="mb-4 rounded-2xl border-2 border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900 overflow-hidden">
                   <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {addEntryType === 'poop' ? (
@@ -791,13 +791,13 @@ export default function Home() {
 
                   <div className="space-y-4">
                     {/* Time Input */}
-                    <div>
+                    <div className="overflow-hidden">
                       <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Time</label>
                       <input
                         type="time"
                         value={addEntryTime}
                         onChange={(e) => setAddEntryTime(e.target.value)}
-                        className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                        className={`w-full max-w-full rounded-xl border-2 border-zinc-200 bg-white px-4 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
                           gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
                         }`}
                         style={{
@@ -806,6 +806,7 @@ export default function Home() {
                           appearance: 'none',
                           height: '52px',
                           lineHeight: '52px',
+                          boxSizing: 'border-box',
                         }}
                       />
                     </div>
