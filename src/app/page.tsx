@@ -778,12 +778,12 @@ export default function Home() {
                           }`}
                         >
                           <option value="">Select consistency...</option>
-                          <option value="hard-lumps">Separate hard lumps</option>
-                          <option value="lumpy-sausage">A lumpy, sausage-like clump</option>
-                          <option value="cracked-sausage">A sausage shape with cracks</option>
-                          <option value="smooth-sausage">Smooth sausage-shaped</option>
-                          <option value="soft-blobs">Soft blobs with clear edges</option>
-                          <option value="mushy-mass">A mushy, ragged mass</option>
+                          <option value="hard-lumps">Hard lumps</option>
+                          <option value="lumpy-sausage">Lumpy sausage</option>
+                          <option value="cracked-sausage">Cracked sausage</option>
+                          <option value="smooth-sausage">Smooth sausage</option>
+                          <option value="soft-blobs">Soft blobs</option>
+                          <option value="mushy-mass">Mushy</option>
                           <option value="liquid">Liquid</option>
                         </select>
                         <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 px-4 min-h-[40px]">
