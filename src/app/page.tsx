@@ -791,23 +791,15 @@ export default function Home() {
 
                   <div className="space-y-4">
                     {/* Time Input */}
-                    <div className="overflow-hidden">
+                    <div>
                       <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Time</label>
                       <input
                         type="time"
                         value={addEntryTime}
                         onChange={(e) => setAddEntryTime(e.target.value)}
-                        className={`w-full max-w-full rounded-xl border-2 border-zinc-200 bg-white px-4 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                        className={`block w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
                           gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
                         }`}
-                        style={{
-                          WebkitAppearance: 'none',
-                          MozAppearance: 'none',
-                          appearance: 'none',
-                          height: '52px',
-                          lineHeight: '52px',
-                          boxSizing: 'border-box',
-                        }}
                       />
                     </div>
 
