@@ -965,7 +965,7 @@ export default function Home() {
                         onClick={handleCancelManualAdd}
                         className="flex-1 cursor-pointer rounded-xl bg-zinc-200 py-3 text-base font-medium text-zinc-700 active:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300 dark:active:bg-zinc-600"
                       >
-                        Cancel
+                        Flush
                       </button>
                       <button
                         onClick={() => handleManualAdd(addEntryType)}
