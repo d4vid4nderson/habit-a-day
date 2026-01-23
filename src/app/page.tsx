@@ -793,14 +793,23 @@ export default function Home() {
                     {/* Time Input */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Time</label>
-                      <input
-                        type="time"
-                        value={addEntryTime}
-                        onChange={(e) => setAddEntryTime(e.target.value)}
-                        className={`block w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
-                          gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
-                        }`}
-                      />
+                      <div className="relative w-full overflow-hidden rounded-xl">
+                        <input
+                          type="time"
+                          value={addEntryTime}
+                          onChange={(e) => setAddEntryTime(e.target.value)}
+                          className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                          style={{
+                            WebkitAppearance: 'none',
+                            MozAppearance: 'none',
+                            appearance: 'none',
+                            maxWidth: '100%',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
                     </div>
 
                     {/* Consistency Dropdown (for poop only) */}
