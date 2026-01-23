@@ -2,30 +2,48 @@
 
 import { useState } from 'react';
 import { BathroomType } from '@/lib/types';
-import { PoopIcon } from './icons/PoopIcon';
+import { PoopIcon, PeeIcon } from './icons/BathroomIcons';
+import { useGender } from '@/lib/GenderContext';
 
 interface LogButtonProps {
   type: BathroomType;
   onLog: (type: BathroomType) => void;
 }
 
-const config = {
+const maleConfig = {
   poop: {
-    bg: 'bg-cyan-100 dark:bg-cyan-900/30',
-    activeBg: 'bg-cyan-200 dark:bg-cyan-800/50',
-    ring: 'ring-cyan-400',
-    iconColor: 'text-cyan-600 dark:text-cyan-400',
+    bg: 'bg-teal-600 dark:bg-teal-900/30',
+    activeBg: 'bg-teal-700 dark:bg-teal-800/50',
+    ring: 'ring-teal-400',
+    iconColor: 'text-teal-100 dark:text-teal-400',
   },
   pee: {
-    bg: 'bg-violet-100 dark:bg-violet-900/30',
-    activeBg: 'bg-violet-200 dark:bg-violet-800/50',
-    ring: 'ring-violet-400',
-    iconColor: 'text-violet-600 dark:text-violet-400',
+    bg: 'bg-blue-600 dark:bg-blue-900/30',
+    activeBg: 'bg-blue-700 dark:bg-blue-800/50',
+    ring: 'ring-blue-400',
+    iconColor: 'text-blue-100 dark:text-blue-400',
+  },
+};
+
+const femaleConfig = {
+  poop: {
+    bg: 'bg-pink-600 dark:bg-pink-900/30',
+    activeBg: 'bg-pink-700 dark:bg-pink-800/50',
+    ring: 'ring-pink-400',
+    iconColor: 'text-pink-100 dark:text-pink-400',
+  },
+  pee: {
+    bg: 'bg-purple-600 dark:bg-purple-900/30',
+    activeBg: 'bg-purple-700 dark:bg-purple-800/50',
+    ring: 'ring-purple-400',
+    iconColor: 'text-purple-100 dark:text-purple-400',
   },
 };
 
 export function LogButton({ type, onLog }: LogButtonProps) {
   const [isPressed, setIsPressed] = useState(false);
+  const { gender } = useGender();
+  const config = gender === 'female' ? femaleConfig : maleConfig;
   const { bg, activeBg, ring, iconColor } = config[type];
 
   return (
@@ -40,12 +58,15 @@ export function LogButton({ type, onLog }: LogButtonProps) {
         isPressed ? `${activeBg} scale-95 ${ring} ring-4` : bg
       }`}
     >
-      <div className={`transition-transform ${isPressed ? 'scale-90' : ''} ${iconColor}`}>
+      <div className={`flex flex-col items-center transition-transform ${isPressed ? 'scale-90' : ''} ${iconColor}`}>
         {type === 'poop' ? (
-          <PoopIcon className="w-32 h-32" />
+          <PoopIcon className="w-[12rem] h-[12rem]" />
         ) : (
-          <span className="text-8xl">🍆</span>
+          <PeeIcon className="w-[12rem] h-[12rem]" />
         )}
+        <span className="w-[12rem] text-center text-[3.5rem] font-black uppercase leading-none tracking-tight">
+          {type === 'poop' ? "POOP'D" : "PEE'D"}
+        </span>
       </div>
     </button>
   );

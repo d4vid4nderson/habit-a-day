@@ -2,7 +2,8 @@
 
 import { BathroomEntry } from '@/lib/types';
 import { formatTime, formatDate, groupEntriesByDate } from '@/lib/storage';
-import { PoopIcon } from './icons/PoopIcon';
+import { PoopIcon, PeeIcon } from './icons/BathroomIcons';
+import { useGender } from '@/lib/GenderContext';
 
 interface HistoryProps {
   entries: BathroomEntry[];
@@ -11,6 +12,10 @@ interface HistoryProps {
 
 export function History({ entries, onDelete }: HistoryProps) {
   const grouped = groupEntriesByDate(entries);
+  const { gender } = useGender();
+
+  const poopColor = gender === 'female' ? 'text-pink-600 dark:text-pink-400' : 'text-teal-600 dark:text-teal-400';
+  const peeColor = gender === 'female' ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400';
 
   if (entries.length === 0) {
     return (
@@ -37,11 +42,16 @@ export function History({ entries, onDelete }: HistoryProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {entry.type === 'poop' ? (
-                      <PoopIcon className="w-7 h-7 text-cyan-600 dark:text-cyan-400" />
+                      <PoopIcon className={`w-7 h-7 ${poopColor}`} />
                     ) : (
-                      <span className="text-2xl">🍆</span>
+                      <PeeIcon className={`w-7 h-7 ${peeColor}`} />
                     )}
-                    <p className="text-sm text-zinc-500">{formatTime(entry.timestamp)}</p>
+                    <div className="flex flex-col">
+                      <span className={`text-base font-semibold ${entry.type === 'poop' ? poopColor : peeColor}`}>
+                        {entry.type === 'poop' ? "Poop'd" : "Pee'd"}
+                      </span>
+                      <p className="text-xs text-zinc-500">{formatTime(entry.timestamp)}</p>
+                    </div>
                   </div>
                   <button
                     onClick={() => onDelete(entry.id)}

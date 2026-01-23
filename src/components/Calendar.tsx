@@ -1,5 +1,7 @@
 'use client';
 
+import { useGender } from '@/lib/GenderContext';
+
 interface CalendarProps {
   selectedDate: string;
   onSelectDate: (date: string) => void;
@@ -9,6 +11,17 @@ interface CalendarProps {
 export function Calendar({ selectedDate, onSelectDate, hasEntries }: CalendarProps) {
   const today = new Date();
   const currentMonth = new Date(selectedDate + 'T00:00:00');
+  const { gender } = useGender();
+
+  const selectedClass = gender === 'female'
+    ? 'bg-pink-600 font-bold text-white ring-8 ring-pink-200 dark:ring-pink-400/30'
+    : 'bg-blue-600 font-bold text-white ring-8 ring-blue-200 dark:ring-blue-400/30';
+
+  const todayClass = gender === 'female'
+    ? 'bg-pink-100 font-bold text-pink-800 dark:bg-pink-900/30 dark:text-pink-400'
+    : 'bg-teal-100 font-bold text-teal-800 dark:bg-teal-900/30 dark:text-teal-400';
+
+  const dotClass = gender === 'female' ? 'bg-pink-500' : 'bg-teal-500';
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -32,7 +45,7 @@ export function Calendar({ selectedDate, onSelectDate, hasEntries }: CalendarPro
 
   const navigateMonth = (delta: number) => {
     const newDate = new Date(year, month + delta, 1);
-    const newDateStr = newDate.toISOString().split('T')[0];
+    const newDateStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`;
     onSelectDate(newDateStr);
   };
 
@@ -86,21 +99,21 @@ export function Calendar({ selectedDate, onSelectDate, hasEntries }: CalendarPro
 
       <div className="grid grid-cols-7 gap-1">
         {days.map((day, i) => (
-          <div key={i} className="aspect-square p-0.5">
+          <div key={i} className="flex aspect-square items-center justify-center p-0.5">
             {day && (
               <button
                 onClick={() => onSelectDate(getDateString(day))}
-                className={`flex h-full w-full flex-col items-center justify-center rounded-full text-sm transition-colors ${
+                className={`flex flex-col items-center justify-center rounded-full text-sm transition-colors ${
                   isSelected(day)
-                    ? 'bg-violet-600 font-semibold text-white'
+                    ? `h-8 w-8 ${selectedClass}`
                     : isToday(day)
-                    ? 'bg-violet-100 font-semibold text-violet-800 dark:bg-violet-900/30 dark:text-violet-400'
-                    : 'active:bg-zinc-100 dark:active:bg-zinc-700'
+                    ? `h-full w-full ${todayClass}`
+                    : 'h-full w-full active:bg-zinc-100 dark:active:bg-zinc-700'
                 }`}
               >
                 <span>{day}</span>
                 {hasEntries(getDateString(day)) && !isSelected(day) && (
-                  <span className="mt-0.5 h-1 w-1 rounded-full bg-violet-500" />
+                  <span className={`mt-0.5 h-1 w-1 rounded-full ${dotClass}`} />
                 )}
               </button>
             )}
