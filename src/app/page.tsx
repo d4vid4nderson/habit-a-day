@@ -95,7 +95,9 @@ export default function Home() {
   const [faqSearch, setFaqSearch] = useState('');
   const [addDropdownOpen, setAddDropdownOpen] = useState(false);
   const [addEntryType, setAddEntryType] = useState<BathroomType | null>(null);
-  const [addEntryTime, setAddEntryTime] = useState('');
+  const [addEntryHour, setAddEntryHour] = useState('');
+  const [addEntryMinute, setAddEntryMinute] = useState('');
+  const [addEntryAmPm, setAddEntryAmPm] = useState<'AM' | 'PM'>('AM');
   const [addEntryNotes, setAddEntryNotes] = useState('');
   const [addEntryConsistency, setAddEntryConsistency] = useState('');
   const [addEntryStream, setAddEntryStream] = useState('');
@@ -250,8 +252,15 @@ export default function Home() {
   };
 
   const handleManualAdd = (type: BathroomType) => {
-    if (!addEntryTime) return;
-    const [hours, minutes] = addEntryTime.split(':').map(Number);
+    if (!addEntryHour || !addEntryMinute) return;
+    let hours = parseInt(addEntryHour);
+    const minutes = parseInt(addEntryMinute);
+    // Convert 12-hour to 24-hour format
+    if (addEntryAmPm === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (addEntryAmPm === 'AM' && hours === 12) {
+      hours = 0;
+    }
     const entryDate = new Date(selectedDate + 'T00:00:00');
     entryDate.setHours(hours, minutes, 0, 0);
 
@@ -271,7 +280,9 @@ export default function Home() {
     });
     setAddDropdownOpen(false);
     setAddEntryType(null);
-    setAddEntryTime('');
+    setAddEntryHour('');
+    setAddEntryMinute('');
+    setAddEntryAmPm('AM');
     setAddEntryNotes('');
     setAddEntryConsistency('');
     setAddEntryStream('');
@@ -282,7 +293,9 @@ export default function Home() {
   const handleCancelManualAdd = () => {
     setAddDropdownOpen(false);
     setAddEntryType(null);
-    setAddEntryTime('');
+    setAddEntryHour('');
+    setAddEntryMinute('');
+    setAddEntryAmPm('AM');
     setAddEntryNotes('');
     setAddEntryConsistency('');
     setAddEntryStream('');
@@ -793,22 +806,45 @@ export default function Home() {
                     {/* Time Input */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Time</label>
-                      <div className="relative w-full overflow-hidden rounded-xl">
-                        <input
-                          type="time"
-                          value={addEntryTime}
-                          onChange={(e) => setAddEntryTime(e.target.value)}
-                          className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                      <div className="flex gap-2">
+                        {/* Hour */}
+                        <select
+                          value={addEntryHour}
+                          onChange={(e) => setAddEntryHour(e.target.value)}
+                          className={`flex-1 rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
                             gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
                           }`}
-                          style={{
-                            WebkitAppearance: 'none',
-                            MozAppearance: 'none',
-                            appearance: 'none',
-                            maxWidth: '100%',
-                            boxSizing: 'border-box',
-                          }}
-                        />
+                        >
+                          <option value="">Hr</option>
+                          {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((h) => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                        <span className="flex items-center text-zinc-400 text-xl font-bold">:</span>
+                        {/* Minute */}
+                        <select
+                          value={addEntryMinute}
+                          onChange={(e) => setAddEntryMinute(e.target.value)}
+                          className={`flex-1 rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        >
+                          <option value="">Min</option>
+                          {Array.from({ length: 60 }, (_, i) => (
+                            <option key={i} value={i}>{i.toString().padStart(2, '0')}</option>
+                          ))}
+                        </select>
+                        {/* AM/PM */}
+                        <select
+                          value={addEntryAmPm}
+                          onChange={(e) => setAddEntryAmPm(e.target.value as 'AM' | 'PM')}
+                          className={`rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        >
+                          <option value="AM">AM</option>
+                          <option value="PM">PM</option>
+                        </select>
                       </div>
                     </div>
 
@@ -977,7 +1013,7 @@ export default function Home() {
                       </button>
                       <button
                         onClick={() => handleManualAdd(addEntryType)}
-                        disabled={!addEntryTime}
+                        disabled={!addEntryHour || !addEntryMinute}
                         className={`flex-1 cursor-pointer rounded-xl py-3 text-base font-semibold text-white transition-colors disabled:opacity-50 ${
                           gender === 'female'
                             ? 'bg-pink-500 hover:bg-pink-600 disabled:hover:bg-pink-500'
