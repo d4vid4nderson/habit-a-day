@@ -797,9 +797,10 @@ export default function Home() {
                         type="time"
                         value={addEntryTime}
                         onChange={(e) => setAddEntryTime(e.target.value)}
-                        className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                        className={`w-full appearance-none rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [&::-webkit-calendar-picker-indicator]:dark:invert ${
                           gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
                         }`}
+                        style={{ colorScheme: 'light dark' }}
                       />
                     </div>
 
