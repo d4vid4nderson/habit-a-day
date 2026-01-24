@@ -1,6 +1,6 @@
 'use client';
 
-import { useGender } from '@/lib/GenderContext';
+import { useProfile } from '@/lib/hooks/useProfile';
 
 interface CalendarProps {
   selectedDate: string;
@@ -11,7 +11,7 @@ interface CalendarProps {
 export function Calendar({ selectedDate, onSelectDate, hasEntries }: CalendarProps) {
   const today = new Date();
   const currentMonth = new Date(selectedDate + 'T00:00:00');
-  const { gender } = useGender();
+  const { gender } = useProfile();
 
   const selectedClass = gender === 'female'
     ? 'bg-pink-600 font-bold text-white ring-8 ring-pink-200 dark:ring-pink-400/30'

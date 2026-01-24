@@ -2,7 +2,7 @@
 
 import { BathroomEntry } from '@/lib/types';
 import { PoopIcon, PeeIcon } from './icons/BathroomIcons';
-import { useGender } from '@/lib/GenderContext';
+import { useProfile } from '@/lib/hooks/useProfile';
 
 interface StatsProps {
   entries: BathroomEntry[];
@@ -11,7 +11,7 @@ interface StatsProps {
 export function Stats({ entries }: StatsProps) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const { gender } = useGender();
+  const { gender } = useProfile();
 
   const todayEntries = entries.filter((e) => e.timestamp >= today.getTime());
   const todayPoop = todayEntries.filter((e) => e.type === 'poop').length;
