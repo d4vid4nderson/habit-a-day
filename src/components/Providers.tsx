@@ -1,8 +1,13 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { GenderProvider } from '@/lib/GenderContext';
+import { AuthProvider } from '@/lib/auth/AuthContext';
+import { ProfileProvider } from '@/lib/hooks/useProfile';
 
 export function Providers({ children }: { children: ReactNode }) {
-  return <GenderProvider>{children}</GenderProvider>;
+  return (
+    <AuthProvider>
+      <ProfileProvider>{children}</ProfileProvider>
+    </AuthProvider>
+  );
 }

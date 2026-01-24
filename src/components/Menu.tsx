@@ -1,17 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useGender } from '@/lib/GenderContext';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { useProfile } from '@/lib/hooks/useProfile';
 import { Gender } from '@/lib/types';
+import { Theme } from '@/lib/services/profileService';
 
 interface MenuProps {
   isOpen: boolean;
   onClose: () => void;
-  onNavigate: (view: 'log' | 'history' | 'faq') => void;
-  currentView: 'log' | 'history' | 'faq';
+  onNavigate: (view: 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq') => void;
+  currentView: 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq';
 }
-
-type Theme = 'light' | 'dark' | 'system';
 
 function SunIcon({ className }: { className?: string }) {
   return (
@@ -58,20 +58,28 @@ function FemaleIcon({ className }: { className?: string }) {
 }
 
 export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
-  const [theme, setTheme] = useState<Theme>('system');
+  const { user, signOut } = useAuth();
+  const { profile, gender, theme, updateGender, updateTheme } = useProfile();
+  const [localTheme, setLocalTheme] = useState<Theme>(theme);
+  const [showFoodJournal, setShowFoodJournal] = useState(false);
+  const [showPhysicalTherapy, setShowPhysicalTherapy] = useState(false);
+  const [showPottyLogger, setShowPottyLogger] = useState(false);
+  const [showWaterIntake, setShowWaterIntake] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [showGender, setShowGender] = useState(false);
   const [showAppearance, setShowAppearance] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
-  const { gender, setGender } = useGender();
 
+  // Sync local theme state with profile theme
   useEffect(() => {
-    const saved = localStorage.getItem('theme') as Theme | null;
-    if (saved) {
-      setTheme(saved);
-      applyTheme(saved);
-    }
-  }, []);
+    setLocalTheme(theme);
+  }, [theme]);
+
+  // Apply theme to DOM
+  useEffect(() => {
+    applyTheme(localTheme);
+  }, [localTheme]);
 
   const applyTheme = (newTheme: Theme) => {
     const root = document.documentElement;
@@ -91,13 +99,30 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
     }
   };
 
-  const handleThemeChange = (newTheme: Theme) => {
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
+  const handleThemeChange = async (newTheme: Theme) => {
+    setLocalTheme(newTheme);
     applyTheme(newTheme);
+    try {
+      await updateTheme(newTheme);
+    } catch (err) {
+      console.error('Failed to update theme:', err);
+    }
   };
 
-  const handleNavigation = (view: 'log' | 'history' | 'faq') => {
+  const handleGenderChange = async (newGender: Gender) => {
+    try {
+      await updateGender(newGender);
+    } catch (err) {
+      console.error('Failed to update gender:', err);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    onClose();
+  };
+
+  const handleNavigation = (view: 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq') => {
     onNavigate(view);
     onClose();
   };
@@ -122,11 +147,40 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-4 dark:border-zinc-800">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Menu</h2>
+        {/* User Info Header */}
+        <div className="flex items-center gap-3 border-b border-zinc-200 p-4 dark:border-zinc-700">
+          {user && profile && (
+            <>
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt="Profile"
+                  className="h-12 w-12 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                  <svg className="h-6 w-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                  {profile.first_name && profile.last_name
+                    ? `${profile.first_name} ${profile.last_name}`
+                    : user.email}
+                </p>
+                {profile.first_name && profile.last_name && (
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                    {user.email}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
           <button
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full active:bg-zinc-100 dark:active:bg-zinc-800"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-100 active:bg-zinc-200 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:active:bg-zinc-700"
           >
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -134,54 +188,324 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
           </button>
         </div>
 
-        <div className="p-4">
-          <div className="space-y-2">
-            {/* Navigation */}
-            <button
-              onClick={() => handleNavigation('log')}
-              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
-                currentView === 'log'
-                  ? activeClass
-                  : 'text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800'
-              }`}
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <span className="font-medium">Log</span>
-            </button>
+        <div className="p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
 
+          <div className="space-y-2">
+            {/* Home */}
             <button
-              onClick={() => handleNavigation('history')}
+              onClick={() => handleNavigation('home')}
               className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
-                currentView === 'history'
+                currentView === 'home'
                   ? activeClass
                   : 'text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800'
               }`}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
-              <span className="font-medium">{gender === 'female' ? 'Herstory' : 'History'}</span>
+              <span className="font-medium">Home</span>
             </button>
 
             {/* Divider */}
             <div className="my-3 border-t border-zinc-200 dark:border-zinc-700" />
 
-            {/* FAQs */}
+            {/* Habit Tracker Section Header */}
+            <p className="px-4 text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+              Habit Tracker
+            </p>
+
+            {/* Food Journal - Expandable */}
             <button
-              onClick={() => handleNavigation('faq')}
-              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
-                currentView === 'faq'
-                  ? activeClass
-                  : 'text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800'
-              }`}
+              onClick={() => setShowFoodJournal(!showFoodJournal)}
+              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div className="flex items-center gap-3">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <path d="M7 4v17m-3 -17v3a3 3 0 1 0 6 0v-3" />
+                  <path d="M14 8a3 4 0 1 0 6 0a3 4 0 1 0 -6 0" />
+                  <path d="M17 12v9" />
+                </svg>
+                <span className="font-medium">Food Journal</span>
+              </div>
+              <svg
+                className={`h-5 w-5 transition-transform ${showFoodJournal ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              <span className="font-medium">Potty FAQs</span>
             </button>
+
+            {/* Food Journal Content */}
+            {showFoodJournal && (
+              <div className="ml-4 space-y-2 pl-4">
+                <button
+                  onClick={() => handleNavigation('food')}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                    currentView === 'food'
+                      ? activeClass
+                      : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                  }`}
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="font-medium">Log</span>
+                  {currentView === 'food' && (
+                    <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleNavigation('food-history')}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                    currentView === 'food-history'
+                      ? activeClass
+                      : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                  }`}
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium">{gender === 'female' ? 'Herstory' : 'History'}</span>
+                  {currentView === 'food-history' && (
+                    <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleNavigation('food-faq')}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                    currentView === 'food-faq'
+                      ? activeClass
+                      : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                  }`}
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium">Dietary FAQs</span>
+                  {currentView === 'food-faq' && (
+                    <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Physical Therapy - Expandable */}
+            <button
+              onClick={() => setShowPhysicalTherapy(!showPhysicalTherapy)}
+              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800"
+            >
+              <div className="flex items-center gap-3">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <path d="M2 12h1" />
+                  <path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" />
+                  <path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                  <path d="M9 12h6" />
+                  <path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                  <path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2" />
+                  <path d="M22 12h-1" />
+                </svg>
+                <span className="font-medium">Physical Therapy</span>
+              </div>
+              <svg
+                className={`h-5 w-5 transition-transform ${showPhysicalTherapy ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Physical Therapy Content */}
+            {showPhysicalTherapy && (
+              <div className="ml-4 pl-4">
+                <div className="rounded-xl bg-zinc-100 p-4 dark:bg-zinc-800">
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center">Coming Soon</p>
+                </div>
+              </div>
+            )}
+
+            {/* Potty Logger - Expandable */}
+            <button
+              onClick={() => setShowPottyLogger(!showPottyLogger)}
+              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800"
+            >
+              <div className="flex items-center gap-3">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <path d="M3 10a3 7 0 1 0 6 0a3 7 0 1 0 -6 0" />
+                  <path d="M21 10c0 -3.866 -1.343 -7 -3 -7" />
+                  <path d="M6 3h12" />
+                  <path d="M21 10v10l-3 -1l-3 2l-3 -3l-3 2v-10" />
+                  <path d="M6 10h.01" />
+                </svg>
+                <span className="font-medium">Potty Logger</span>
+              </div>
+              <svg
+                className={`h-5 w-5 transition-transform ${showPottyLogger ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Potty Logger Content */}
+            {showPottyLogger && (
+              <div className="ml-4 space-y-2 pl-4">
+                <button
+                  onClick={() => handleNavigation('potty')}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                    currentView === 'potty'
+                      ? activeClass
+                      : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                  }`}
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="font-medium">Log</span>
+                  {currentView === 'potty' && (
+                    <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleNavigation('history')}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                    currentView === 'history'
+                      ? activeClass
+                      : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                  }`}
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium">{gender === 'female' ? 'Herstory' : 'History'}</span>
+                  {currentView === 'history' && (
+                    <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleNavigation('faq')}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                    currentView === 'faq'
+                      ? activeClass
+                      : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                  }`}
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium">Potty FAQs</span>
+                  {currentView === 'faq' && (
+                    <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Water Intake - Expandable */}
+            <button
+              onClick={() => setShowWaterIntake(!showWaterIntake)}
+              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800"
+            >
+              <div className="flex items-center gap-3">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <path d="M10 5h4v-2a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v2" />
+                  <path d="M14 3.5c0 1.626 .507 3.212 1.45 4.537l.05 .07a8.093 8.093 0 0 1 1.5 4.694v6.199a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2v-6.2c0 -1.682 .524 -3.322 1.5 -4.693l.05 -.07a7.823 7.823 0 0 0 1.45 -4.537" />
+                  <path d="M7 14.803a2.4 2.4 0 0 0 1 -.803a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 1 -.805" />
+                </svg>
+                <span className="font-medium">Water Intake</span>
+              </div>
+              <svg
+                className={`h-5 w-5 transition-transform ${showWaterIntake ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Water Intake Content */}
+            {showWaterIntake && (
+              <div className="ml-4 space-y-2 pl-4">
+                <button
+                  onClick={() => handleNavigation('water')}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                    currentView === 'water'
+                      ? activeClass
+                      : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                  }`}
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="font-medium">Log</span>
+                  {currentView === 'water' && (
+                    <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleNavigation('water-history')}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                    currentView === 'water-history'
+                      ? activeClass
+                      : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                  }`}
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium">{gender === 'female' ? 'Herstory' : 'History'}</span>
+                  {currentView === 'water-history' && (
+                    <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleNavigation('water-faq')}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                    currentView === 'water-faq'
+                      ? activeClass
+                      : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                  }`}
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium">Hydration FAQs</span>
+                  {currentView === 'water-faq' && (
+                    <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* Divider */}
             <div className="my-3 border-t border-zinc-200 dark:border-zinc-700" />
@@ -211,6 +535,37 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
             {/* Settings Content */}
             {showSettings && (
               <div className="ml-4 space-y-2 pl-4">
+                {/* Profile */}
+                <div>
+                  <button
+                    onClick={() => setShowProfile(!showProfile)}
+                    className="flex w-full items-center gap-2 py-2 text-sm font-medium text-zinc-500 dark:text-zinc-400"
+                  >
+                    <svg
+                      className={`h-4 w-4 transition-transform ${showProfile ? 'rotate-90' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                    Profile
+                  </button>
+                  {showProfile && (
+                    <div className="space-y-2 pb-2">
+                      <a
+                        href="/profile"
+                        className="flex w-full items-center gap-3 rounded-xl bg-zinc-100 px-4 py-3 text-zinc-700 transition-colors active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
+                      >
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span className="font-medium">Edit Profile</span>
+                      </a>
+                    </div>
+                  )}
+                </div>
+
                 {/* Gender Selection */}
                 <div>
                   <button
@@ -235,7 +590,7 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
                       ].map((option) => (
                         <button
                           key={option.value}
-                          onClick={() => setGender(option.value)}
+                          onClick={() => handleGenderChange(option.value)}
                           className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
                             gender === option.value
                               ? activeClass
@@ -282,14 +637,14 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
                           key={option.value}
                           onClick={() => handleThemeChange(option.value)}
                           className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
-                            theme === option.value
+                            localTheme === option.value
                               ? activeClass
                               : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
                           }`}
                         >
                           <option.Icon className="h-5 w-5" />
                           <span className="font-medium">{option.label}</span>
-                          {theme === option.value && (
+                          {localTheme === option.value && (
                             <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
@@ -345,13 +700,24 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
         </div>
 
         {/* Footer content */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-zinc-200 p-4 dark:border-zinc-700">
-          <h3 className={`text-lg font-bold bg-gradient-to-r ${gender === 'female' ? 'from-pink-400 via-purple-500 to-purple-400' : 'from-teal-400 via-blue-500 to-blue-400'} bg-clip-text text-transparent`}>Potty Logger</h3>
+        <div className="absolute bottom-0 left-0 right-0 border-t border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
+          {/* Logout Button */}
+          <button
+            onClick={handleSignOut}
+            className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-zinc-200 bg-zinc-50 px-4 py-3 font-medium text-zinc-700 transition-colors hover:bg-zinc-100 active:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:active:bg-zinc-600"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Sign Out
+          </button>
+
+          <h3 className={`text-lg font-bold bg-gradient-to-r ${gender === 'female' ? 'from-pink-400 via-purple-500 to-purple-400' : 'from-teal-400 via-blue-500 to-blue-400'} bg-clip-text text-transparent`}>Habit-a-Day</h3>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Simple bathroom tracking for health and wellness.
+            Start your journey to healing one day at a time.
           </p>
           <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
-            © 2026 Built with 💩 by David Anderson.
+            © 2026 Built for <span title="Shits and Giggles" className="cursor-default">💩 &amp; 🤭</span>.
           </p>
           <p className="text-xs text-zinc-400 dark:text-zinc-500">
             All rights reserved. Version 1.0

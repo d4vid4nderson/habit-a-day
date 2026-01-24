@@ -10,13 +10,13 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Potty Logger",
-  description: "Track your bathroom visits",
+  title: "Habit-a-Day",
+  description: "Track your daily habits",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Potty Logger",
+    title: "Habit-a-Day",
   },
 };
 
@@ -36,7 +36,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icon-192" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body
         className={`${poppins.className} antialiased`}

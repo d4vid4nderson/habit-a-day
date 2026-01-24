@@ -1,18 +1,65 @@
 'use client';
 
 import { BathroomEntry } from '@/lib/types';
-import { formatTime, formatDate, groupEntriesByDate } from '@/lib/storage';
 import { PoopIcon, PeeIcon } from './icons/BathroomIcons';
-import { useGender } from '@/lib/GenderContext';
+import { useProfile } from '@/lib/hooks/useProfile';
 
 interface HistoryProps {
   entries: BathroomEntry[];
   onDelete: (id: string) => void;
 }
 
+function formatTime(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+function formatDate(timestamp: number): string {
+  const date = new Date(timestamp);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return 'Today';
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  }
+
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function getDateKey(timestamp: number): string {
+  return new Date(timestamp).toDateString();
+}
+
+function groupEntriesByDate(entries: BathroomEntry[]): Map<string, BathroomEntry[]> {
+  const grouped = new Map<string, BathroomEntry[]>();
+
+  // Sort by most recent first
+  const sorted = [...entries].sort((a, b) => b.timestamp - a.timestamp);
+
+  for (const entry of sorted) {
+    const key = getDateKey(entry.timestamp);
+    if (!grouped.has(key)) {
+      grouped.set(key, []);
+    }
+    grouped.get(key)!.push(entry);
+  }
+
+  return grouped;
+}
+
 export function History({ entries, onDelete }: HistoryProps) {
   const grouped = groupEntriesByDate(entries);
-  const { gender } = useGender();
+  const { gender } = useProfile();
 
   const poopColor = gender === 'female' ? 'text-pink-600 dark:text-pink-400' : 'text-teal-600 dark:text-teal-400';
   const peeColor = gender === 'female' ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400';

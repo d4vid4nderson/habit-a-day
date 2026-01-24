@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { BathroomType } from '@/lib/types';
 import { PoopIcon, PeeIcon } from './icons/BathroomIcons';
-import { useGender } from '@/lib/GenderContext';
+import { useProfile } from '@/lib/hooks/useProfile';
 
 interface LogButtonProps {
   type: BathroomType;
@@ -42,7 +42,7 @@ const femaleConfig = {
 
 export function LogButton({ type, onLog }: LogButtonProps) {
   const [isPressed, setIsPressed] = useState(false);
-  const { gender } = useGender();
+  const { gender } = useProfile();
   const config = gender === 'female' ? femaleConfig : maleConfig;
   const { bg, activeBg, ring, iconColor } = config[type];
 

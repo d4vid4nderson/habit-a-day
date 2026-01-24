@@ -1,0 +1,9 @@
+export { SetupWizard } from './SetupWizard';
+export { SetupProgress } from './SetupProgress';
+export { PhotoCapture } from './PhotoCapture';
+export { NameStep } from './steps/NameStep';
+export { GenderStep } from './steps/GenderStep';
+export { AgeStep } from './steps/AgeStep';
+export { PhotoStep } from './steps/PhotoStep';
+export { WeightStep } from './steps/WeightStep';
+export { GoalsStep } from './steps/GoalsStep';
