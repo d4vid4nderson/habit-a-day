@@ -17,6 +17,8 @@ import { LogButton } from '@/components/LogButton';
 import { History } from '@/components/History';
 import { Calendar } from '@/components/Calendar';
 import { Menu } from '@/components/Menu';
+import { DesktopNav } from '@/components/DesktopNav';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { MigrationPrompt } from '@/components/MigrationPrompt';
 import { BathroomType, BathroomEntry, WaterUnit, MealType } from '@/lib/types';
 import { PoopIcon, PeeIcon, SimplePoopIcon, SimpleDropletIcon } from '@/components/icons/BathroomIcons';
@@ -649,7 +651,16 @@ export default function Home() {
           currentView="faq"
         />
 
-        <header className={`sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
+        <DesktopNav
+          currentView="faq"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenSettings={() => setMenuOpen(true)}
+          gender={gender}
+          avatarUrl={profile?.avatar_url}
+          userName={profile?.first_name || undefined}
+        />
+
+        <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
           <div className="flex items-center justify-between px-4 py-5">
             <button
               onClick={() => setCurrentView('potty')}
@@ -667,7 +678,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-4 pb-24">
+        <main className="mx-auto max-w-lg px-4 py-4 pb-24 lg:pb-4">
           {/* FAQ Tabs */}
           <div className="mb-6 flex rounded-2xl bg-white p-1.5 shadow-sm dark:bg-zinc-800">
             <button
@@ -765,16 +776,12 @@ export default function Home() {
           </div>
         </main>
 
-        {/* Floating Menu Button */}
-        <button
-          onClick={() => setMenuOpen(true)}
-          className={`fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg active:scale-95 transition-transform bg-gradient-to-r ${headerGradient}`}
-          aria-label="Open menu"
-        >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <MobileBottomNav
+          currentView="faq"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenMore={() => setMenuOpen(true)}
+          gender={gender}
+        />
       </div>
     );
   }
@@ -792,7 +799,16 @@ export default function Home() {
           currentView="history"
         />
 
-        <header className={`sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
+        <DesktopNav
+          currentView="history"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenSettings={() => setMenuOpen(true)}
+          gender={gender}
+          avatarUrl={profile?.avatar_url}
+          userName={profile?.first_name || undefined}
+        />
+
+        <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
           <div className="flex items-center justify-between px-4 py-5">
             <button
               onClick={() => {
@@ -813,7 +829,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-4 pb-24">
+        <main className="mx-auto max-w-lg px-4 py-4 pb-24 lg:pb-4">
           <div className="space-y-4">
             {/* Calendar */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
@@ -1078,16 +1094,12 @@ export default function Home() {
           </div>
         </main>
 
-        {/* Floating Menu Button */}
-        <button
-          onClick={() => setMenuOpen(true)}
-          className={`fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg active:scale-95 transition-transform bg-gradient-to-r ${headerGradient}`}
-          aria-label="Open menu"
-        >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <MobileBottomNav
+          currentView="history"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenMore={() => setMenuOpen(true)}
+          gender={gender}
+        />
       </div>
     );
   }
@@ -1106,7 +1118,19 @@ export default function Home() {
           currentView="potty"
         />
 
-        <header className={`sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
+        <DesktopNav
+          currentView="potty"
+          onNavigate={(view) => {
+            setSelectedType(null);
+            setCurrentView(view);
+          }}
+          onOpenSettings={() => setMenuOpen(true)}
+          gender={gender}
+          avatarUrl={profile?.avatar_url}
+          userName={profile?.first_name || undefined}
+        />
+
+        <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
           <div className="flex items-center justify-between px-4 py-5">
             <button
               onClick={handleCancel}
@@ -1124,7 +1148,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-4 pb-24">
+        <main className="mx-auto max-w-lg px-4 py-4 pb-24 lg:pb-4">
           <div className="space-y-4 pt-8">
             {selectedType === 'pee' && (
               <div className="flex flex-col items-center justify-center py-12 space-y-2">
@@ -1225,16 +1249,15 @@ export default function Home() {
           </div>
         </main>
 
-        {/* Floating Menu Button */}
-        <button
-          onClick={() => setMenuOpen(true)}
-          className={`fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg active:scale-95 transition-transform bg-gradient-to-r ${headerGradient}`}
-          aria-label="Open menu"
-        >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <MobileBottomNav
+          currentView="potty"
+          onNavigate={(view) => {
+            setSelectedType(null);
+            setCurrentView(view);
+          }}
+          onOpenMore={() => setMenuOpen(true)}
+          gender={gender}
+        />
       </div>
     );
   }
@@ -1305,7 +1328,16 @@ export default function Home() {
           currentView="potty"
         />
 
-        <header className={`sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
+        <DesktopNav
+          currentView="potty"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenSettings={() => setMenuOpen(true)}
+          gender={gender}
+          avatarUrl={profile?.avatar_url}
+          userName={profile?.first_name || undefined}
+        />
+
+        <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
           <div className="flex items-center justify-between px-4 py-5">
             <button
               onClick={() => setCurrentView('home')}
@@ -1323,7 +1355,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-6 pb-24">
+        <main className="mx-auto max-w-lg px-4 py-6 pb-24 lg:pb-6">
           <div className="space-y-4">
             {/* Today's Stats Card */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
@@ -1497,16 +1529,12 @@ export default function Home() {
           </div>
         </main>
 
-        {/* Floating Menu Button */}
-        <button
-          onClick={() => setMenuOpen(true)}
-          className={`fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg active:scale-95 transition-transform bg-gradient-to-r ${headerGradient}`}
-          aria-label="Open menu"
-        >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <MobileBottomNav
+          currentView="potty"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenMore={() => setMenuOpen(true)}
+          gender={gender}
+        />
       </div>
     );
   }
@@ -1526,7 +1554,16 @@ export default function Home() {
           currentView="water"
         />
 
-        <header className={`sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
+        <DesktopNav
+          currentView="water"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenSettings={() => setMenuOpen(true)}
+          gender={gender}
+          avatarUrl={profile?.avatar_url}
+          userName={profile?.first_name || undefined}
+        />
+
+        <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
           <div className="flex items-center justify-between px-4 py-5">
             <button
               onClick={() => setCurrentView('home')}
@@ -1544,7 +1581,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-6">
+        <main className="mx-auto max-w-lg px-4 py-6 pb-24 lg:pb-6">
           <div className="space-y-4">
             {/* Animated Water Tank */}
             <div className="rounded-2xl bg-gradient-to-b from-slate-100 to-slate-200 dark:from-zinc-800 dark:to-zinc-900 p-4 shadow-sm overflow-hidden relative z-0">
@@ -1877,16 +1914,12 @@ export default function Home() {
           </div>
         </main>
 
-        {/* Floating Menu Button */}
-        <button
-          onClick={() => setMenuOpen(true)}
-          className={`fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg active:scale-95 transition-transform bg-gradient-to-r ${headerGradient}`}
-          aria-label="Open menu"
-        >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <MobileBottomNav
+          currentView="water"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenMore={() => setMenuOpen(true)}
+          gender={gender}
+        />
       </div>
     );
   }
@@ -1927,7 +1960,16 @@ export default function Home() {
           currentView="water-history"
         />
 
-        <header className={`sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
+        <DesktopNav
+          currentView="water-history"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenSettings={() => setMenuOpen(true)}
+          gender={gender}
+          avatarUrl={profile?.avatar_url}
+          userName={profile?.first_name || undefined}
+        />
+
+        <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
           <div className="flex items-center justify-between px-4 py-5">
             <button
               onClick={() => setCurrentView('water')}
@@ -1945,7 +1987,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-4 pb-24">
+        <main className="mx-auto max-w-lg px-4 py-4 pb-24 lg:pb-4">
           <div className="space-y-4">
             {/* Calendar */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
@@ -2019,16 +2061,12 @@ export default function Home() {
           </div>
         </main>
 
-        {/* Floating Menu Button */}
-        <button
-          onClick={() => setMenuOpen(true)}
-          className={`fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg active:scale-95 transition-transform bg-gradient-to-r ${headerGradient}`}
-          aria-label="Open menu"
-        >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <MobileBottomNav
+          currentView="water-history"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenMore={() => setMenuOpen(true)}
+          gender={gender}
+        />
       </div>
     );
   }
@@ -2139,7 +2177,16 @@ export default function Home() {
           currentView="water-faq"
         />
 
-        <header className={`sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
+        <DesktopNav
+          currentView="water-faq"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenSettings={() => setMenuOpen(true)}
+          gender={gender}
+          avatarUrl={profile?.avatar_url}
+          userName={profile?.first_name || undefined}
+        />
+
+        <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
           <div className="flex items-center justify-between px-4 py-5">
             <button
               onClick={() => setCurrentView('water')}
@@ -2157,7 +2204,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-4 pb-24">
+        <main className="mx-auto max-w-lg px-4 py-4 pb-24 lg:pb-4">
           {/* Search */}
           <div className="relative mb-4">
             <svg
@@ -2230,16 +2277,12 @@ export default function Home() {
           </div>
         </main>
 
-        {/* Floating Menu Button */}
-        <button
-          onClick={() => setMenuOpen(true)}
-          className={`fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg active:scale-95 transition-transform bg-gradient-to-r ${headerGradient}`}
-          aria-label="Open menu"
-        >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <MobileBottomNav
+          currentView="water-faq"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenMore={() => setMenuOpen(true)}
+          gender={gender}
+        />
       </div>
     );
   }
@@ -2260,7 +2303,16 @@ export default function Home() {
           currentView="food"
         />
 
-        <header className={`sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
+        <DesktopNav
+          currentView="food"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenSettings={() => setMenuOpen(true)}
+          gender={gender}
+          avatarUrl={profile?.avatar_url}
+          userName={profile?.first_name || undefined}
+        />
+
+        <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
           <div className="flex items-center justify-between px-4 py-5">
             <button
               onClick={() => setCurrentView('home')}
@@ -2278,7 +2330,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-6">
+        <main className="mx-auto max-w-lg px-4 py-6 pb-24 lg:pb-6">
           <div className="space-y-4">
             {/* Progress Card */}
             <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-800">
@@ -2540,16 +2592,12 @@ export default function Home() {
           </div>
         </main>
 
-        {/* Floating Menu Button */}
-        <button
-          onClick={() => setMenuOpen(true)}
-          className={`fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg active:scale-95 transition-transform bg-gradient-to-r ${headerGradient}`}
-          aria-label="Open menu"
-        >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <MobileBottomNav
+          currentView="food"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenMore={() => setMenuOpen(true)}
+          gender={gender}
+        />
 
         {/* Calorie AI Modal */}
         <CalorieAIModal
@@ -2581,7 +2629,16 @@ export default function Home() {
           currentView="food-history"
         />
 
-        <header className={`sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
+        <DesktopNav
+          currentView="food-history"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenSettings={() => setMenuOpen(true)}
+          gender={gender}
+          avatarUrl={profile?.avatar_url}
+          userName={profile?.first_name || undefined}
+        />
+
+        <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
           <div className="flex items-center justify-between px-4 py-5">
             <button
               onClick={() => setCurrentView('food')}
@@ -2599,7 +2656,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-4 pb-24">
+        <main className="mx-auto max-w-lg px-4 py-4 pb-24 lg:pb-4">
           <div className="space-y-4">
             {/* Calendar */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
@@ -2674,16 +2731,12 @@ export default function Home() {
           </div>
         </main>
 
-        {/* Floating Menu Button */}
-        <button
-          onClick={() => setMenuOpen(true)}
-          className={`fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg active:scale-95 transition-transform bg-gradient-to-r ${headerGradient}`}
-          aria-label="Open menu"
-        >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <MobileBottomNav
+          currentView="food-history"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenMore={() => setMenuOpen(true)}
+          gender={gender}
+        />
       </div>
     );
   }
@@ -2794,7 +2847,16 @@ export default function Home() {
           currentView="food-faq"
         />
 
-        <header className={`sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
+        <DesktopNav
+          currentView="food-faq"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenSettings={() => setMenuOpen(true)}
+          gender={gender}
+          avatarUrl={profile?.avatar_url}
+          userName={profile?.first_name || undefined}
+        />
+
+        <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
           <div className="flex items-center justify-between px-4 py-5">
             <button
               onClick={() => setCurrentView('food')}
@@ -2812,7 +2874,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-4 pb-24">
+        <main className="mx-auto max-w-lg px-4 py-4 pb-24 lg:pb-4">
           <div className="space-y-4">
             {/* Personalized Info Banner */}
             <div className={`rounded-2xl p-4 ${
@@ -2864,16 +2926,12 @@ export default function Home() {
           </div>
         </main>
 
-        {/* Floating Menu Button */}
-        <button
-          onClick={() => setMenuOpen(true)}
-          className={`fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg active:scale-95 transition-transform bg-gradient-to-r ${headerGradient}`}
-          aria-label="Open menu"
-        >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <MobileBottomNav
+          currentView="food-faq"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenMore={() => setMenuOpen(true)}
+          gender={gender}
+        />
       </div>
     );
   }
@@ -2892,7 +2950,16 @@ export default function Home() {
         currentView="home"
       />
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <DesktopNav
+        currentView="home"
+        onNavigate={(view) => setCurrentView(view)}
+        onOpenSettings={() => setMenuOpen(true)}
+        gender={gender}
+        avatarUrl={profile?.avatar_url}
+        userName={profile?.first_name || undefined}
+      />
+
+      <main className="mx-auto max-w-6xl px-4 py-6 pb-24 lg:pb-6">
         {/* Welcome Hero */}
         <div className="pt-4 pb-8">
           <div className="flex items-center gap-4">
@@ -2941,7 +3008,7 @@ export default function Home() {
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Content - Graph Area */}
-          <div className="flex-1 order-2 lg:order-1">
+          <div className="flex-1 order-1 lg:order-1">
             <div className={`rounded-3xl bg-white/80 backdrop-blur-sm p-6 shadow-xl dark:bg-zinc-800/80 min-h-[400px] border border-white/50 dark:border-zinc-700/50 ${gender === 'female' ? 'shadow-pink-500/5' : 'shadow-teal-500/5'}`}>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -3078,7 +3145,7 @@ export default function Home() {
                     {selectedTrackers.size === 3 ? 'Clear All' : 'Select All'}
                   </button>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   {/* Food Journal - Toggle */}
                   <button
                     onClick={() => toggleTracker('food')}
@@ -3188,7 +3255,7 @@ export default function Home() {
           </div>
 
           {/* Right Sidebar */}
-          <div className="w-full lg:w-80 order-1 lg:order-2 space-y-4">
+          <div className="w-full lg:w-80 order-2 lg:order-2 space-y-4">
             {/* Recovery Info Card */}
             <div className={`rounded-3xl p-6 shadow-xl border border-white/50 dark:border-zinc-700/50 overflow-hidden relative ${gender === 'female' ? 'bg-gradient-to-br from-pink-500 to-purple-600' : 'bg-gradient-to-br from-teal-500 to-blue-600'}`}>
               <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
@@ -3301,16 +3368,12 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Floating Menu Button */}
-      <button
-        onClick={() => setMenuOpen(true)}
-        className={`fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg active:scale-95 transition-transform bg-gradient-to-r ${headerGradient}`}
-        aria-label="Open menu"
-      >
-        <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
+      <MobileBottomNav
+        currentView="home"
+        onNavigate={(view) => setCurrentView(view)}
+        onOpenMore={() => setMenuOpen(true)}
+        gender={gender}
+      />
     </div>
   );
 }
