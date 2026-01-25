@@ -191,28 +191,30 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
         <div className="p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
 
           <div className="space-y-2">
-            {/* Home */}
-            <button
-              onClick={() => handleNavigation('home')}
-              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
-                currentView === 'home'
-                  ? activeClass
-                  : 'text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800'
-              }`}
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              <span className="font-medium">Home</span>
-            </button>
+            {/* Navigation links - hidden on desktop since they're in the header */}
+            <div className="lg:hidden">
+              {/* Home */}
+              <button
+                onClick={() => handleNavigation('home')}
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                  currentView === 'home'
+                    ? activeClass
+                    : 'text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800'
+                }`}
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span className="font-medium">Home</span>
+              </button>
 
-            {/* Divider */}
-            <div className="my-3 border-t border-zinc-200 dark:border-zinc-700" />
+              {/* Divider */}
+              <div className="my-3 border-t border-zinc-200 dark:border-zinc-700" />
 
-            {/* Habit Tracker Section Header */}
-            <p className="px-4 text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-              Habit Tracker
-            </p>
+              {/* Habit Tracker Section Header */}
+              <p className="px-4 text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                Habit Tracker
+              </p>
 
             {/* Food Journal - Expandable */}
             <button
@@ -507,8 +509,9 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
               </div>
             )}
 
-            {/* Divider */}
-            <div className="my-3 border-t border-zinc-200 dark:border-zinc-700" />
+            {/* Divider - hidden on desktop */}
+            <div className="my-3 border-t border-zinc-200 dark:border-zinc-700 lg:hidden" />
+            </div>{/* End of mobile-only navigation */}
 
             {/* Settings */}
             <button
