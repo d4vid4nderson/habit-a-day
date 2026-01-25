@@ -258,8 +258,24 @@ export async function acceptTerms(userId: string): Promise<UserProfile> {
 }
 
 export function hasAcceptedCurrentTerms(profile: UserProfile | null): boolean {
-  if (!profile) return false;
-  if (!profile.terms_accepted_at) return false;
+  if (!profile) {
+    console.log('hasAcceptedCurrentTerms: no profile');
+    return false;
+  }
+  if (!profile.terms_accepted_at) {
+    console.log('hasAcceptedCurrentTerms: no terms_accepted_at', {
+      profileId: profile.id,
+      termsAcceptedAt: profile.terms_accepted_at,
+      termsVersion: profile.terms_version
+    });
+    return false;
+  }
   // Check if they've accepted the current version
-  return profile.terms_version === CURRENT_TERMS_VERSION;
+  const accepted = profile.terms_version === CURRENT_TERMS_VERSION;
+  console.log('hasAcceptedCurrentTerms:', {
+    accepted,
+    profileVersion: profile.terms_version,
+    currentVersion: CURRENT_TERMS_VERSION
+  });
+  return accepted;
 }

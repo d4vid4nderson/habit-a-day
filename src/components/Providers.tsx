@@ -22,17 +22,23 @@ function TermsGate({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Don't show while loading
+    // Don't show while loading - keep current state
     if (authLoading || profileLoading) {
       return;
     }
 
+    // Debug logging
+    console.log('TermsGate check:', {
+      hasUser: !!user,
+      hasProfile: !!profile,
+      termsAccepted,
+      termsAcceptedAt: profile?.terms_accepted_at,
+      termsVersion: profile?.terms_version,
+    });
+
     // Show modal if user is logged in, has a profile, but hasn't accepted terms
-    if (user && profile && !termsAccepted) {
-      setShowTermsModal(true);
-    } else {
-      setShowTermsModal(false);
-    }
+    const shouldShowModal = !!(user && profile && !termsAccepted);
+    setShowTermsModal(shouldShowModal);
   }, [user, profile, termsAccepted, authLoading, profileLoading, pathname]);
 
   const handleTermsAccepted = () => {
