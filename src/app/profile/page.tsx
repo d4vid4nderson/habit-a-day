@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Gender, WeightUnit, UserGoal } from '@/lib/types';
@@ -228,12 +227,10 @@ export default function ProfilePage() {
             className={`relative mb-4 h-24 w-24 overflow-hidden rounded-full border-4 ${accentBorder}`}
           >
             {avatarUrl ? (
-              <Image
+              <img
                 src={avatarUrl}
                 alt="Profile"
-                fill
-                className="object-cover"
-                unoptimized={avatarUrl.startsWith('blob:') || avatarUrl.includes('dicebear')}
+                className="h-full w-full object-cover"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-zinc-100 dark:bg-zinc-800">
