@@ -43,7 +43,9 @@ export async function GET(request: Request) {
         const isOAuthAvatar = profile.avatar_url && (
           profile.avatar_url.includes('googleusercontent.com') ||
           profile.avatar_url.includes('fbcdn.net') ||
+          profile.avatar_url.includes('fbsbx.com') ||
           profile.avatar_url.includes('graph.facebook.com') ||
+          profile.avatar_url.includes('facebook.com') ||
           profile.avatar_url.includes('appleid.apple.com')
         );
 

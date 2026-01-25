@@ -108,7 +108,7 @@ export function PhotoStep({
       };
     }
 
-    if (url.includes('fbcdn.net') || url.includes('facebook.com')) {
+    if (url.includes('fbcdn.net') || url.includes('facebook.com') || url.includes('fbsbx.com')) {
       return {
         label: 'From Facebook',
         icon: (
