@@ -449,7 +449,7 @@ function HomeContent() {
   // Food journal handlers
   const handleFoodLog = async () => {
     const calories = parseInt(foodCalories);
-    if (!calories || calories <= 0) return;
+    if (isNaN(calories) || calories < 0) return;
 
     // Parse time if provided, otherwise use current time
     let timestamp = Date.now();
