@@ -76,6 +76,13 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
     setLocalTheme(theme);
   }, [theme]);
 
+  // Auto-expand settings on desktop when menu opens
+  useEffect(() => {
+    if (isOpen && window.innerWidth >= 1024) {
+      setShowSettings(true);
+    }
+  }, [isOpen]);
+
   // Apply theme to DOM
   useEffect(() => {
     applyTheme(localTheme);
