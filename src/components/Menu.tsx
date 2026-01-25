@@ -5,6 +5,8 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Gender } from '@/lib/types';
 import { Theme } from '@/lib/services/profileService';
+import { APP_VERSION } from '@/lib/version';
+import Link from 'next/link';
 
 // Store console logs globally for bug reports
 const consoleLogs: string[] = [];
@@ -786,14 +788,23 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
             © 2026 Built for <span title="Shits and Giggles" className="cursor-default">💩 &amp; 🤭</span>.
           </p>
           <p className="text-xs text-zinc-400 dark:text-zinc-500">
-            All rights reserved. Version 1.0
+            All rights reserved. Version {APP_VERSION}
           </p>
-          <button
-            onClick={() => setShowTermsModal(true)}
-            className={`mt-2 text-xs font-medium underline ${gender === 'female' ? 'text-pink-500 hover:text-pink-600' : 'text-teal-500 hover:text-teal-600'}`}
-          >
-            Terms & Conditions
-          </button>
+          <p className="mt-2 text-xs">
+            <Link
+              href="/privacy"
+              className={`font-medium underline ${gender === 'female' ? 'text-pink-500 hover:text-pink-600' : 'text-teal-500 hover:text-teal-600'}`}
+            >
+              Privacy Policy
+            </Link>
+            <span className="mx-2 text-zinc-400">·</span>
+            <Link
+              href="/terms"
+              className={`font-medium underline ${gender === 'female' ? 'text-pink-500 hover:text-pink-600' : 'text-teal-500 hover:text-teal-600'}`}
+            >
+              Terms & Conditions
+            </Link>
+          </p>
         </div>
       </div>
 
