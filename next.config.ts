@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Force rebuild - native select dropdowns
+// Force rebuild - navigation system update
 const nextConfig: NextConfig = {
   devIndicators: {
     position: 'bottom-left',
