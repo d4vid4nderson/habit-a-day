@@ -20,7 +20,7 @@ import { Menu } from '@/components/Menu';
 import { DesktopNav } from '@/components/DesktopNav';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { MigrationPrompt } from '@/components/MigrationPrompt';
-import { BathroomType, BathroomEntry, WaterUnit, MealType, UrineColor, URINE_COLORS } from '@/lib/types';
+import { BathroomType, BathroomEntry, WaterUnit, MealType, UrineColor, URINE_COLORS, StreamStrength } from '@/lib/types';
 import { PoopIcon, PeeIcon, SimplePoopIcon, SimpleDropletIcon } from '@/components/icons/BathroomIcons';
 import { CalorieAIModal } from '@/components/CalorieAIModal';
 import { Flame, Sparkles } from 'lucide-react';
@@ -326,7 +326,8 @@ function HomeContent() {
   const handleSave = async () => {
     if (!selectedType) return;
     try {
-      await createEntry(selectedType, notes, undefined, selectedUrineColor);
+      const streamStrength = selectedType === 'pee' && peeStream ? peeStream as StreamStrength : undefined;
+      await createEntry(selectedType, notes, undefined, selectedUrineColor, streamStrength);
       setSelectedType(null);
       setNotes('');
       setPoopConsistency('');
@@ -351,7 +352,8 @@ function HomeContent() {
     entryDate.setHours(hours, minutes, 0, 0);
 
     try {
-      await createEntry(type, addEntryNotes, entryDate.getTime());
+      const streamStrength = type === 'pee' && addEntryStream ? addEntryStream as StreamStrength : undefined;
+      await createEntry(type, addEntryNotes, entryDate.getTime(), undefined, streamStrength);
       setAddDropdownOpen(false);
       setAddEntryType(null);
       setAddEntryHour('');
@@ -1577,9 +1579,9 @@ function HomeContent() {
                               : 'bg-blue-100 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400'
                         }`}>
                           {entry.type === 'poop' ? (
-                            <SimplePoopIcon className="w-6 h-6" />
+                            <PoopIcon className="w-6 h-6" />
                           ) : (
-                            <SimpleDropletIcon className="w-6 h-6" />
+                            <PeeIcon className="w-6 h-6" />
                           )}
                         </div>
                         <div className="flex-1">
@@ -1605,6 +1607,11 @@ function HomeContent() {
                             {entry.type === 'pee' && entry.urine_color && (
                               <span className="ml-1">
                                 · {URINE_COLORS.find(c => c.level === entry.urine_color)?.status}
+                              </span>
+                            )}
+                            {entry.type === 'pee' && entry.stream_strength && (
+                              <span className="ml-1">
+                                · {entry.stream_strength.charAt(0).toUpperCase() + entry.stream_strength.slice(1)} stream
                               </span>
                             )}
                           </p>

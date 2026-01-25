@@ -27,6 +27,8 @@ export type WeightUnit = 'kg' | 'lbs';
 
 export type HeightUnit = 'imperial' | 'metric';
 
+export type StreamStrength = 'strong' | 'normal' | 'weak' | 'intermittent' | 'dribbling';
+
 export interface BathroomEntry {
   id: string;
   user_id?: string;
@@ -34,6 +36,7 @@ export interface BathroomEntry {
   timestamp: number; // Unix timestamp in milliseconds
   notes?: string;
   urine_color?: UrineColor; // Only for pee entries
+  stream_strength?: StreamStrength; // Only for pee entries
 }
 
 export interface TrackerData {

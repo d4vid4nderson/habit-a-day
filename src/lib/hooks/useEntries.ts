@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { BathroomEntry, BathroomType, UrineColor } from '@/lib/types';
+import { BathroomEntry, BathroomType, UrineColor, StreamStrength } from '@/lib/types';
 import {
   fetchEntries,
   createEntry as createEntryService,
@@ -54,7 +54,7 @@ export function useEntries() {
   }, [user]);
 
   const createEntry = useCallback(
-    async (type: BathroomType, notes?: string, timestamp?: number, urineColor?: UrineColor) => {
+    async (type: BathroomType, notes?: string, timestamp?: number, urineColor?: UrineColor, streamStrength?: StreamStrength) => {
       if (!user) return;
 
       // Optimistic update
@@ -65,12 +65,13 @@ export function useEntries() {
         timestamp: timestamp || Date.now(),
         notes: notes?.trim() || undefined,
         urine_color: type === 'pee' ? urineColor : undefined,
+        stream_strength: type === 'pee' ? streamStrength : undefined,
       };
 
       setEntries((prev) => [optimisticEntry, ...prev]);
 
       try {
-        const newEntry = await createEntryService(user.id, type, notes, timestamp, urineColor);
+        const newEntry = await createEntryService(user.id, type, notes, timestamp, urineColor, streamStrength);
         // Replace optimistic entry with real one
         setEntries((prev) =>
           prev.map((e) => (e.id === tempId ? newEntry : e))

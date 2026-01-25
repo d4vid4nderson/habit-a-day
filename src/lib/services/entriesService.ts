@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import { BathroomEntry, BathroomType, UrineColor } from '@/lib/types';
+import { BathroomEntry, BathroomType, UrineColor, StreamStrength } from '@/lib/types';
 
 function getSupabase() {
   return createClient();
@@ -12,6 +12,7 @@ export interface DbBathroomEntry {
   timestamp: number;
   notes: string | null;
   urine_color: number | null;
+  stream_strength: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +24,7 @@ function toAppEntry(dbEntry: DbBathroomEntry): BathroomEntry {
     timestamp: dbEntry.timestamp,
     notes: dbEntry.notes || undefined,
     urine_color: dbEntry.urine_color as UrineColor | undefined,
+    stream_strength: dbEntry.stream_strength as StreamStrength | undefined,
   };
 }
 
@@ -46,7 +48,8 @@ export async function createEntry(
   type: BathroomType,
   notes?: string,
   timestamp?: number,
-  urineColor?: UrineColor
+  urineColor?: UrineColor,
+  streamStrength?: StreamStrength
 ): Promise<BathroomEntry> {
   const now = timestamp || Date.now();
 
@@ -58,6 +61,7 @@ export async function createEntry(
       timestamp: now,
       notes: notes?.trim() || null,
       urine_color: type === 'pee' ? urineColor || null : null,
+      stream_strength: type === 'pee' ? streamStrength || null : null,
     })
     .select()
     .single();
