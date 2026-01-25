@@ -128,6 +128,12 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const screenshotInputRef = useRef<HTMLInputElement>(null);
 
+  // Get avatar URL from profile or fallback to user metadata
+  const userMetadata = user?.user_metadata || {};
+  const avatarUrl = profile?.avatar_url ||
+    userMetadata.avatar_url ||
+    (typeof userMetadata.picture === 'string' ? userMetadata.picture : null);
+
   // Sync local theme state with profile theme
   useEffect(() => {
     setLocalTheme(theme);
@@ -215,9 +221,9 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
         <div className="flex items-center gap-3 border-b border-zinc-200 p-4 dark:border-zinc-700">
           {user && profile && (
             <>
-              {profile.avatar_url ? (
+              {avatarUrl ? (
                 <img
-                  src={profile.avatar_url}
+                  src={avatarUrl}
                   alt="Profile"
                   className="h-12 w-12 rounded-full object-cover"
                   referrerPolicy="no-referrer"
