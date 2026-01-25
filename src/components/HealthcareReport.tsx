@@ -289,7 +289,7 @@ export function HealthcareReport({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-zinc-200 dark:border-zinc-700 pb-safe">
+        <div className="p-4 pb-6 border-t border-zinc-200 dark:border-zinc-700">
           {isComplete ? (
             <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400 py-2">
               <CheckCircle className="w-5 h-5" />
