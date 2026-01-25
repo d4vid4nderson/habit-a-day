@@ -17,7 +17,21 @@ export async function GET(request: Request) {
 
       // Extract OAuth provider avatar URL from user metadata
       const userMetadata = user.user_metadata || {};
-      const oauthAvatarUrl = userMetadata.avatar_url || userMetadata.picture || null;
+
+      // Handle different avatar URL formats from providers:
+      // - Google: avatar_url (direct string)
+      // - Facebook: picture.data.url (nested) or picture (if string)
+      // - Apple: picture (direct string)
+      let oauthAvatarUrl: string | null = null;
+      if (userMetadata.avatar_url) {
+        oauthAvatarUrl = userMetadata.avatar_url;
+      } else if (typeof userMetadata.picture === 'string') {
+        oauthAvatarUrl = userMetadata.picture;
+      } else if (userMetadata.picture?.data?.url) {
+        // Facebook nested format
+        oauthAvatarUrl = userMetadata.picture.data.url;
+      }
+
       const oauthFullName = userMetadata.full_name || userMetadata.name || null;
 
       // Check if profile exists and get current state
