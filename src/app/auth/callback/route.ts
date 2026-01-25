@@ -72,7 +72,14 @@ export async function GET(request: Request) {
 
       if (provider === 'facebook') {
         // Facebook URLs are temporary and expire. We need to download and store the image.
-        const tempPictureUrl = userMetadata.picture?.data?.url;
+        // Facebook can provide picture as:
+        // - Direct string: userMetadata.picture or userMetadata.avatar_url
+        // - Nested object: userMetadata.picture.data.url
+        const tempPictureUrl =
+          userMetadata.avatar_url ||
+          (typeof userMetadata.picture === 'string' ? userMetadata.picture : null) ||
+          userMetadata.picture?.data?.url;
+
         if (tempPictureUrl) {
           // Download the image and store it in Supabase Storage
           oauthAvatarUrl = await downloadAndStoreFacebookAvatar(supabase, user.id, tempPictureUrl);
