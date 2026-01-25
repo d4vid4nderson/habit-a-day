@@ -117,9 +117,9 @@ export async function getOrCreateProfile(
 export function getDefaultAvatarUrl(userId: string, gender: Gender): string {
   // Use DiceBear API for gender-based default avatars
   if (gender === 'female') {
-    return `https://api.dicebear.com/7.x/lorelei/svg?seed=${userId}`;
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}&top=longHair&accessories=prescription02&accessoriesProbability=30`;
   }
-  return `https://api.dicebear.com/7.x/bottts/svg?seed=${userId}`;
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}&top=shortFlat&facialHair=beardLight&facialHairProbability=50`;
 }
 
 export async function uploadAvatar(
