@@ -1355,8 +1355,11 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-6 pb-24 lg:pb-6">
-          <div className="space-y-4">
+        <main className="mx-auto max-w-lg lg:max-w-5xl px-4 py-6 pb-24 lg:pb-6">
+          {/* Desktop: Two-column layout, Mobile: Single column */}
+          <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+            {/* Left Column - Stats & Log Buttons */}
+            <div className="space-y-4">
             {/* Today's Stats Card */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
               <div className="flex items-center justify-between mb-4">
@@ -1447,7 +1450,10 @@ export default function Home() {
                 <span className="text-white font-black text-xl tracking-tight">PEE&apos;D</span>
               </button>
             </div>
+            </div>
 
+            {/* Right Column - Recent Entries */}
+            <div className="space-y-4 mt-4 lg:mt-0">
             {/* Recent Entries */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
               <div className="flex items-center justify-between mb-3">
@@ -1526,6 +1532,7 @@ export default function Home() {
                 </div>
               )}
             </div>
+            </div>
           </div>
         </main>
 
@@ -1581,8 +1588,11 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-6 pb-24 lg:pb-6">
-          <div className="space-y-4">
+        <main className="mx-auto max-w-lg lg:max-w-5xl px-4 py-6 pb-24 lg:pb-6">
+          {/* Desktop: Two-column layout, Mobile: Single column */}
+          <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+            {/* Left Column - Water Tank & Quick Add */}
+            <div className="space-y-4">
             {/* Animated Water Tank */}
             <div className="rounded-2xl bg-gradient-to-b from-slate-100 to-slate-200 dark:from-zinc-800 dark:to-zinc-900 p-4 shadow-sm overflow-hidden relative z-0">
               {/* Water Tank Container */}
@@ -1799,7 +1809,10 @@ export default function Home() {
                 })}
               </div>
             </div>
+            </div>
 
+            {/* Right Column - Custom Amount & Recent Entries */}
+            <div className="space-y-4 mt-4 lg:mt-0">
             {/* Custom Amount */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
               <div className="flex items-center justify-between mb-3">
@@ -1910,6 +1923,7 @@ export default function Home() {
               ) : (
                 <p className="text-center text-zinc-400 py-4">No entries yet. Start tracking!</p>
               )}
+            </div>
             </div>
           </div>
         </main>
@@ -2330,33 +2344,36 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-4 py-6 pb-24 lg:pb-6">
-          <div className="space-y-4">
-            {/* Progress Card */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-800">
-              <div className="text-center mb-4">
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Today&apos;s Calories</p>
-                <p className={`text-4xl font-bold bg-gradient-to-r ${headerGradient} bg-clip-text text-transparent`}>
-                  {todayCalories}
-                </p>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  of {calorieGoal} cal goal
+        <main className="mx-auto max-w-lg lg:max-w-5xl px-4 py-6 pb-24 lg:pb-6">
+          {/* Desktop: Two-column layout, Mobile: Single column */}
+          <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+            {/* Left Column - Progress & Log Form */}
+            <div className="space-y-4">
+              {/* Progress Card */}
+              <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-800">
+                <div className="text-center mb-4">
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Today&apos;s Calories</p>
+                  <p className={`text-4xl font-bold bg-gradient-to-r ${headerGradient} bg-clip-text text-transparent`}>
+                    {todayCalories}
+                  </p>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    of {calorieGoal} cal goal
+                  </p>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full bg-gradient-to-r ${headerGradient} transition-all duration-500`}
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+                  {progress >= 100 ? '🎯 Goal reached!' : `${calorieGoal - todayCalories} cal remaining`}
                 </p>
               </div>
 
-              {/* Progress Bar */}
-              <div className="h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
-                <div
-                  className={`h-full rounded-full bg-gradient-to-r ${headerGradient} transition-all duration-500`}
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-2">
-                {progress >= 100 ? '🎯 Goal reached!' : `${calorieGoal - todayCalories} cal remaining`}
-              </p>
-            </div>
-
-            {/* Log New Entry */}
+              {/* Log New Entry */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
               <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-3">Log Food Entry</p>
 
@@ -2481,7 +2498,10 @@ export default function Home() {
                 Log Food
               </button>
             </div>
+            </div>
 
+            {/* Right Column - Entries & Targets */}
+            <div className="space-y-4 mt-4 lg:mt-0">
             {/* Today's Entries */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
               <div className="flex items-center justify-between mb-3">
@@ -2588,6 +2608,7 @@ export default function Home() {
               >
                 View Dietary FAQs →
               </button>
+            </div>
             </div>
           </div>
         </main>
