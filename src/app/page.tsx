@@ -2980,54 +2980,7 @@ export default function Home() {
         userName={profile?.first_name || undefined}
       />
 
-      <main className="mx-auto max-w-6xl px-4 py-6 pb-24 lg:pb-6">
-        {/* Welcome Hero */}
-        <div className="pt-4 pb-8">
-          <div className="flex items-center gap-4">
-            <div className="relative h-16 w-16 shrink-0">
-              {/* Gradient border */}
-              <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br shadow-xl ${
-                gender === 'female'
-                  ? 'from-pink-500 via-purple-500 to-fuchsia-400 shadow-pink-500/30'
-                  : 'from-teal-500 via-cyan-500 to-blue-500 shadow-teal-500/30'
-              }`} />
-              {/* Dark interior */}
-              <div className="absolute inset-[4px] rounded-[12px] bg-zinc-900 flex items-center justify-center">
-                <svg className="h-8 w-8" viewBox="0 0 80 80" fill="none">
-                  <defs>
-                    <linearGradient id="headerIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      {gender === 'female' ? (
-                        <>
-                          <stop offset="0%" stopColor="#ec4899"/>
-                          <stop offset="50%" stopColor="#a855f7"/>
-                          <stop offset="100%" stopColor="#e879f9"/>
-                        </>
-                      ) : (
-                        <>
-                          <stop offset="0%" stopColor="#14b8a6"/>
-                          <stop offset="50%" stopColor="#06b6d4"/>
-                          <stop offset="100%" stopColor="#3b82f6"/>
-                        </>
-                      )}
-                    </linearGradient>
-                  </defs>
-                  <circle cx="40" cy="40" r="24" stroke="url(#headerIconGrad)" strokeWidth="3" fill="none"/>
-                  <path d="M28 40 L36 48 L52 30" stroke="url(#headerIconGrad)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                </svg>
-              </div>
-            </div>
-            <div>
-              <h1 className={`text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r ${headerGradient} bg-clip-text text-transparent drop-shadow-sm`}>
-                Habit-a-Day
-              </h1>
-              <p className="text-zinc-600 dark:text-zinc-400 text-sm md:text-base mt-1 font-medium">
-                Start your journey to healing one day at a time.
-              </p>
-              <p className="text-zinc-400 dark:text-zinc-500 text-[10px] mt-0.5">v2.0-nav</p>
-            </div>
-          </div>
-        </div>
-
+      <main className="mx-auto max-w-6xl px-4 py-4 pb-24 lg:pb-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Content - Graph Area */}
           <div className="flex-1 order-1 lg:order-1">

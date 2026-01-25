@@ -117,10 +117,10 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
     <nav className="hidden lg:flex items-center justify-between px-6 py-3 bg-white/80 backdrop-blur-sm border-b border-zinc-200/50 dark:bg-zinc-900/80 dark:border-zinc-700/50 sticky top-0 z-40">
       {/* Logo */}
       <div className="flex items-center gap-3">
-        <div className="relative h-10 w-10 shrink-0">
+        <div className="relative h-12 w-12 shrink-0">
           <div className={`absolute inset-0 rounded-xl bg-gradient-to-br shadow-lg ${headerGradient} ${gender === 'female' ? 'shadow-pink-500/20' : 'shadow-teal-500/20'}`} />
           <div className="absolute inset-[3px] rounded-[9px] bg-zinc-900 flex items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 80 80" fill="none">
+            <svg width="24" height="24" viewBox="0 0 80 80" fill="none">
               <circle cx="40" cy="40" r="22" stroke={`url(#navGrad-${gender})`} strokeWidth="3" fill="none" />
               <path d="M26 40 L35 49 L54 28" stroke={`url(#navGrad-${gender})`} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
               <defs>
@@ -143,9 +143,14 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
             </svg>
           </div>
         </div>
-        <span className={`text-xl font-bold bg-gradient-to-r ${headerGradient} bg-clip-text text-transparent`}>
-          Habit-a-Day
-        </span>
+        <div>
+          <span className={`text-2xl font-bold bg-gradient-to-r ${headerGradient} bg-clip-text text-transparent`}>
+            Habit-a-Day
+          </span>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Start your journey to healing one day at a time.
+          </p>
+        </div>
       </div>
 
       {/* Navigation Items */}
