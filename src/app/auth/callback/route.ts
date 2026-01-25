@@ -1,6 +1,51 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+// Helper function to download and upload Facebook profile picture to Supabase Storage
+async function downloadAndStoreFacebookAvatar(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  tempPictureUrl: string
+): Promise<string | null> {
+  try {
+    // Download the image from Facebook's temporary URL
+    const response = await fetch(tempPictureUrl);
+    if (!response.ok) return null;
+
+    const blob = await response.blob();
+    const arrayBuffer = await blob.arrayBuffer();
+    const buffer = new Uint8Array(arrayBuffer);
+
+    // Determine file extension from content type
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    const extension = contentType.includes('png') ? 'png' : 'jpg';
+    const fileName = `${userId}/facebook-avatar.${extension}`;
+
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, buffer, {
+        contentType,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error('Error uploading Facebook avatar:', uploadError);
+      return null;
+    }
+
+    // Get the public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Error downloading Facebook avatar:', error);
+    return null;
+  }
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
@@ -21,18 +66,16 @@ export async function GET(request: Request) {
 
       // Handle different avatar URL formats from providers:
       // - Google: avatar_url (direct string, permanent)
-      // - Facebook: picture.data.url (nested, TEMPORARY - expires!)
+      // - Facebook: picture.data.url (nested, TEMPORARY - must download and store!)
       // - Apple: picture (direct string)
       let oauthAvatarUrl: string | null = null;
 
       if (provider === 'facebook') {
-        // Facebook URLs are temporary. Use the permanent Graph API format instead.
-        // The provider_id contains the Facebook user ID
-        const facebookUserId = user.user_metadata?.provider_id ||
-                               user.identities?.find(i => i.provider === 'facebook')?.id;
-        if (facebookUserId) {
-          // Use Graph API permanent URL - type=large gives ~200x200 image
-          oauthAvatarUrl = `https://graph.facebook.com/${facebookUserId}/picture?type=large`;
+        // Facebook URLs are temporary and expire. We need to download and store the image.
+        const tempPictureUrl = userMetadata.picture?.data?.url;
+        if (tempPictureUrl) {
+          // Download the image and store it in Supabase Storage
+          oauthAvatarUrl = await downloadAndStoreFacebookAvatar(supabase, user.id, tempPictureUrl);
         }
       } else if (userMetadata.avatar_url) {
         oauthAvatarUrl = userMetadata.avatar_url;
@@ -70,6 +113,7 @@ export async function GET(request: Request) {
           profile.avatar_url.includes('fbsbx.com') ||
           profile.avatar_url.includes('graph.facebook.com') ||
           profile.avatar_url.includes('facebook.com') ||
+          profile.avatar_url.includes('facebook-avatar') || // Stored Facebook avatars
           profile.avatar_url.includes('appleid.apple.com')
         );
 
