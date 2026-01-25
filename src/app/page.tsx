@@ -3023,6 +3023,7 @@ export default function Home() {
               <p className="text-zinc-600 dark:text-zinc-400 text-sm md:text-base mt-1 font-medium">
                 Start your journey to healing one day at a time.
               </p>
+              <p className="text-zinc-400 dark:text-zinc-500 text-[10px] mt-0.5">v2.0-nav</p>
             </div>
           </div>
         </div>
