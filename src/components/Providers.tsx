@@ -16,29 +16,25 @@ function TermsGate({ children }: { children: ReactNode }) {
   const [showTermsModal, setShowTermsModal] = useState(false);
 
   useEffect(() => {
-    // Don't show modal on public paths
-    if (PUBLIC_PATHS.some(path => pathname?.startsWith(path))) {
+    try {
+      // Don't show modal on public paths
+      if (PUBLIC_PATHS.some(path => pathname?.startsWith(path))) {
+        setShowTermsModal(false);
+        return;
+      }
+
+      // Don't show while loading - keep current state
+      if (authLoading || profileLoading) {
+        return;
+      }
+
+      // Show modal if user is logged in, has a profile, but hasn't accepted terms
+      const shouldShowModal = !!(user && profile && !termsAccepted);
+      setShowTermsModal(shouldShowModal);
+    } catch (err) {
+      console.error('TermsGate error:', err);
       setShowTermsModal(false);
-      return;
     }
-
-    // Don't show while loading - keep current state
-    if (authLoading || profileLoading) {
-      return;
-    }
-
-    // Debug logging
-    console.log('TermsGate check:', {
-      hasUser: !!user,
-      hasProfile: !!profile,
-      termsAccepted,
-      termsAcceptedAt: profile?.terms_accepted_at,
-      termsVersion: profile?.terms_version,
-    });
-
-    // Show modal if user is logged in, has a profile, but hasn't accepted terms
-    const shouldShowModal = !!(user && profile && !termsAccepted);
-    setShowTermsModal(shouldShowModal);
   }, [user, profile, termsAccepted, authLoading, profileLoading, pathname]);
 
   const handleTermsAccepted = () => {
