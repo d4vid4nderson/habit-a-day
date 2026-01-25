@@ -213,12 +213,12 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
 
       {/* Menu Panel */}
       <div
-        className={`fixed right-0 top-0 z-50 h-full w-72 bg-white shadow-xl transition-transform duration-300 dark:bg-zinc-900 ${
+        className={`fixed right-0 top-0 z-50 flex h-full w-72 flex-col bg-white shadow-xl transition-transform duration-300 dark:bg-zinc-900 ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* User Info Header */}
-        <div className="flex items-center gap-3 border-b border-zinc-200 p-4 dark:border-zinc-700">
+        <div className="flex shrink-0 items-center gap-3 border-b border-zinc-200 p-4 dark:border-zinc-700">
           {user && profile && (
             <>
               {avatarUrl ? (
@@ -259,7 +259,7 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
           </button>
         </div>
 
-        <div className="p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
+        <div className="flex-1 overflow-y-auto p-4">
 
           <div className="space-y-2">
             {/* Navigation links - hidden on desktop since they're in the header */}
@@ -774,7 +774,7 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
         </div>
 
         {/* Footer content */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="shrink-0 border-t border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
           {/* Logout Button */}
           <button
             onClick={handleSignOut}
