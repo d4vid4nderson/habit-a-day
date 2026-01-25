@@ -13,6 +13,7 @@ import {
   getUserGoals,
   saveUserGoals,
 } from '@/lib/services/profileService';
+import { DesktopNav } from '@/components/DesktopNav';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -178,8 +179,18 @@ export default function ProfilePage() {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br ${bgGradient}`}>
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur-sm px-4 py-4 dark:border-zinc-700 dark:bg-zinc-900/80">
+      {/* Desktop Nav */}
+      <DesktopNav
+        currentView="home"
+        onNavigate={(view) => router.push(view === 'home' ? '/' : `/${view}`)}
+        onOpenSettings={() => {}}
+        gender={gender}
+        avatarUrl={profile?.avatar_url}
+        userName={profile?.first_name || undefined}
+      />
+
+      {/* Mobile Header */}
+      <header className="lg:hidden sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur-sm px-4 py-4 dark:border-zinc-700 dark:bg-zinc-900/80">
         <div className="mx-auto flex max-w-lg items-center justify-between">
           <button
             onClick={() => router.back()}
