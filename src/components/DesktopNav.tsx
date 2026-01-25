@@ -70,6 +70,23 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
       ],
     },
     {
+      id: 'physical-therapy',
+      label: 'Physical Therapy',
+      view: null,
+      disabled: true,
+      icon: (
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M2 12h1" />
+          <path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" />
+          <path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+          <path d="M9 12h6" />
+          <path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+          <path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2" />
+          <path d="M22 12h-1" />
+        </svg>
+      ),
+    },
+    {
       id: 'potty',
       label: 'Potty Logger',
       view: 'potty' as ViewType,
@@ -192,9 +209,19 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
                   </div>
                 )}
               </>
+            ) : item.disabled ? (
+              <div
+                className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-zinc-400 dark:text-zinc-500 cursor-not-allowed"
+              >
+                {item.icon}
+                <span>{item.label}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400">
+                  Soon
+                </span>
+              </div>
             ) : (
               <button
-                onClick={() => onNavigate(item.view)}
+                onClick={() => item.view && onNavigate(item.view)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
                   isViewActive(item) ? activeClass : `text-zinc-600 dark:text-zinc-400 ${hoverClass}`
                 }`}
