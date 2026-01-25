@@ -259,6 +259,11 @@ function HomeContent() {
     }
   }, [searchParams]);
 
+  // Scroll to top when view changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [currentView]);
+
   useEffect(() => {
     if (!addDropdownOpen || addEntryType) return;
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
