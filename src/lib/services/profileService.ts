@@ -115,11 +115,21 @@ export async function getOrCreateProfile(
 }
 
 export function getDefaultAvatarUrl(userId: string, gender: Gender): string {
-  // Use DiceBear API for gender-based default avatars
-  if (gender === 'female') {
-    return `https://api.dicebear.com/7.x/lorelei/svg?seed=${userId}`;
+  // Use our API endpoint which fetches from Noun Project (with DiceBear fallback)
+  // The API endpoint redirects to the actual image URL
+  return `/api/avatar?gender=${gender}&seed=${userId}`;
+}
+
+export async function fetchDefaultAvatarUrl(userId: string, gender: Gender): Promise<string> {
+  try {
+    const response = await fetch(`/api/avatar?gender=${gender}&seed=${userId}&format=json`);
+    const data = await response.json();
+    return data.url;
+  } catch {
+    // Fallback to DiceBear
+    const style = gender === 'female' ? 'lorelei' : 'micah';
+    return `https://api.dicebear.com/7.x/${style}/svg?seed=${userId}`;
   }
-  return `https://api.dicebear.com/7.x/micah/svg?seed=${userId}`;
 }
 
 export async function uploadAvatar(
