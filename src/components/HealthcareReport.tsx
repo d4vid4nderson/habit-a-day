@@ -126,7 +126,7 @@ export function HealthcareReport({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -134,7 +134,7 @@ export function HealthcareReport({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85vh] flex flex-col animate-in slide-in-from-bottom duration-300">
+      <div className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div
           className={`flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-700 bg-gradient-to-r ${
@@ -194,9 +194,9 @@ export function HealthcareReport({
 
             {/* Custom Date Pickers */}
             {dateRangeOption === 'custom' && (
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="space-y-3 pt-2">
                 <div>
-                  <label className="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">
+                  <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1.5">
                     Start Date
                   </label>
                   <input
@@ -204,7 +204,7 @@ export function HealthcareReport({
                     value={customStartDate}
                     onChange={(e) => setCustomStartDate(e.target.value)}
                     max={customEndDate || undefined}
-                    className={`w-full px-3 py-2.5 text-sm rounded-xl border-2 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 transition-colors ${
+                    className={`w-full px-4 py-3 text-base rounded-xl border-2 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 transition-colors ${
                       gender === 'female'
                         ? 'border-pink-200 dark:border-pink-800 focus:border-pink-500'
                         : 'border-teal-200 dark:border-teal-800 focus:border-teal-500'
@@ -212,7 +212,7 @@ export function HealthcareReport({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">
+                  <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1.5">
                     End Date
                   </label>
                   <input
@@ -221,7 +221,7 @@ export function HealthcareReport({
                     onChange={(e) => setCustomEndDate(e.target.value)}
                     min={customStartDate || undefined}
                     max={new Date().toISOString().split('T')[0]}
-                    className={`w-full px-3 py-2.5 text-sm rounded-xl border-2 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 transition-colors ${
+                    className={`w-full px-4 py-3 text-base rounded-xl border-2 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 transition-colors ${
                       gender === 'female'
                         ? 'border-pink-200 dark:border-pink-800 focus:border-pink-500'
                         : 'border-teal-200 dark:border-teal-800 focus:border-teal-500'
@@ -289,7 +289,7 @@ export function HealthcareReport({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-zinc-200 dark:border-zinc-700">
+        <div className="p-4 border-t border-zinc-200 dark:border-zinc-700 pb-safe">
           {isComplete ? (
             <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400 py-2">
               <CheckCircle className="w-5 h-5" />
