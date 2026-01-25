@@ -17,18 +17,28 @@ export async function GET(request: Request) {
 
       // Extract OAuth provider avatar URL from user metadata
       const userMetadata = user.user_metadata || {};
+      const provider = user.app_metadata?.provider || '';
 
       // Handle different avatar URL formats from providers:
-      // - Google: avatar_url (direct string)
-      // - Facebook: picture.data.url (nested) or picture (if string)
+      // - Google: avatar_url (direct string, permanent)
+      // - Facebook: picture.data.url (nested, TEMPORARY - expires!)
       // - Apple: picture (direct string)
       let oauthAvatarUrl: string | null = null;
-      if (userMetadata.avatar_url) {
+
+      if (provider === 'facebook') {
+        // Facebook URLs are temporary. Use the permanent Graph API format instead.
+        // The provider_id contains the Facebook user ID
+        const facebookUserId = user.user_metadata?.provider_id ||
+                               user.identities?.find(i => i.provider === 'facebook')?.id;
+        if (facebookUserId) {
+          // Use Graph API permanent URL - type=large gives ~200x200 image
+          oauthAvatarUrl = `https://graph.facebook.com/${facebookUserId}/picture?type=large`;
+        }
+      } else if (userMetadata.avatar_url) {
         oauthAvatarUrl = userMetadata.avatar_url;
       } else if (typeof userMetadata.picture === 'string') {
         oauthAvatarUrl = userMetadata.picture;
       } else if (userMetadata.picture?.data?.url) {
-        // Facebook nested format
         oauthAvatarUrl = userMetadata.picture.data.url;
       }
 
