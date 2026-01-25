@@ -136,7 +136,7 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
       <div className="flex items-center gap-3">
         <div className="relative h-12 w-12 shrink-0">
           <div className={`absolute inset-0 rounded-xl bg-gradient-to-br shadow-lg ${headerGradient} ${gender === 'female' ? 'shadow-pink-500/20' : 'shadow-teal-500/20'}`} />
-          <div className="absolute inset-[3px] rounded-[9px] bg-zinc-900 flex items-center justify-center">
+          <div className="absolute inset-[3px] rounded-[9px] bg-white dark:bg-zinc-900 flex items-center justify-center">
             <svg width="24" height="24" viewBox="0 0 80 80" fill="none">
               <circle cx="40" cy="40" r="22" stroke={`url(#navGrad-${gender})`} strokeWidth="3" fill="none" />
               <path d="M26 40 L35 49 L54 28" stroke={`url(#navGrad-${gender})`} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
