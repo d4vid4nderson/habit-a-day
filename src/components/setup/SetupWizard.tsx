@@ -41,8 +41,15 @@ export function SetupWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get OAuth avatar URL from profile (set during auth callback)
-  const oauthAvatarUrl = profile?.oauth_avatar_url || profile?.avatar_url || null;
+  // Get OAuth avatar URL from profile or directly from user metadata as fallback
+  // For new users, the profile might not have the avatar yet, so check user metadata
+  const userMetadata = user?.user_metadata || {};
+  const oauthAvatarUrl =
+    profile?.oauth_avatar_url ||
+    profile?.avatar_url ||
+    userMetadata.avatar_url ||
+    (typeof userMetadata.picture === 'string' ? userMetadata.picture : null) ||
+    null;
 
   const [setupData, setSetupData] = useState<SetupData>({
     firstName: '',
@@ -58,16 +65,17 @@ export function SetupWizard() {
 
   // Initialize with OAuth avatar and profile data if available
   useEffect(() => {
-    if (profile) {
-      setSetupData((prev) => ({
-        ...prev,
-        firstName: profile.first_name || prev.firstName,
-        lastName: profile.last_name || prev.lastName,
-        gender: profile.gender || prev.gender,
-        avatarUrl: profile.oauth_avatar_url || profile.avatar_url || prev.avatarUrl,
-      }));
-    }
-  }, [profile]);
+    const newFirstName = profile?.first_name || userMetadata.full_name?.split(' ')[0] || userMetadata.name?.split(' ')[0] || '';
+    const newLastName = profile?.last_name || userMetadata.full_name?.split(' ').slice(1).join(' ') || userMetadata.name?.split(' ').slice(1).join(' ') || '';
+
+    setSetupData((prev) => ({
+      ...prev,
+      firstName: newFirstName || prev.firstName,
+      lastName: newLastName || prev.lastName,
+      gender: profile?.gender || prev.gender,
+      avatarUrl: oauthAvatarUrl || prev.avatarUrl,
+    }));
+  }, [profile, userMetadata, oauthAvatarUrl]);
 
   const handleNext = useCallback(() => {
     setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
