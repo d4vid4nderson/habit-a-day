@@ -2980,7 +2980,7 @@ export default function Home() {
         userName={profile?.first_name || undefined}
       />
 
-      <main className="mx-auto max-w-6xl px-4 py-4 pb-24 lg:pb-6">
+      <main className="mx-auto max-w-6xl px-4 pt-8 pb-24 lg:pb-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Content - Graph Area */}
           <div className="flex-1 order-1 lg:order-1">
