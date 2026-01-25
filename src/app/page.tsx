@@ -23,7 +23,8 @@ import { MigrationPrompt } from '@/components/MigrationPrompt';
 import { BathroomType, BathroomEntry, WaterUnit, MealType, UrineColor, URINE_COLORS, StreamStrength } from '@/lib/types';
 import { PoopIcon, PeeIcon, SimplePoopIcon, SimpleDropletIcon } from '@/components/icons/BathroomIcons';
 import { CalorieAIModal } from '@/components/CalorieAIModal';
-import { Flame, Sparkles } from 'lucide-react';
+import { HealthcareReport } from '@/components/HealthcareReport';
+import { Flame, Sparkles, FileText, Share2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useEntries } from '@/lib/hooks/useEntries';
 import { useProfile } from '@/lib/hooks/useProfile';
@@ -160,6 +161,8 @@ function HomeContent() {
   const [foodEntryMinute, setFoodEntryMinute] = useState('');
   const [foodEntryAmPm, setFoodEntryAmPm] = useState<'AM' | 'PM'>('AM');
   const [calorieAIModalOpen, setCalorieAIModalOpen] = useState(false);
+  const [healthcareReportOpen, setHealthcareReportOpen] = useState(false);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
 
   // Chart data - configurable time range
   const chartData = useMemo(() => {
@@ -3097,7 +3100,20 @@ function HomeContent() {
         userName={profile?.first_name || undefined}
       />
 
-      <main className="mx-auto max-w-6xl px-4 pt-8 pb-24 lg:pb-6">
+      <main className="mx-auto max-w-6xl px-4 pt-6 pb-24 lg:pb-6">
+        {/* Recovery Journey Banner */}
+        <div className={`rounded-2xl p-4 mb-6 flex items-center gap-4 ${gender === 'female' ? 'bg-gradient-to-r from-pink-500 to-purple-600' : 'bg-gradient-to-r from-teal-500 to-blue-600'}`}>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm flex-shrink-0">
+            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-bold text-white text-sm lg:text-base">Your Recovery Journey</h2>
+            <p className="text-white/80 text-xs lg:text-sm">Tracking daily habits helps build awareness and supports your path to recovery.</p>
+          </div>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Content - Graph Area */}
           <div className="flex-1 order-1 lg:order-1">
@@ -3145,7 +3161,7 @@ function HomeContent() {
               </div>
 
               {/* Graph Area */}
-              <div className="h-64 mb-6">
+              <div ref={chartContainerRef} className="h-64 mb-6">
                 {selectedTrackers.size === 0 ? (
                   <div className="h-full rounded-xl bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
                     <div className="text-center space-y-2">
@@ -3378,34 +3394,10 @@ function HomeContent() {
 
           {/* Right Sidebar */}
           <div className="w-full lg:w-80 order-2 lg:order-2 space-y-4">
-            {/* Recovery Info Card */}
-            <div className={`rounded-3xl p-6 shadow-xl border border-white/50 dark:border-zinc-700/50 overflow-hidden relative ${gender === 'female' ? 'bg-gradient-to-br from-pink-500 to-purple-600' : 'bg-gradient-to-br from-teal-500 to-blue-600'}`}>
-              <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
-                <svg viewBox="0 0 100 100" className="w-full h-full text-white" fill="currentColor">
-                  <path d="M50 10 L60 40 L90 40 L65 60 L75 90 L50 70 L25 90 L35 60 L10 40 L40 40 Z" />
-                </svg>
-              </div>
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-                    <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </div>
-                  <h2 className="font-bold text-white text-lg">
-                    Your Recovery Journey
-                  </h2>
-                </div>
-                <p className="text-white/90 text-sm leading-relaxed">
-                  Tracking daily habits and routines helps build awareness and supports your path to recovery.
-                </p>
-              </div>
-            </div>
-
             {/* Habit Tracker Links */}
             <div className={`rounded-3xl bg-white/80 backdrop-blur-sm p-5 shadow-xl dark:bg-zinc-800/80 border border-white/50 dark:border-zinc-700/50 ${gender === 'female' ? 'shadow-pink-500/5' : 'shadow-teal-500/5'}`}>
               <h3 className={`text-xs font-bold uppercase tracking-wider mb-4 ${gender === 'female' ? 'text-pink-600 dark:text-pink-400' : 'text-teal-600 dark:text-teal-400'}`}>
-                Habit Tracker
+                Habit Trackers
               </h3>
               <div className="space-y-2">
                 {/* Food Journal */}
@@ -3486,6 +3478,45 @@ function HomeContent() {
                 </button>
               </div>
             </div>
+
+            {/* Healthcare Report Button */}
+            <button
+              onClick={() => setHealthcareReportOpen(true)}
+              className={`w-full rounded-3xl p-5 shadow-lg transition-all duration-200 hover:shadow-xl active:scale-[0.98] bg-white dark:bg-zinc-800 border-2 ${
+                gender === 'female'
+                  ? 'border-pink-400 dark:border-pink-500 hover:border-pink-500 dark:hover:border-pink-400'
+                  : 'border-teal-400 dark:border-teal-500 hover:border-teal-500 dark:hover:border-teal-400'
+              }`}
+            >
+              <div className="flex items-center gap-4">
+                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
+                  gender === 'female'
+                    ? 'bg-pink-100 dark:bg-pink-900/40'
+                    : 'bg-teal-100 dark:bg-teal-900/40'
+                }`}>
+                  <Share2 className={`h-7 w-7 ${
+                    gender === 'female'
+                      ? 'text-pink-600 dark:text-pink-400'
+                      : 'text-teal-600 dark:text-teal-400'
+                  }`} />
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <span className={`block font-bold text-lg ${
+                    gender === 'female'
+                      ? 'text-pink-700 dark:text-pink-300'
+                      : 'text-teal-700 dark:text-teal-300'
+                  }`}>Share with Provider</span>
+                  <span className="block text-sm text-zinc-500 dark:text-zinc-400">Generate PDF Report</span>
+                </div>
+                <svg className={`h-6 w-6 flex-shrink-0 ${
+                  gender === 'female'
+                    ? 'text-pink-400 dark:text-pink-500'
+                    : 'text-teal-400 dark:text-teal-500'
+                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </button>
           </div>
         </div>
       </main>
@@ -3496,6 +3527,20 @@ function HomeContent() {
         onOpenMore={() => setMenuOpen(true)}
         gender={gender}
       />
+
+      {/* Healthcare Report Modal */}
+      {profile && (
+        <HealthcareReport
+          isOpen={healthcareReportOpen}
+          onClose={() => setHealthcareReportOpen(false)}
+          profile={profile}
+          bathroomEntries={entries}
+          waterEntries={waterEntries}
+          foodEntries={foodEntries}
+          chartRef={chartContainerRef}
+          gender={gender}
+        />
+      )}
     </div>
   );
 }
