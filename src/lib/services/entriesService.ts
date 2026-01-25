@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import { BathroomEntry, BathroomType } from '@/lib/types';
+import { BathroomEntry, BathroomType, UrineColor } from '@/lib/types';
 
 function getSupabase() {
   return createClient();
@@ -11,6 +11,7 @@ export interface DbBathroomEntry {
   type: BathroomType;
   timestamp: number;
   notes: string | null;
+  urine_color: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -21,6 +22,7 @@ function toAppEntry(dbEntry: DbBathroomEntry): BathroomEntry {
     type: dbEntry.type,
     timestamp: dbEntry.timestamp,
     notes: dbEntry.notes || undefined,
+    urine_color: dbEntry.urine_color as UrineColor | undefined,
   };
 }
 
@@ -43,7 +45,8 @@ export async function createEntry(
   userId: string,
   type: BathroomType,
   notes?: string,
-  timestamp?: number
+  timestamp?: number,
+  urineColor?: UrineColor
 ): Promise<BathroomEntry> {
   const now = timestamp || Date.now();
 
@@ -54,6 +57,7 @@ export async function createEntry(
       type,
       timestamp: now,
       notes: notes?.trim() || null,
+      urine_color: type === 'pee' ? urineColor || null : null,
     })
     .select()
     .single();
@@ -80,7 +84,7 @@ export async function deleteEntry(entryId: string): Promise<void> {
 
 export async function updateEntry(
   entryId: string,
-  updates: Partial<Pick<BathroomEntry, 'notes' | 'timestamp'>>
+  updates: Partial<Pick<BathroomEntry, 'notes' | 'timestamp' | 'urine_color'>>
 ): Promise<BathroomEntry> {
   const { data, error } = await getSupabase()
     .from('bathroom_entries')

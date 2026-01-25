@@ -1,12 +1,13 @@
 {
   "name": "habit-a-day",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "version:bump": "node scripts/increment-version.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

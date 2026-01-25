@@ -8,6 +8,9 @@ import {
   Theme,
   getOrCreateProfile,
   updateProfile as updateProfileService,
+  acceptTerms as acceptTermsService,
+  hasAcceptedCurrentTerms,
+  CURRENT_TERMS_VERSION,
 } from '@/lib/services/profileService';
 
 function applyTheme(theme: Theme) {
@@ -37,8 +40,11 @@ interface ProfileContextType {
   gender: Gender;
   theme: Theme;
   profileCompleted: boolean;
+  termsAccepted: boolean;
+  termsVersion: string;
   updateGender: (gender: Gender) => Promise<void>;
   updateTheme: (theme: Theme) => Promise<void>;
+  acceptTerms: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -129,6 +135,17 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     [user, profile]
   );
 
+  const acceptTerms = useCallback(async () => {
+    if (!user || !profile) return;
+
+    try {
+      const updated = await acceptTermsService(user.id);
+      setProfile(updated);
+    } catch (err) {
+      throw err;
+    }
+  }, [user, profile]);
+
   const value: ProfileContextType = {
     profile,
     loading,
@@ -136,8 +153,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     gender: profile?.gender ?? 'male',
     theme: profile?.theme ?? 'system',
     profileCompleted: profile?.profile_completed ?? false,
+    termsAccepted: hasAcceptedCurrentTerms(profile),
+    termsVersion: CURRENT_TERMS_VERSION,
     updateGender,
     updateTheme,
+    acceptTerms,
     refreshProfile,
   };
 

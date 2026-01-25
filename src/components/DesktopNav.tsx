@@ -116,7 +116,9 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
       view: 'water' as ViewType,
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69z" />
+          <path d="M10 5h4v-2a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v2" />
+          <path d="M14 3.5c0 1.626 .507 3.212 1.45 4.537l.05 .07a8.093 8.093 0 0 1 1.5 4.694v6.199a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2v-6.2c0 -1.682 .524 -3.322 1.5 -4.693l.05 -.07a7.823 7.823 0 0 0 1.45 -4.537" />
+          <path d="M7 14.803a2.4 2.4 0 0 0 1 -.803a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 1 -.805" />
         </svg>
       ),
       subItems: [
@@ -142,9 +144,10 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
         <div className="relative h-12 w-12 shrink-0">
           <div className={`absolute inset-0 rounded-xl bg-gradient-to-br shadow-lg ${headerGradient} ${gender === 'female' ? 'shadow-pink-500/20' : 'shadow-teal-500/20'}`} />
           <div className={`absolute inset-[3px] rounded-[9px] flex items-center justify-center ${gender === 'female' ? 'bg-pink-50 dark:bg-zinc-900' : 'bg-teal-50 dark:bg-zinc-900'}`}>
-            <svg width="24" height="24" viewBox="0 0 80 80" fill="none">
-              <circle cx="40" cy="40" r="22" stroke={`url(#navGrad-${gender})`} strokeWidth="5" fill="none" />
-              <path d="M26 40 L35 49 L54 28" stroke={`url(#navGrad-${gender})`} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            {/* Lucide circle-check icon */}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke={`url(#navGrad-${gender})`} strokeWidth="2" fill="none" />
+              <path d="m9 12 2 2 4-4" stroke={`url(#navGrad-${gender})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
               <defs>
                 <linearGradient id={`navGrad-${gender}`} x1="0%" y1="0%" x2="100%" y2="100%">
                   {gender === 'female' ? (
@@ -246,7 +249,7 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
         className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${hoverClass}`}
       >
         {avatarUrl ? (
-          <img src={avatarUrl} alt="Profile" className="h-8 w-8 rounded-full object-cover" />
+          <img src={avatarUrl} alt="Profile" className="h-8 w-8 rounded-full object-cover" referrerPolicy="no-referrer" />
         ) : (
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
             <svg className="h-4 w-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

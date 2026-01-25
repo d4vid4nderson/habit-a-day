@@ -63,8 +63,9 @@ export async function createFoodEntry(
     .single();
 
   if (error) {
-    console.error('Error creating food entry:', error);
-    throw error;
+    console.error('Error creating food entry:', JSON.stringify(error, null, 2));
+    console.error('Input data:', { userId, mealType, calories, notes, timestamp: now });
+    throw new Error(error.message || 'Failed to create food entry');
   }
 
   return toAppEntry(data);

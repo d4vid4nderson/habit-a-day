@@ -9,8 +9,16 @@ CREATE TABLE IF NOT EXISTS profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   email TEXT,
   display_name TEXT,
+  first_name TEXT,
+  last_name TEXT,
+  age INTEGER CHECK (age IS NULL OR (age >= 13 AND age <= 120)),
+  avatar_url TEXT,
+  oauth_avatar_url TEXT,  -- Avatar from OAuth provider (Google/Facebook/Apple) - used as fallback
+  weight DECIMAL(5,2) CHECK (weight IS NULL OR weight > 0),
+  weight_unit TEXT CHECK (weight_unit IS NULL OR weight_unit IN ('kg', 'lbs')) DEFAULT 'lbs',
   gender TEXT CHECK (gender IN ('male', 'female')) DEFAULT 'male',
   theme TEXT CHECK (theme IN ('light', 'dark', 'system')) DEFAULT 'system',
+  profile_completed BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -22,6 +30,7 @@ CREATE TABLE IF NOT EXISTS bathroom_entries (
   type TEXT CHECK (type IN ('poop', 'pee')) NOT NULL,
   timestamp BIGINT NOT NULL, -- Unix timestamp in milliseconds
   notes TEXT,
+  urine_color INTEGER CHECK (urine_color IS NULL OR (urine_color >= 1 AND urine_color <= 8)), -- Hydration level 1-8
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -66,14 +75,46 @@ CREATE POLICY "Users can delete their own entries"
   USING (auth.uid() = user_id);
 
 -- Function to automatically create a profile on user signup
+-- Captures OAuth provider profile photos (Google, Facebook, Apple)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  oauth_avatar TEXT;
+  oauth_full_name TEXT;
+  first_name_val TEXT;
+  last_name_val TEXT;
 BEGIN
-  INSERT INTO public.profiles (id, email, display_name)
+  -- Extract avatar URL from OAuth metadata (Google uses 'picture', others use 'avatar_url')
+  oauth_avatar := COALESCE(
+    NEW.raw_user_meta_data->>'avatar_url',
+    NEW.raw_user_meta_data->>'picture'
+  );
+
+  -- Extract full name from OAuth metadata
+  oauth_full_name := COALESCE(
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'name'
+  );
+
+  -- Parse first and last name from full name
+  IF oauth_full_name IS NOT NULL AND oauth_full_name != '' THEN
+    first_name_val := split_part(oauth_full_name, ' ', 1);
+    last_name_val := CASE
+      WHEN position(' ' in oauth_full_name) > 0
+      THEN substring(oauth_full_name from position(' ' in oauth_full_name) + 1)
+      ELSE NULL
+    END;
+  END IF;
+
+  INSERT INTO public.profiles (id, email, display_name, avatar_url, oauth_avatar_url, first_name, last_name)
   VALUES (
     NEW.id,
     NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name')
+    oauth_full_name,
+    oauth_avatar,      -- Set initial avatar to OAuth avatar
+    oauth_avatar,      -- Store OAuth avatar separately for fallback
+    first_name_val,
+    last_name_val
   );
   RETURN NEW;
 END;
@@ -105,3 +146,134 @@ CREATE TRIGGER update_bathroom_entries_updated_at
 
 -- Enable realtime for bathroom_entries (optional, for live updates)
 ALTER PUBLICATION supabase_realtime ADD TABLE bathroom_entries;
+
+-- Food entries table
+CREATE TABLE IF NOT EXISTS food_entries (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  meal_type TEXT NOT NULL,
+  calories INTEGER NOT NULL,
+  timestamp BIGINT NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT food_entries_meal_type_check CHECK (meal_type IN ('breakfast', 'lunch', 'dinner', 'snack', 'beverage', 'dessert'))
+);
+
+-- Food entries indexes
+CREATE INDEX IF NOT EXISTS idx_food_entries_user_id ON food_entries(user_id);
+CREATE INDEX IF NOT EXISTS idx_food_entries_timestamp ON food_entries(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_food_entries_user_timestamp ON food_entries(user_id, timestamp DESC);
+
+-- Enable RLS for food_entries
+ALTER TABLE food_entries ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for food_entries
+CREATE POLICY "Users can view their own food entries"
+  ON food_entries FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own food entries"
+  ON food_entries FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own food entries"
+  ON food_entries FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own food entries"
+  ON food_entries FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Updated_at trigger for food_entries
+CREATE TRIGGER update_food_entries_updated_at
+  BEFORE UPDATE ON food_entries
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Enable realtime for food_entries
+ALTER PUBLICATION supabase_realtime ADD TABLE food_entries;
+
+-- Water entries table
+CREATE TABLE IF NOT EXISTS water_entries (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  amount DECIMAL(6,2) NOT NULL,
+  unit TEXT CHECK (unit IN ('oz', 'ml')) DEFAULT 'oz',
+  timestamp BIGINT NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Water entries indexes
+CREATE INDEX IF NOT EXISTS idx_water_entries_user_id ON water_entries(user_id);
+CREATE INDEX IF NOT EXISTS idx_water_entries_timestamp ON water_entries(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_water_entries_user_timestamp ON water_entries(user_id, timestamp DESC);
+
+-- Enable RLS for water_entries
+ALTER TABLE water_entries ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for water_entries
+CREATE POLICY "Users can view their own water entries"
+  ON water_entries FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own water entries"
+  ON water_entries FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own water entries"
+  ON water_entries FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own water entries"
+  ON water_entries FOR DELETE USING (auth.uid() = user_id);
+
+-- Updated_at trigger for water_entries
+CREATE TRIGGER update_water_entries_updated_at
+  BEFORE UPDATE ON water_entries
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Enable realtime for water_entries
+ALTER PUBLICATION supabase_realtime ADD TABLE water_entries;
+
+-- Physical therapy entries table
+CREATE TABLE IF NOT EXISTS pt_entries (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  exercise_name TEXT NOT NULL,
+  duration_minutes INTEGER,
+  sets INTEGER,
+  reps INTEGER,
+  pain_level INTEGER CHECK (pain_level IS NULL OR (pain_level >= 1 AND pain_level <= 10)),
+  timestamp BIGINT NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- PT entries indexes
+CREATE INDEX IF NOT EXISTS idx_pt_entries_user_id ON pt_entries(user_id);
+CREATE INDEX IF NOT EXISTS idx_pt_entries_timestamp ON pt_entries(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_pt_entries_user_timestamp ON pt_entries(user_id, timestamp DESC);
+
+-- Enable RLS for pt_entries
+ALTER TABLE pt_entries ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for pt_entries
+CREATE POLICY "Users can view their own PT entries"
+  ON pt_entries FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own PT entries"
+  ON pt_entries FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own PT entries"
+  ON pt_entries FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own PT entries"
+  ON pt_entries FOR DELETE USING (auth.uid() = user_id);
+
+-- Updated_at trigger for pt_entries
+CREATE TRIGGER update_pt_entries_updated_at
+  BEFORE UPDATE ON pt_entries
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Enable realtime for pt_entries
+ALTER PUBLICATION supabase_realtime ADD TABLE pt_entries;

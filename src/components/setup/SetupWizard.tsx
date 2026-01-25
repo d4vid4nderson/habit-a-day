@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useProfile } from '@/lib/hooks/useProfile';
@@ -36,10 +36,13 @@ interface SetupData {
 export function SetupWizard() {
   const router = useRouter();
   const { user } = useAuth();
-  const { refreshProfile } = useProfile();
+  const { profile, refreshProfile } = useProfile();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Get OAuth avatar URL from profile (set during auth callback)
+  const oauthAvatarUrl = profile?.oauth_avatar_url || profile?.avatar_url || null;
 
   const [setupData, setSetupData] = useState<SetupData>({
     firstName: '',
@@ -52,6 +55,19 @@ export function SetupWizard() {
     weightUnit: 'lbs',
     goals: ['', '', ''],
   });
+
+  // Initialize with OAuth avatar and profile data if available
+  useEffect(() => {
+    if (profile) {
+      setSetupData((prev) => ({
+        ...prev,
+        firstName: profile.first_name || prev.firstName,
+        lastName: profile.last_name || prev.lastName,
+        gender: profile.gender || prev.gender,
+        avatarUrl: profile.oauth_avatar_url || profile.avatar_url || prev.avatarUrl,
+      }));
+    }
+  }, [profile]);
 
   const handleNext = useCallback(() => {
     setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
@@ -96,8 +112,8 @@ export function SetupWizard() {
       if (setupData.avatarFile) {
         finalAvatarUrl = await uploadAvatar(user.id, setupData.avatarFile);
       } else if (!finalAvatarUrl) {
-        // Use default avatar if none selected
-        finalAvatarUrl = getDefaultAvatarUrl(user.id, setupData.gender);
+        // Prefer OAuth avatar, fall back to generated avatar
+        finalAvatarUrl = oauthAvatarUrl || getDefaultAvatarUrl(user.id, setupData.gender);
       }
 
       const profileData: ProfileSetupData = {
@@ -199,6 +215,7 @@ export function SetupWizard() {
           {currentStep === 4 && (
             <PhotoStep
               avatarUrl={setupData.avatarUrl}
+              oauthAvatarUrl={oauthAvatarUrl}
               userId={user.id}
               onAvatarChange={handleAvatarChange}
               onNext={handleNext}

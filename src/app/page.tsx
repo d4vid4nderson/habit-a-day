@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Fuse from 'fuse.js';
 import {
   LineChart,
@@ -20,7 +20,7 @@ import { Menu } from '@/components/Menu';
 import { DesktopNav } from '@/components/DesktopNav';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { MigrationPrompt } from '@/components/MigrationPrompt';
-import { BathroomType, BathroomEntry, WaterUnit, MealType } from '@/lib/types';
+import { BathroomType, BathroomEntry, WaterUnit, MealType, UrineColor, URINE_COLORS } from '@/lib/types';
 import { PoopIcon, PeeIcon, SimplePoopIcon, SimpleDropletIcon } from '@/components/icons/BathroomIcons';
 import { CalorieAIModal } from '@/components/CalorieAIModal';
 import { Flame, Sparkles } from 'lucide-react';
@@ -99,6 +99,7 @@ function formatDateHeader(dateStr: string): string {
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { entries, loading: entriesLoading, createEntry, deleteEntry } = useEntries();
   const { profile, gender, loading: profileLoading } = useProfile();
@@ -110,6 +111,7 @@ export default function Home() {
   const [notes, setNotes] = useState('');
   const [poopConsistency, setPoopConsistency] = useState('');
   const [peeStream, setPeeStream] = useState('');
+  const [selectedUrineColor, setSelectedUrineColor] = useState<UrineColor | undefined>(undefined);
   const [selectedDate, setSelectedDate] = useState(getToday());
   const [menuOpen, setMenuOpen] = useState(false);
   const [faqTab, setFaqTab] = useState<'poop' | 'pee'>('poop');
@@ -124,7 +126,10 @@ export default function Home() {
   const [addEntryStream, setAddEntryStream] = useState('');
   const [showMigration, setShowMigration] = useState(true);
   const [selectedTrackers, setSelectedTrackers] = useState<Set<'potty' | 'water' | 'food'>>(() => new Set(['potty', 'water', 'food']));
+  const [chartDays, setChartDays] = useState<7 | 30 | 90 | 365>(7);
+  const [chartDropdownOpen, setChartDropdownOpen] = useState(false);
   const addDropdownRef = useRef<HTMLDivElement | null>(null);
+  const chartDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const toggleTracker = (tracker: 'potty' | 'water' | 'food') => {
     setSelectedTrackers(prev => {
@@ -156,12 +161,12 @@ export default function Home() {
   const [foodEntryAmPm, setFoodEntryAmPm] = useState<'AM' | 'PM'>('AM');
   const [calorieAIModalOpen, setCalorieAIModalOpen] = useState(false);
 
-  // Chart data - last 7 days
+  // Chart data - configurable time range
   const chartData = useMemo(() => {
     const days: { date: string; label: string; poop: number; pee: number; water: number; calories: number }[] = [];
     const today = new Date();
 
-    for (let i = 6; i >= 0; i--) {
+    for (let i = chartDays - 1; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dateStr = toLocalDateString(date);
@@ -185,9 +190,19 @@ export default function Home() {
         .filter(e => e.timestamp >= dateStart && e.timestamp < dateEnd)
         .reduce((sum, e) => sum + e.calories, 0);
 
+      // Format label based on range
+      let label: string;
+      if (chartDays <= 7) {
+        label = date.toLocaleDateString('en-US', { weekday: 'short' });
+      } else if (chartDays <= 30) {
+        label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } else {
+        label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+
       days.push({
         date: dateStr,
-        label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        label,
         poop: poopCount,
         pee: peeCount,
         water: Math.round(waterTotal * 10) / 10,
@@ -196,7 +211,7 @@ export default function Home() {
     }
 
     return days;
-  }, [entries, waterEntries, foodEntries]);
+  }, [entries, waterEntries, foodEntries, chartDays]);
 
   const headerGradient = gender === 'female'
     ? 'from-pink-500 to-purple-600'
@@ -231,6 +246,19 @@ export default function Home() {
     }
   }, [authLoading, user, router]);
 
+  // Read view from query params (for navigation from other pages like profile)
+  useEffect(() => {
+    const viewParam = searchParams.get('view');
+    if (viewParam) {
+      const validViews = ['home', 'potty', 'history', 'faq', 'water', 'water-history', 'water-faq', 'food', 'food-history', 'food-faq'];
+      if (validViews.includes(viewParam)) {
+        setCurrentView(viewParam as typeof currentView);
+        // Clear the query param from URL without triggering a navigation
+        window.history.replaceState({}, '', '/');
+      }
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (!addDropdownOpen || addEntryType) return;
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
@@ -246,6 +274,23 @@ export default function Home() {
       document.removeEventListener('touchstart', handlePointerDown);
     };
   }, [addDropdownOpen, addEntryType]);
+
+  // Close chart dropdown when clicking outside
+  useEffect(() => {
+    if (!chartDropdownOpen) return;
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (chartDropdownRef.current && !chartDropdownRef.current.contains(target)) {
+        setChartDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+    };
+  }, [chartDropdownOpen]);
 
   // Show loading state while checking auth
   if (authLoading || profileLoading) {
@@ -275,16 +320,18 @@ export default function Home() {
     setNotes('');
     setPoopConsistency('');
     setPeeStream('');
+    setSelectedUrineColor(undefined);
   };
 
   const handleSave = async () => {
     if (!selectedType) return;
     try {
-      await createEntry(selectedType, notes);
+      await createEntry(selectedType, notes, undefined, selectedUrineColor);
       setSelectedType(null);
       setNotes('');
       setPoopConsistency('');
       setPeeStream('');
+      setSelectedUrineColor(undefined);
     } catch (err) {
       console.error('Failed to create entry:', err);
     }
@@ -334,6 +381,7 @@ export default function Home() {
     setNotes('');
     setPoopConsistency('');
     setPeeStream('');
+    setSelectedUrineColor(undefined);
   };
 
   const handleDelete = async (id: string) => {
@@ -1158,29 +1206,72 @@ export default function Home() {
             )}
 
             {selectedType === 'pee' && (
-              <div className="space-y-2">
-                <select
-                  value={peeStream}
-                  onChange={(e) => setPeeStream(e.target.value)}
-                  className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
-                    gender === 'female' ? 'focus:border-purple-500' : 'focus:border-blue-500'
-                  }`}
-                >
-                  <option value="">Select stream strength...</option>
-                  <option value="strong">Strong</option>
-                  <option value="normal">Normal</option>
-                  <option value="weak">Weak</option>
-                  <option value="intermittent">Intermittent</option>
-                  <option value="dribbling">Dribbling</option>
-                </select>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 px-4 min-h-[40px]">
-                  {peeStream === 'strong' && "Forceful, steady stream. Good bladder pressure and pelvic floor function."}
-                  {peeStream === 'normal' && "Comfortable, consistent flow. Healthy urination pattern."}
-                  {peeStream === 'weak' && "Low pressure, takes longer. May indicate pelvic floor weakness or obstruction."}
-                  {peeStream === 'intermittent' && "Stop-and-start stream. Could suggest bladder or prostate issues."}
-                  {peeStream === 'dribbling' && "Slow drips, difficulty starting/stopping. Consider pelvic floor exercises."}
-                  {!peeStream && "\u00A0"}
-                </p>
+              <div className="space-y-4">
+                {/* Urine Color Dropdown */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 px-1">
+                    Urine Color (Hydration Level)
+                  </label>
+                  <select
+                    value={selectedUrineColor || ''}
+                    onChange={(e) => setSelectedUrineColor(e.target.value ? Number(e.target.value) as UrineColor : undefined)}
+                    className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                      gender === 'female' ? 'focus:border-purple-500' : 'focus:border-blue-500'
+                    }`}
+                  >
+                    <option value="">Select urine color...</option>
+                    {URINE_COLORS.map((item) => (
+                      <option key={item.level} value={item.level}>
+                        {item.level}. {item.label} - {item.status}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedUrineColor && (
+                    <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                      <div
+                        className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-600 flex-shrink-0"
+                        style={{ backgroundColor: URINE_COLORS.find(c => c.level === selectedUrineColor)?.color }}
+                      />
+                      <p className={`text-sm font-medium ${
+                        URINE_COLORS.find(c => c.level === selectedUrineColor)?.status === 'Hydrated' ? 'text-green-600 dark:text-green-400' :
+                        URINE_COLORS.find(c => c.level === selectedUrineColor)?.status === 'Mildly Dehydrated' ? 'text-yellow-600 dark:text-yellow-400' :
+                        URINE_COLORS.find(c => c.level === selectedUrineColor)?.status === 'Dehydrated' ? 'text-orange-600 dark:text-orange-400' :
+                        'text-red-600 dark:text-red-400'
+                      }`}>
+                        {URINE_COLORS.find(c => c.level === selectedUrineColor)?.status}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Stream Strength Dropdown */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 px-1">
+                    Stream Strength
+                  </label>
+                  <select
+                    value={peeStream}
+                    onChange={(e) => setPeeStream(e.target.value)}
+                    className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                      gender === 'female' ? 'focus:border-purple-500' : 'focus:border-blue-500'
+                    }`}
+                  >
+                    <option value="">Select stream strength...</option>
+                    <option value="strong">Strong</option>
+                    <option value="normal">Normal</option>
+                    <option value="weak">Weak</option>
+                    <option value="intermittent">Intermittent</option>
+                    <option value="dribbling">Dribbling</option>
+                  </select>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 px-4 min-h-[40px]">
+                    {peeStream === 'strong' && "Forceful, steady stream. Good bladder pressure and pelvic floor function."}
+                    {peeStream === 'normal' && "Comfortable, consistent flow. Healthy urination pattern."}
+                    {peeStream === 'weak' && "Low pressure, takes longer. May indicate pelvic floor weakness or obstruction."}
+                    {peeStream === 'intermittent' && "Stop-and-start stream. Could suggest bladder or prostate issues."}
+                    {peeStream === 'dribbling' && "Slow drips, difficulty starting/stopping. Consider pelvic floor exercises."}
+                    {!peeStream && "\u00A0"}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -1491,10 +1582,19 @@ export default function Home() {
                             <SimpleDropletIcon className="w-6 h-6" />
                           )}
                         </div>
-                        <div>
-                          <p className="font-medium text-zinc-800 dark:text-zinc-200 capitalize">
-                            {entry.type === 'poop' ? 'Pooped' : 'Peed'}
-                          </p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-zinc-800 dark:text-zinc-200 capitalize">
+                              {entry.type === 'poop' ? 'Pooped' : 'Peed'}
+                            </p>
+                            {entry.type === 'pee' && entry.urine_color && (
+                              <div
+                                className="w-4 h-4 rounded-full border border-zinc-300 dark:border-zinc-600"
+                                style={{ backgroundColor: URINE_COLORS.find(c => c.level === entry.urine_color)?.color }}
+                                title={URINE_COLORS.find(c => c.level === entry.urine_color)?.status}
+                              />
+                            )}
+                          </div>
                           <p className="text-xs text-zinc-500 dark:text-zinc-400">
                             {new Date(entry.timestamp).toLocaleString([], {
                               month: 'short',
@@ -1502,6 +1602,11 @@ export default function Home() {
                               hour: 'numeric',
                               minute: '2-digit'
                             })}
+                            {entry.type === 'pee' && entry.urine_color && (
+                              <span className="ml-1">
+                                · {URINE_COLORS.find(c => c.level === entry.urine_color)?.status}
+                              </span>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -2992,9 +3097,39 @@ export default function Home() {
                     Activity Overview
                   </h2>
                 </div>
-                <span className={`text-xs font-medium px-3 py-1.5 rounded-full ${gender === 'female' ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400' : 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400'}`}>
-                  Last 7 days
-                </span>
+                <div className="relative" ref={chartDropdownRef}>
+                  <button
+                    onClick={() => setChartDropdownOpen(!chartDropdownOpen)}
+                    className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${gender === 'female' ? 'bg-pink-100 text-pink-700 hover:bg-pink-200 dark:bg-pink-900/30 dark:text-pink-400 dark:hover:bg-pink-900/50' : 'bg-teal-100 text-teal-700 hover:bg-teal-200 dark:bg-teal-900/30 dark:text-teal-400 dark:hover:bg-teal-900/50'}`}
+                  >
+                    Last {chartDays} days
+                    <svg className={`h-3.5 w-3.5 transition-transform ${chartDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {chartDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-1 py-1 bg-white dark:bg-zinc-800 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-700 min-w-[120px] z-50">
+                      {([7, 30, 90, 365] as const).map((days) => (
+                        <button
+                          key={days}
+                          onClick={() => {
+                            setChartDays(days);
+                            setChartDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${
+                            chartDays === days
+                              ? gender === 'female'
+                                ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400'
+                                : 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400'
+                              : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700'
+                          }`}
+                        >
+                          Last {days} days
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Graph Area */}

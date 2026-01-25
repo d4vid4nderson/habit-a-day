@@ -1,6 +1,7 @@
 'use client';
 
 import { useProfile } from '@/lib/hooks/useProfile';
+import { APP_VERSION } from '@/lib/version';
 
 export function Footer() {
   const { gender } = useProfile();
@@ -20,7 +21,7 @@ export function Footer() {
           © 2026 Built for <span title="Shits and Giggles" className="cursor-default">💩 &amp; 🤭</span>.
         </p>
         <p className="text-zinc-400 dark:text-zinc-500">
-          All rights reserved. Version 1.0
+          All rights reserved. Version {APP_VERSION}
         </p>
       </div>
     </footer>

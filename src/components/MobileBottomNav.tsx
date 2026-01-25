@@ -13,6 +13,7 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ currentView, onNavigate, onOpenMore, gender }: MobileBottomNavProps) {
   const activeColor = gender === 'female' ? 'text-pink-500' : 'text-teal-500';
+  const activeBg = gender === 'female' ? 'bg-pink-100 dark:bg-pink-900/30' : 'bg-teal-100 dark:bg-teal-900/30';
   const inactiveColor = 'text-zinc-400 dark:text-zinc-500';
 
   const navItems = [
@@ -21,12 +22,9 @@ export function MobileBottomNav({ currentView, onNavigate, onOpenMore, gender }:
       label: 'Home',
       view: 'home' as ViewType,
       isActive: currentView === 'home',
-      icon: (active: boolean) => (
-        <svg className="h-6 w-6" fill={active ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 0 : 1.5} d={active
-            ? "M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"
-            : "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-          } />
+      icon: () => (
+        <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
       ),
     },
@@ -35,17 +33,11 @@ export function MobileBottomNav({ currentView, onNavigate, onOpenMore, gender }:
       label: 'Food',
       view: 'food' as ViewType,
       isActive: ['food', 'food-history', 'food-faq'].includes(currentView),
-      icon: (active: boolean) => (
-        <svg className="h-6 w-6" fill={active ? 'currentColor' : 'none'} stroke={active ? 'none' : 'currentColor'} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-          {active ? (
-            <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
-          ) : (
-            <>
-              <path d="M7 4v17m-3 -17v3a3 3 0 1 0 6 0v-3" />
-              <path d="M14 8a3 4 0 1 0 6 0a3 4 0 1 0 -6 0" />
-              <path d="M17 12v9" />
-            </>
-          )}
+      icon: () => (
+        <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M7 4v17m-3 -17v3a3 3 0 1 0 6 0v-3" />
+          <path d="M14 8a3 4 0 1 0 6 0a3 4 0 1 0 -6 0" />
+          <path d="M17 12v9" />
         </svg>
       ),
     },
@@ -54,19 +46,13 @@ export function MobileBottomNav({ currentView, onNavigate, onOpenMore, gender }:
       label: 'Potty',
       view: 'potty' as ViewType,
       isActive: ['potty', 'history', 'faq'].includes(currentView),
-      icon: (active: boolean) => (
-        <svg className="h-6 w-6" fill={active ? 'currentColor' : 'none'} stroke={active ? 'none' : 'currentColor'} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-          {active ? (
-            <path d="M6 3h12v2H6V3zm-3 7c0-2.76 1.79-5 4-5h10c2.21 0 4 2.24 4 5v1c0 1.1-.9 2-2 2h-1v8c0 .55-.45 1-1 1H8c-.55 0-1-.45-1-1v-8H6c-1.1 0-2-.9-2-2v-1z"/>
-          ) : (
-            <>
-              <path d="M3 10a3 7 0 1 0 6 0a3 7 0 1 0 -6 0" />
-              <path d="M21 10c0 -3.866 -1.343 -7 -3 -7" />
-              <path d="M6 3h12" />
-              <path d="M21 10v10l-3 -1l-3 2l-3 -3l-3 2v-10" />
-              <path d="M6 10h.01" />
-            </>
-          )}
+      icon: () => (
+        <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M3 10a3 7 0 1 0 6 0a3 7 0 1 0 -6 0" />
+          <path d="M21 10c0 -3.866 -1.343 -7 -3 -7" />
+          <path d="M6 3h12" />
+          <path d="M21 10v10l-3 -1l-3 2l-3 -3l-3 2v-10" />
+          <path d="M6 10h.01" />
         </svg>
       ),
     },
@@ -75,12 +61,11 @@ export function MobileBottomNav({ currentView, onNavigate, onOpenMore, gender }:
       label: 'Water',
       view: 'water' as ViewType,
       isActive: ['water', 'water-history', 'water-faq'].includes(currentView),
-      icon: (active: boolean) => (
-        <svg className="h-6 w-6" fill={active ? 'currentColor' : 'none'} stroke={active ? 'none' : 'currentColor'} strokeWidth={1.5} viewBox="0 0 24 24">
-          <path d={active
-            ? "M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69z"
-            : "M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69z"
-          } />
+      icon: () => (
+        <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M10 5h4v-2a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v2" />
+          <path d="M14 3.5c0 1.626 .507 3.212 1.45 4.537l.05 .07a8.093 8.093 0 0 1 1.5 4.694v6.199a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2v-6.2c0 -1.682 .524 -3.322 1.5 -4.693l.05 -.07a7.823 7.823 0 0 0 1.45 -4.537" />
+          <path d="M7 14.803a2.4 2.4 0 0 0 1 -.803a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 1 -.805" />
         </svg>
       ),
     },
@@ -110,17 +95,16 @@ export function MobileBottomNav({ currentView, onNavigate, onOpenMore, gender }:
                 onNavigate(item.view);
               }
             }}
-            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl min-w-[60px] transition-colors ${
-              item.isActive ? activeColor : inactiveColor
+            className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-xl min-w-[60px] transition-all ${
+              item.isActive
+                ? `${activeColor} ${activeBg}`
+                : inactiveColor
             }`}
           >
-            {item.icon(item.isActive)}
+            {item.icon()}
             <span className={`text-[10px] mt-1 font-medium ${item.isActive ? '' : 'text-zinc-500 dark:text-zinc-400'}`}>
               {item.label}
             </span>
-            {item.isActive && (
-              <div className={`absolute bottom-1 w-1 h-1 rounded-full ${gender === 'female' ? 'bg-pink-500' : 'bg-teal-500'}`} />
-            )}
           </button>
         ))}
       </div>

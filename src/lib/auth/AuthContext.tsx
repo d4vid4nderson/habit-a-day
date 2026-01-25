@@ -10,6 +10,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithFacebook: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -98,6 +99,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const signInWithApple = async () => {
+    const supabase = getSupabase();
+    if (!supabase) return;
+    await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: getRedirectUrl(),
+      },
+    });
+  };
+
   const signOut = async () => {
     const supabase = getSupabase();
     if (!supabase) return;
@@ -112,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signInWithGoogle,
         signInWithFacebook,
+        signInWithApple,
         signOut,
       }}
     >

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Generate Habit-a-Day Favicon</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #18181b;
+      color: white;
+    }
+    canvas {
+      margin: 20px;
+    }
+    button {
+      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #14b8a6 100%);
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      font-size: 18px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    h1 {
+      margin-bottom: 0;
+    }
+    p {
+      color: #a1a1aa;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Habit-a-Day Favicon</h1>
+  <p>512x512 PNG</p>
+  <canvas id="canvas" width="512" height="512"></canvas>
+  <button onclick="downloadIcon()">Download PNG</button>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const size = 512;
+
+    function drawIcon() {
+      // Clear canvas
+      ctx.clearRect(0, 0, size, size);
+
+      // Create gradient for background border
+      const bgGradient = ctx.createLinearGradient(0, 0, size, size);
+      bgGradient.addColorStop(0, '#ec4899');
+      bgGradient.addColorStop(0.5, '#8b5cf6');
+      bgGradient.addColorStop(1, '#14b8a6');
+
+      // Draw outer rounded rectangle with gradient (as a stroke)
+      ctx.beginPath();
+      roundRect(ctx, 6, 6, size - 12, size - 12, 96);
+      ctx.strokeStyle = bgGradient;
+      ctx.lineWidth = 12;
+      ctx.stroke();
+
+      // Fill inner area with dark color
+      ctx.beginPath();
+      roundRect(ctx, 12, 12, size - 24, size - 24, 90);
+      ctx.fillStyle = '#18181b';
+      ctx.fill();
+
+      // Create gradient for icon strokes
+      const iconGradient = ctx.createLinearGradient(128, 128, 384, 384);
+      iconGradient.addColorStop(0, '#ec4899');
+      iconGradient.addColorStop(0.5, '#a855f7');
+      iconGradient.addColorStop(1, '#14b8a6');
+
+      const centerX = size / 2;
+      const centerY = size / 2;
+      const scale = 10; // Scale factor for the 24x24 viewBox to 512
+
+      // Draw Lucide circle-check icon (scaled from 24x24 viewBox)
+      // Circle: cx="12" cy="12" r="10"
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 10 * scale, 0, Math.PI * 2);
+      ctx.strokeStyle = iconGradient;
+      ctx.lineWidth = 1.5 * scale;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      // Checkmark path: "m9 12 2 2 4-4"
+      ctx.beginPath();
+      ctx.moveTo(centerX + (9 - 12) * scale, centerY + (12 - 12) * scale);  // 9,12
+      ctx.lineTo(centerX + (11 - 12) * scale, centerY + (14 - 12) * scale); // 11,14
+      ctx.lineTo(centerX + (15 - 12) * scale, centerY + (10 - 12) * scale); // 15,10
+      ctx.strokeStyle = iconGradient;
+      ctx.lineWidth = 1.5 * scale;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function downloadIcon() {
+      const link = document.createElement('a');
+      link.download = 'habit-a-day-icon-512x512.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Draw the icon when page loads
+    drawIcon();
+  </script>
+</body>
+</html>

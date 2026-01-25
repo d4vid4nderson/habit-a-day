@@ -15,11 +15,18 @@ export interface UserProfile {
   last_name: string | null;
   age: number | null;
   avatar_url: string | null;
+  oauth_avatar_url: string | null; // Avatar from OAuth provider (Google/Facebook/Apple)
+  height_feet: number | null;
+  height_inches: number | null;
+  height_cm: number | null;
+  height_unit: 'imperial' | 'metric' | null;
   weight: number | null;
   weight_unit: WeightUnit | null;
   gender: Gender;
   theme: Theme;
   profile_completed: boolean;
+  terms_accepted_at: string | null;
+  terms_version: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -80,7 +87,7 @@ export async function createProfile(
 
 export async function updateProfile(
   userId: string,
-  updates: Partial<Pick<UserProfile, 'gender' | 'theme' | 'display_name' | 'first_name' | 'last_name' | 'age' | 'avatar_url' | 'weight' | 'weight_unit' | 'profile_completed'>>
+  updates: Partial<Pick<UserProfile, 'gender' | 'theme' | 'display_name' | 'first_name' | 'last_name' | 'age' | 'avatar_url' | 'height_feet' | 'height_inches' | 'height_cm' | 'height_unit' | 'weight' | 'weight_unit' | 'profile_completed'>>
 ): Promise<UserProfile> {
   const { data, error } = await getSupabase()
     .from('profiles')
@@ -115,9 +122,11 @@ export async function getOrCreateProfile(
 }
 
 export function getDefaultAvatarUrl(userId: string, gender: Gender): string {
-  // Use our API endpoint which fetches from Noun Project (with DiceBear fallback)
-  // The API endpoint redirects to the actual image URL
-  return `/api/avatar?gender=${gender}&seed=${userId}`;
+  // alohe/avatars - professional cartoon avatars
+  // Use a consistent avatar based on userId hash
+  const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const avatarNum = (hash % 27) + 1;
+  return `https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_${avatarNum}.png`;
 }
 
 export async function fetchDefaultAvatarUrl(userId: string, gender: Gender): Promise<string> {
@@ -223,4 +232,34 @@ export async function completeProfileSetup(
   });
 
   return profile;
+}
+
+// Current terms version - update this when terms change
+export const CURRENT_TERMS_VERSION = '1.0.0';
+
+export async function acceptTerms(userId: string): Promise<UserProfile> {
+  const { data, error } = await getSupabase()
+    .from('profiles')
+    .update({
+      terms_accepted_at: new Date().toISOString(),
+      terms_version: CURRENT_TERMS_VERSION,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error accepting terms:', error.message, error.code, error.details);
+    throw new Error(error.message || 'Failed to accept terms');
+  }
+
+  return data;
+}
+
+export function hasAcceptedCurrentTerms(profile: UserProfile | null): boolean {
+  if (!profile) return false;
+  if (!profile.terms_accepted_at) return false;
+  // Check if they've accepted the current version
+  return profile.terms_version === CURRENT_TERMS_VERSION;
 }
