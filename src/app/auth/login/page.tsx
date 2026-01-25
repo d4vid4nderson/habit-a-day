@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
+import Link from 'next/link';
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -38,26 +39,75 @@ function FacebookIcon({ className }: { className?: string }) {
   );
 }
 
-function AppleIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24">
-      <path
-        fill="currentColor"
-        d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"
-      />
-    </svg>
-  );
-}
-
 export default function LoginPage() {
-  const { user, loading, signInWithGoogle, signInWithFacebook, signInWithApple } = useAuth();
+  const { user, loading, signInWithGoogle, signInWithFacebook, signInWithEmail, signUpWithEmail } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  // Check for error in URL params
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam) {
+      setError(errorParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!loading && user) {
       router.push('/');
     }
   }, [user, loading, router]);
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    // Validate email
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid email address.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate password
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (isSignUp) {
+      // Validate confirm password
+      if (password !== confirmPassword) {
+        setError('Passwords do not match.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const { error, needsConfirmation } = await signUpWithEmail(email, password);
+      if (error) {
+        setError(error);
+      } else if (needsConfirmation) {
+        setShowConfirmation(true);
+      }
+    } else {
+      const { error } = await signInWithEmail(email, password);
+      if (error) {
+        setError(error);
+      }
+    }
+
+    setIsSubmitting(false);
+  };
 
   if (loading) {
     return (
@@ -71,9 +121,44 @@ export default function LoginPage() {
     return null;
   }
 
+  // Show confirmation message after successful sign up
+  if (showConfirmation) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-teal-50 via-cyan-50 to-zinc-50 px-4 dark:from-zinc-950 dark:via-teal-950/20 dark:to-zinc-950">
+        <div className="w-full max-w-sm space-y-6 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-900/30">
+            <svg className="h-8 w-8 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+            Check your email
+          </h1>
+          <p className="text-zinc-600 dark:text-zinc-400">
+            We sent a confirmation link to <strong>{email}</strong>. Click the link in the email to verify your account.
+          </p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-500">
+            Didn&apos;t receive the email? Check your spam folder or try signing up again.
+          </p>
+          <button
+            onClick={() => {
+              setShowConfirmation(false);
+              setEmail('');
+              setPassword('');
+              setConfirmPassword('');
+            }}
+            className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 font-medium"
+          >
+            Back to login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-teal-50 via-cyan-50 to-zinc-50 px-4 dark:from-zinc-950 dark:via-teal-950/20 dark:to-zinc-950">
-      <div className="w-full max-w-sm space-y-8">
+      <div className="w-full max-w-sm space-y-6">
         {/* Logo/Title */}
         <div className="text-center">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-500 to-blue-600 bg-clip-text text-transparent">
@@ -84,8 +169,98 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Auth Buttons */}
-        <div className="space-y-4">
+        {/* Error message */}
+        {error && (
+          <div className="rounded-xl bg-red-100 p-4 text-center text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">
+            {error}
+          </div>
+        )}
+
+        {/* Email/Password Form */}
+        <form onSubmit={handleEmailAuth} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+              placeholder="••••••••"
+              minLength={6}
+              required
+            />
+          </div>
+          {isSignUp && (
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+                placeholder="••••••••"
+                minLength={6}
+                required
+              />
+            </div>
+          )}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full rounded-xl bg-teal-500 px-4 py-3 font-medium text-white shadow-sm transition-colors hover:bg-teal-600 active:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
+          </button>
+        </form>
+
+        {/* Toggle sign up / sign in */}
+        <div className="text-center">
+          <button
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setError(null);
+              setConfirmPassword('');
+            }}
+            className="text-sm text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
+          >
+            {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-zinc-300 dark:border-zinc-700"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-gradient-to-br from-teal-50 via-cyan-50 to-zinc-50 px-4 text-zinc-500 dark:from-zinc-950 dark:via-teal-950/20 dark:to-zinc-950 dark:text-zinc-400">
+              or continue with
+            </span>
+          </div>
+        </div>
+
+        {/* OAuth Buttons */}
+        <div className="space-y-3">
           <button
             onClick={signInWithGoogle}
             className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 active:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
@@ -101,20 +276,14 @@ export default function LoginPage() {
             <FacebookIcon className="h-5 w-5" />
             Continue with Facebook
           </button>
-
-          <button
-            onClick={signInWithApple}
-            className="flex w-full items-center justify-center gap-3 rounded-xl bg-black px-4 py-3 font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 active:bg-zinc-900"
-          >
-            <AppleIcon className="h-5 w-5" />
-            Continue with Apple
-          </button>
         </div>
 
         {/* Privacy note */}
         <p className="text-center text-xs text-zinc-400 dark:text-zinc-500">
-          By continuing, you agree to our Terms of Service and Privacy Policy.
-          Your data is private and secure.
+          By continuing, you agree to our{' '}
+          <Link href="/terms" className="text-teal-600 hover:underline dark:text-teal-400">Terms of Service</Link>
+          {' '}and{' '}
+          <Link href="/privacy" className="text-teal-600 hover:underline dark:text-teal-400">Privacy Policy</Link>.
         </p>
       </div>
     </div>

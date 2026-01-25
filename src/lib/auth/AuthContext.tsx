@@ -10,7 +10,8 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithFacebook: () => Promise<void>;
-  signInWithApple: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUpWithEmail: (email: string, password: string) => Promise<{ error: string | null; needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -99,15 +100,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const signInWithApple = async () => {
+  const signInWithEmail = async (email: string, password: string): Promise<{ error: string | null }> => {
     const supabase = getSupabase();
-    if (!supabase) return;
-    await supabase.auth.signInWithOAuth({
-      provider: 'apple',
+    if (!supabase) return { error: 'Supabase not configured' };
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      if (error.message.includes('Email not confirmed')) {
+        return { error: 'Please check your email and click the confirmation link before signing in.' };
+      }
+      if (error.message.includes('Invalid login credentials')) {
+        return { error: 'Invalid email or password. Please try again.' };
+      }
+      return { error: error.message };
+    }
+
+    return { error: null };
+  };
+
+  const signUpWithEmail = async (email: string, password: string): Promise<{ error: string | null; needsConfirmation: boolean }> => {
+    const supabase = getSupabase();
+    if (!supabase) return { error: 'Supabase not configured', needsConfirmation: false };
+
+    const { error, data } = await supabase.auth.signUp({
+      email,
+      password,
       options: {
-        redirectTo: getRedirectUrl(),
+        emailRedirectTo: getRedirectUrl(),
       },
     });
+
+    if (error) {
+      if (error.message.includes('already registered')) {
+        return { error: 'An account with this email already exists. Please sign in instead.', needsConfirmation: false };
+      }
+      return { error: error.message, needsConfirmation: false };
+    }
+
+    // Check if email confirmation is required
+    // Supabase returns a user but with identities as null/empty if confirmation is pending
+    const needsConfirmation = !data.session;
+
+    return { error: null, needsConfirmation };
   };
 
   const signOut = async () => {
@@ -124,7 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signInWithGoogle,
         signInWithFacebook,
-        signInWithApple,
+        signInWithEmail,
+        signUpWithEmail,
         signOut,
       }}
     >
