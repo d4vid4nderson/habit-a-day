@@ -85,6 +85,11 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
           <path d="M22 12h-1" />
         </svg>
       ),
+      subItems: [
+        { label: 'Log PT', disabled: true },
+        { label: gender === 'female' ? 'Herstory' : 'History', disabled: true },
+        { label: 'PT FAQs', disabled: true },
+      ],
     },
     {
       id: 'potty',
@@ -136,7 +141,7 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
       <div className="flex items-center gap-3">
         <div className="relative h-12 w-12 shrink-0">
           <div className={`absolute inset-0 rounded-xl bg-gradient-to-br shadow-lg ${headerGradient} ${gender === 'female' ? 'shadow-pink-500/20' : 'shadow-teal-500/20'}`} />
-          <div className="absolute inset-[3px] rounded-[9px] bg-white dark:bg-zinc-900 flex items-center justify-center">
+          <div className={`absolute inset-[3px] rounded-[9px] flex items-center justify-center ${gender === 'female' ? 'bg-pink-50 dark:bg-zinc-900' : 'bg-teal-50 dark:bg-zinc-900'}`}>
             <svg width="24" height="24" viewBox="0 0 80 80" fill="none">
               <circle cx="40" cy="40" r="22" stroke={`url(#navGrad-${gender})`} strokeWidth="5" fill="none" />
               <path d="M26 40 L35 49 L54 28" stroke={`url(#navGrad-${gender})`} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
@@ -179,7 +184,9 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
                 <button
                   onClick={() => setActiveDropdown(activeDropdown === item.id ? null : item.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
-                    isViewActive(item) ? activeClass : `text-zinc-600 dark:text-zinc-400 ${hoverClass}`
+                    item.disabled
+                      ? 'text-zinc-400 dark:text-zinc-500'
+                      : isViewActive(item) ? activeClass : `text-zinc-600 dark:text-zinc-400 ${hoverClass}`
                   }`}
                 >
                   {item.icon}
@@ -190,35 +197,34 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
                 </button>
                 {activeDropdown === item.id && (
                   <div className="absolute top-full left-0 mt-1 py-2 bg-white dark:bg-zinc-800 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-700 min-w-[180px] z-50">
-                    {item.subItems.map((subItem) => (
-                      <button
-                        key={subItem.view}
-                        onClick={() => {
-                          onNavigate(subItem.view);
-                          setActiveDropdown(null);
-                        }}
-                        className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${
-                          currentView === subItem.view
-                            ? activeClass
-                            : `text-zinc-600 dark:text-zinc-400 ${hoverClass}`
-                        }`}
-                      >
-                        {subItem.label}
-                      </button>
+                    {item.subItems.map((subItem, index) => (
+                      'disabled' in subItem && subItem.disabled ? (
+                        <div
+                          key={subItem.label || index}
+                          className="w-full text-left px-4 py-2 text-sm font-medium text-zinc-400 dark:text-zinc-500 cursor-not-allowed"
+                        >
+                          {subItem.label}
+                        </div>
+                      ) : 'view' in subItem ? (
+                        <button
+                          key={subItem.view}
+                          onClick={() => {
+                            onNavigate(subItem.view);
+                            setActiveDropdown(null);
+                          }}
+                          className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${
+                            currentView === subItem.view
+                              ? activeClass
+                              : `text-zinc-600 dark:text-zinc-400 ${hoverClass}`
+                          }`}
+                        >
+                          {subItem.label}
+                        </button>
+                      ) : null
                     ))}
                   </div>
                 )}
               </>
-            ) : item.disabled ? (
-              <div
-                className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-zinc-400 dark:text-zinc-500 cursor-not-allowed"
-              >
-                {item.icon}
-                <span>{item.label}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400">
-                  Soon
-                </span>
-              </div>
             ) : (
               <button
                 onClick={() => item.view && onNavigate(item.view)}
