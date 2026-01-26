@@ -150,6 +150,13 @@ function HomeContent() {
   const [waterNotes, setWaterNotes] = useState('');
   const [waterSelectedDate, setWaterSelectedDate] = useState(getToday());
   const [waterFaqSearch, setWaterFaqSearch] = useState('');
+  // Water history add form state
+  const [waterHistoryAddOpen, setWaterHistoryAddOpen] = useState(false);
+  const [waterHistoryAmount, setWaterHistoryAmount] = useState('');
+  const [waterHistoryNotes, setWaterHistoryNotes] = useState('');
+  const [waterHistoryHour, setWaterHistoryHour] = useState('');
+  const [waterHistoryMinute, setWaterHistoryMinute] = useState('');
+  const [waterHistoryAmPm, setWaterHistoryAmPm] = useState<'AM' | 'PM'>('AM');
 
   // Food journal state
   const [foodMealType, setFoodMealType] = useState<MealType>('breakfast');
@@ -161,6 +168,14 @@ function HomeContent() {
   const [foodEntryMinute, setFoodEntryMinute] = useState('');
   const [foodEntryAmPm, setFoodEntryAmPm] = useState<'AM' | 'PM'>('AM');
   const [calorieAIModalOpen, setCalorieAIModalOpen] = useState(false);
+  // Food history add form state
+  const [foodHistoryAddOpen, setFoodHistoryAddOpen] = useState(false);
+  const [foodHistoryMealType, setFoodHistoryMealType] = useState<MealType>('breakfast');
+  const [foodHistoryCalories, setFoodHistoryCalories] = useState('');
+  const [foodHistoryNotes, setFoodHistoryNotes] = useState('');
+  const [foodHistoryHour, setFoodHistoryHour] = useState('');
+  const [foodHistoryMinute, setFoodHistoryMinute] = useState('');
+  const [foodHistoryAmPm, setFoodHistoryAmPm] = useState<'AM' | 'PM'>('AM');
   const [healthcareReportOpen, setHealthcareReportOpen] = useState(false);
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
@@ -504,6 +519,73 @@ function HomeContent() {
     } catch (err) {
       console.error('Failed to duplicate food entry:', err);
     }
+  };
+
+  // Water history add handlers
+  const handleWaterHistoryAdd = async () => {
+    if (!waterHistoryAmount || !waterHistoryHour || !waterHistoryMinute) return;
+
+    let hours = parseInt(waterHistoryHour);
+    const minutes = parseInt(waterHistoryMinute);
+    // Convert 12-hour to 24-hour format
+    if (waterHistoryAmPm === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (waterHistoryAmPm === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    const entryDate = new Date(waterSelectedDate + 'T00:00:00');
+    entryDate.setHours(hours, minutes, 0, 0);
+
+    try {
+      await createWaterEntry(parseFloat(waterHistoryAmount), waterUnit, waterHistoryNotes, entryDate.getTime());
+      handleWaterHistoryCancel();
+    } catch (err) {
+      console.error('Failed to add water entry:', err);
+    }
+  };
+
+  const handleWaterHistoryCancel = () => {
+    setWaterHistoryAddOpen(false);
+    setWaterHistoryAmount('');
+    setWaterHistoryNotes('');
+    setWaterHistoryHour('');
+    setWaterHistoryMinute('');
+    setWaterHistoryAmPm('AM');
+  };
+
+  // Food history add handlers
+  const handleFoodHistoryAdd = async () => {
+    if (!foodHistoryCalories || !foodHistoryHour || !foodHistoryMinute) return;
+
+    let hours = parseInt(foodHistoryHour);
+    const minutes = parseInt(foodHistoryMinute);
+    // Convert 12-hour to 24-hour format
+    if (foodHistoryAmPm === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (foodHistoryAmPm === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    const entryDate = new Date(foodSelectedDate + 'T00:00:00');
+    entryDate.setHours(hours, minutes, 0, 0);
+
+    try {
+      await createFoodEntry(foodHistoryMealType, parseInt(foodHistoryCalories), foodHistoryNotes, entryDate.getTime());
+      handleFoodHistoryCancel();
+    } catch (err) {
+      console.error('Failed to add food entry:', err);
+    }
+  };
+
+  const handleFoodHistoryCancel = () => {
+    setFoodHistoryAddOpen(false);
+    setFoodHistoryMealType('breakfast');
+    setFoodHistoryCalories('');
+    setFoodHistoryNotes('');
+    setFoodHistoryHour('');
+    setFoodHistoryMinute('');
+    setFoodHistoryAmPm('AM');
   };
 
   const getFoodEntriesForDate = (dateStr: string) => {
@@ -2142,9 +2224,140 @@ function HomeContent() {
 
             {/* Entries for selected day */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
-              <h2 className="font-semibold text-zinc-800 dark:text-zinc-200 mb-3">
-                {formatDateHeader(waterSelectedDate)}
-              </h2>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="font-semibold text-zinc-800 dark:text-zinc-200">
+                  {formatDateHeader(waterSelectedDate)}
+                </h2>
+                {!waterHistoryAddOpen && (
+                  <button
+                    onClick={() => setWaterHistoryAddOpen(true)}
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-base font-semibold transition-colors ${
+                      gender === 'female'
+                        ? 'bg-pink-100 text-pink-700 active:bg-pink-200 dark:bg-pink-900/30 dark:text-pink-400'
+                        : 'bg-teal-100 text-teal-700 active:bg-teal-200 dark:bg-teal-900/30 dark:text-teal-400'
+                    }`}
+                  >
+                    + Add
+                  </button>
+                )}
+              </div>
+
+              {/* Add Water Form */}
+              {waterHistoryAddOpen && (
+                <div className="mb-4 rounded-2xl border-2 border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900 overflow-hidden">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <svg className={`h-8 w-8 ${gender === 'female' ? 'text-pink-500' : 'text-teal-500'}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 5h4v-2a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v2" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 3.5c0 1.626 .507 3.212 1.45 4.537l.05 .07a8.093 8.093 0 0 1 1.5 4.694v6.199a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2v-6.2c0 -1.682 .524 -3.322 1.5 -4.693l.05 -.07a7.823 7.823 0 0 0 1.45 -4.537" />
+                      </svg>
+                      <span className={`text-xl font-bold ${gender === 'female' ? 'text-pink-600 dark:text-pink-400' : 'text-teal-600 dark:text-teal-400'}`}>
+                        Add Water
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleWaterHistoryCancel}
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Time Input */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Time</label>
+                      <div className="flex gap-2">
+                        <select
+                          value={waterHistoryHour}
+                          onChange={(e) => setWaterHistoryHour(e.target.value)}
+                          className={`flex-1 rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        >
+                          <option value="">Hr</option>
+                          {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((h) => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                        <span className="flex items-center text-zinc-400 text-xl font-bold">:</span>
+                        <select
+                          value={waterHistoryMinute}
+                          onChange={(e) => setWaterHistoryMinute(e.target.value)}
+                          className={`flex-1 rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        >
+                          <option value="">Min</option>
+                          {Array.from({ length: 60 }, (_, i) => (
+                            <option key={i} value={i}>{i.toString().padStart(2, '0')}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={waterHistoryAmPm}
+                          onChange={(e) => setWaterHistoryAmPm(e.target.value as 'AM' | 'PM')}
+                          className={`rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        >
+                          <option value="AM">AM</option>
+                          <option value="PM">PM</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Amount Input */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Amount</label>
+                      <input
+                        type="number"
+                        value={waterHistoryAmount}
+                        onChange={(e) => setWaterHistoryAmount(e.target.value)}
+                        placeholder={`Amount in ${waterUnit}`}
+                        className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                          gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                        }`}
+                      />
+                    </div>
+
+                    {/* Notes */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Notes</label>
+                      <textarea
+                        value={waterHistoryNotes}
+                        onChange={(e) => setWaterHistoryNotes(e.target.value)}
+                        placeholder="Optional notes..."
+                        className={`min-h-[100px] w-full resize-none rounded-xl border-2 border-zinc-200 bg-white p-4 text-base leading-relaxed focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500 ${
+                          gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                        }`}
+                      />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleWaterHistoryCancel}
+                        className="flex-1 cursor-pointer rounded-xl bg-zinc-200 py-3 text-base font-medium text-zinc-700 active:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300 dark:active:bg-zinc-600"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleWaterHistoryAdd}
+                        disabled={!waterHistoryAmount || !waterHistoryHour || !waterHistoryMinute}
+                        className={`flex-1 cursor-pointer rounded-xl py-3 text-base font-semibold text-white transition-colors disabled:opacity-50 ${
+                          gender === 'female'
+                            ? 'bg-pink-500 hover:bg-pink-600 disabled:hover:bg-pink-500'
+                            : 'bg-teal-500 hover:bg-teal-600 disabled:hover:bg-teal-500'
+                        }`}
+                      >
+                        Log Entry
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {dayWaterEntries.length > 0 ? (
                 <div className="space-y-2">
@@ -2832,9 +3045,160 @@ function HomeContent() {
 
             {/* Entries for selected day */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
-              <h2 className="font-semibold text-zinc-800 dark:text-zinc-200 mb-3">
-                {formatDateHeader(foodSelectedDate)}
-              </h2>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="font-semibold text-zinc-800 dark:text-zinc-200">
+                  {formatDateHeader(foodSelectedDate)}
+                </h2>
+                {!foodHistoryAddOpen && (
+                  <button
+                    onClick={() => setFoodHistoryAddOpen(true)}
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-base font-semibold transition-colors ${
+                      gender === 'female'
+                        ? 'bg-pink-100 text-pink-700 active:bg-pink-200 dark:bg-pink-900/30 dark:text-pink-400'
+                        : 'bg-teal-100 text-teal-700 active:bg-teal-200 dark:bg-teal-900/30 dark:text-teal-400'
+                    }`}
+                  >
+                    + Add
+                  </button>
+                )}
+              </div>
+
+              {/* Add Food Form */}
+              {foodHistoryAddOpen && (
+                <div className="mb-4 rounded-2xl border-2 border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900 overflow-hidden">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <svg className={`h-8 w-8 ${gender === 'female' ? 'text-pink-500' : 'text-teal-500'}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path d="M7 4v17m-3 -17v3a3 3 0 1 0 6 0v-3" />
+                        <path d="M14 8a3 4 0 1 0 6 0a3 4 0 1 0 -6 0" />
+                        <path d="M17 12v9" />
+                      </svg>
+                      <span className={`text-xl font-bold ${gender === 'female' ? 'text-pink-600 dark:text-pink-400' : 'text-teal-600 dark:text-teal-400'}`}>
+                        Add Food
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleFoodHistoryCancel}
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Time Input */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Time</label>
+                      <div className="flex gap-2">
+                        <select
+                          value={foodHistoryHour}
+                          onChange={(e) => setFoodHistoryHour(e.target.value)}
+                          className={`flex-1 rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        >
+                          <option value="">Hr</option>
+                          {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((h) => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                        <span className="flex items-center text-zinc-400 text-xl font-bold">:</span>
+                        <select
+                          value={foodHistoryMinute}
+                          onChange={(e) => setFoodHistoryMinute(e.target.value)}
+                          className={`flex-1 rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        >
+                          <option value="">Min</option>
+                          {Array.from({ length: 60 }, (_, i) => (
+                            <option key={i} value={i}>{i.toString().padStart(2, '0')}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={foodHistoryAmPm}
+                          onChange={(e) => setFoodHistoryAmPm(e.target.value as 'AM' | 'PM')}
+                          className={`rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        >
+                          <option value="AM">AM</option>
+                          <option value="PM">PM</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Meal Type */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Meal Type</label>
+                      <select
+                        value={foodHistoryMealType}
+                        onChange={(e) => setFoodHistoryMealType(e.target.value as MealType)}
+                        className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                          gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                        }`}
+                      >
+                        <option value="breakfast">Breakfast</option>
+                        <option value="lunch">Lunch</option>
+                        <option value="dinner">Dinner</option>
+                        <option value="snack">Snack</option>
+                        <option value="beverage">Beverage</option>
+                        <option value="dessert">Dessert</option>
+                      </select>
+                    </div>
+
+                    {/* Calories Input */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Calories</label>
+                      <input
+                        type="number"
+                        value={foodHistoryCalories}
+                        onChange={(e) => setFoodHistoryCalories(e.target.value)}
+                        placeholder="Calories"
+                        className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
+                          gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                        }`}
+                      />
+                    </div>
+
+                    {/* Notes */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Notes</label>
+                      <textarea
+                        value={foodHistoryNotes}
+                        onChange={(e) => setFoodHistoryNotes(e.target.value)}
+                        placeholder="Optional notes..."
+                        className={`min-h-[100px] w-full resize-none rounded-xl border-2 border-zinc-200 bg-white p-4 text-base leading-relaxed focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500 ${
+                          gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                        }`}
+                      />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleFoodHistoryCancel}
+                        className="flex-1 cursor-pointer rounded-xl bg-zinc-200 py-3 text-base font-medium text-zinc-700 active:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300 dark:active:bg-zinc-600"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleFoodHistoryAdd}
+                        disabled={!foodHistoryCalories || !foodHistoryHour || !foodHistoryMinute}
+                        className={`flex-1 cursor-pointer rounded-xl py-3 text-base font-semibold text-white transition-colors disabled:opacity-50 ${
+                          gender === 'female'
+                            ? 'bg-pink-500 hover:bg-pink-600 disabled:hover:bg-pink-500'
+                            : 'bg-teal-500 hover:bg-teal-600 disabled:hover:bg-teal-500'
+                        }`}
+                      >
+                        Log Entry
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {dayFoodEntries.length > 0 ? (
                 <div className="space-y-2">
