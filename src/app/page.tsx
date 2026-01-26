@@ -2867,7 +2867,7 @@ function HomeContent() {
                 const todayEnd = todayStart + 24 * 60 * 60 * 1000;
                 const todayFoodEntries = foodEntries
                   .filter((e) => e.timestamp >= todayStart && e.timestamp < todayEnd)
-                  .sort((a, b) => a.timestamp - b.timestamp); // Chronological order
+                  .sort((a, b) => b.timestamp - a.timestamp); // Reverse chronological order (newest first)
                 return todayFoodEntries.length > 0 ? (
                 <div className="space-y-2">
                   {todayFoodEntries.map((entry) => (
