@@ -24,7 +24,7 @@ import { BathroomType, BathroomEntry, WaterUnit, MealType, UrineColor, URINE_COL
 import { PoopIcon, PeeIcon, SimplePoopIcon, SimpleDropletIcon } from '@/components/icons/BathroomIcons';
 import { CalorieAIModal } from '@/components/CalorieAIModal';
 import { HealthcareReport } from '@/components/HealthcareReport';
-import { Flame, Sparkles, FileText, Share2 } from 'lucide-react';
+import { Flame, Sparkles, FileText, Share2, Copy } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useEntries } from '@/lib/hooks/useEntries';
 import { useProfile } from '@/lib/hooks/useProfile';
@@ -495,6 +495,14 @@ function HomeContent() {
       await deleteFoodEntry(id);
     } catch (err) {
       console.error('Failed to delete food entry:', err);
+    }
+  };
+
+  const handleFoodDuplicate = async (entry: { meal_type: MealType; calories: number; notes?: string }) => {
+    try {
+      await createFoodEntry(entry.meal_type, entry.calories, entry.notes);
+    } catch (err) {
+      console.error('Failed to duplicate food entry:', err);
     }
   };
 
@@ -2650,8 +2658,8 @@ function HomeContent() {
                       key={entry.id}
                       className="flex items-center justify-between rounded-xl bg-zinc-50 px-4 py-3 dark:bg-zinc-700/50"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                           gender === 'female' ? 'bg-pink-100 dark:bg-pink-900/30' : 'bg-teal-100 dark:bg-teal-900/30'
                         }`}>
                           <svg className={`h-4 w-4 ${gender === 'female' ? 'text-pink-500' : 'text-teal-500'}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -2660,24 +2668,38 @@ function HomeContent() {
                             <path d="M17 12v9" />
                           </svg>
                         </div>
-                        <div>
-                          <p className="font-medium text-zinc-800 dark:text-zinc-200 capitalize">
+                        <div className="min-w-0">
+                          <p className="font-medium text-zinc-800 dark:text-zinc-200 capitalize truncate">
                             {getMealTypeLabel(entry.meal_type)} - {entry.calories} cal
                           </p>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                             {new Date(entry.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                             {entry.notes && ` • ${entry.notes.substring(0, 30)}${entry.notes.length > 30 ? '...' : ''}`}
                           </p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleFoodDelete(entry.id)}
-                        className="text-zinc-400 hover:text-red-500"
-                      >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => handleFoodDuplicate(entry)}
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            gender === 'female'
+                              ? 'text-zinc-400 hover:text-pink-500 hover:bg-pink-50 dark:hover:bg-pink-900/20'
+                              : 'text-zinc-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/20'
+                          }`}
+                          title="Duplicate entry"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleFoodDelete(entry.id)}
+                          className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          title="Delete entry"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -2821,8 +2843,8 @@ function HomeContent() {
                       key={entry.id}
                       className="flex items-center justify-between rounded-xl bg-zinc-50 px-4 py-3 dark:bg-zinc-700/50"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                           gender === 'female' ? 'bg-pink-100 dark:bg-pink-900/30' : 'bg-teal-100 dark:bg-teal-900/30'
                         }`}>
                           <svg className={`h-4 w-4 ${gender === 'female' ? 'text-pink-500' : 'text-teal-500'}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -2831,24 +2853,38 @@ function HomeContent() {
                             <path d="M17 12v9" />
                           </svg>
                         </div>
-                        <div>
-                          <p className="font-medium text-zinc-800 dark:text-zinc-200 capitalize">
+                        <div className="min-w-0">
+                          <p className="font-medium text-zinc-800 dark:text-zinc-200 capitalize truncate">
                             {getMealTypeLabel(entry.meal_type)} - {entry.calories} cal
                           </p>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                             {new Date(entry.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                             {entry.notes && ` • ${entry.notes}`}
                           </p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleFoodDelete(entry.id)}
-                        className="text-zinc-400 hover:text-red-500"
-                      >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => handleFoodDuplicate(entry)}
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            gender === 'female'
+                              ? 'text-zinc-400 hover:text-pink-500 hover:bg-pink-50 dark:hover:bg-pink-900/20'
+                              : 'text-zinc-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/20'
+                          }`}
+                          title="Add to today"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleFoodDelete(entry.id)}
+                          className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          title="Delete entry"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
