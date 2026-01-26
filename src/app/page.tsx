@@ -428,7 +428,7 @@ function HomeContent() {
     const dateEnd = dateStart + 24 * 60 * 60 * 1000;
     return waterEntries
       .filter((e) => e.timestamp >= dateStart && e.timestamp < dateEnd)
-      .sort((a, b) => b.timestamp - a.timestamp);
+      .sort((a, b) => a.timestamp - b.timestamp); // Chronological order (earliest first)
   };
 
   const hasWaterEntriesOnDate = (dateStr: string): boolean => {
@@ -448,7 +448,7 @@ function HomeContent() {
     const dateEnd = dateStart + 24 * 60 * 60 * 1000;
     return entries
       .filter((e) => e.timestamp >= dateStart && e.timestamp < dateEnd)
-      .sort((a, b) => b.timestamp - a.timestamp);
+      .sort((a, b) => a.timestamp - b.timestamp); // Chronological order (earliest first)
   };
 
   const typeConfig = {
@@ -511,7 +511,7 @@ function HomeContent() {
     const dateEnd = dateStart + 24 * 60 * 60 * 1000;
     return foodEntries
       .filter((e) => e.timestamp >= dateStart && e.timestamp < dateEnd)
-      .sort((a, b) => b.timestamp - a.timestamp);
+      .sort((a, b) => a.timestamp - b.timestamp); // Chronological order (earliest first)
   };
 
   const hasFoodEntriesOnDate = (dateStr: string): boolean => {
@@ -2648,9 +2648,9 @@ function HomeContent() {
                 today.setHours(0, 0, 0, 0);
                 const todayStart = today.getTime();
                 const todayEnd = todayStart + 24 * 60 * 60 * 1000;
-                const todayFoodEntries = foodEntries.filter(
-                  (e) => e.timestamp >= todayStart && e.timestamp < todayEnd
-                );
+                const todayFoodEntries = foodEntries
+                  .filter((e) => e.timestamp >= todayStart && e.timestamp < todayEnd)
+                  .sort((a, b) => a.timestamp - b.timestamp); // Chronological order
                 return todayFoodEntries.length > 0 ? (
                 <div className="space-y-2">
                   {todayFoodEntries.map((entry) => (
