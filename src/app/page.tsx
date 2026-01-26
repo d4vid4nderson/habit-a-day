@@ -168,6 +168,7 @@ function HomeContent() {
   const [foodEntryMinute, setFoodEntryMinute] = useState('');
   const [foodEntryAmPm, setFoodEntryAmPm] = useState<'AM' | 'PM'>('AM');
   const [calorieAIModalOpen, setCalorieAIModalOpen] = useState(false);
+  const [calorieAISource, setCalorieAISource] = useState<'food' | 'food-history'>('food');
   // Food history add form state
   const [foodHistoryAddOpen, setFoodHistoryAddOpen] = useState(false);
   const [foodHistoryMealType, setFoodHistoryMealType] = useState<MealType>('breakfast');
@@ -2804,7 +2805,10 @@ function HomeContent() {
                 />
                 <button
                   type="button"
-                  onClick={() => setCalorieAIModalOpen(true)}
+                  onClick={() => {
+                    setCalorieAISource('food');
+                    setCalorieAIModalOpen(true);
+                  }}
                   className={`px-4 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center gap-2 ${
                     gender === 'female'
                       ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600'
@@ -2980,9 +2984,16 @@ function HomeContent() {
           isOpen={calorieAIModalOpen}
           onClose={() => setCalorieAIModalOpen(false)}
           onSelectCalories={(calories, foodDescription) => {
-            setFoodCalories(calories.toString());
-            if (foodDescription) {
-              setFoodNotes(foodDescription);
+            if (calorieAISource === 'food-history') {
+              setFoodHistoryCalories(calories.toString());
+              if (foodDescription) {
+                setFoodHistoryNotes(foodDescription);
+              }
+            } else {
+              setFoodCalories(calories.toString());
+              if (foodDescription) {
+                setFoodNotes(foodDescription);
+              }
             }
           }}
           gender={gender}
@@ -3149,18 +3160,36 @@ function HomeContent() {
                       </select>
                     </div>
 
-                    {/* Calories Input */}
+                    {/* Calories Input with AI Button */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Calories</label>
-                      <input
-                        type="number"
-                        value={foodHistoryCalories}
-                        onChange={(e) => setFoodHistoryCalories(e.target.value)}
-                        placeholder="Calories"
-                        className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
-                          gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
-                        }`}
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          value={foodHistoryCalories}
+                          onChange={(e) => setFoodHistoryCalories(e.target.value)}
+                          placeholder="Estimated calories"
+                          className={`flex-1 rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCalorieAISource('food-history');
+                            setCalorieAIModalOpen(true);
+                          }}
+                          className={`px-4 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center gap-2 ${
+                            gender === 'female'
+                              ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600'
+                              : 'bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600'
+                          }`}
+                          title="Ask AI for calorie estimate"
+                        >
+                          <Sparkles className="w-5 h-5" />
+                          <span className="hidden sm:inline">AI</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Notes */}
