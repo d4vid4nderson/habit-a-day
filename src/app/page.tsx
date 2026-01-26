@@ -126,23 +126,11 @@ function HomeContent() {
   const [addEntryConsistency, setAddEntryConsistency] = useState('');
   const [addEntryStream, setAddEntryStream] = useState('');
   const [showMigration, setShowMigration] = useState(true);
-  const [selectedTrackers, setSelectedTrackers] = useState<Set<'potty' | 'water' | 'food'>>(() => new Set(['potty', 'water', 'food']));
+  const [selectedTracker, setSelectedTracker] = useState<'potty' | 'water' | 'food'>('potty');
   const [chartDays, setChartDays] = useState<7 | 30 | 90 | 365>(7);
   const [chartDropdownOpen, setChartDropdownOpen] = useState(false);
   const addDropdownRef = useRef<HTMLDivElement | null>(null);
   const chartDropdownRef = useRef<HTMLDivElement | null>(null);
-
-  const toggleTracker = (tracker: 'potty' | 'water' | 'food') => {
-    setSelectedTrackers(prev => {
-      const next = new Set(prev);
-      if (next.has(tracker)) {
-        next.delete(tracker);
-      } else {
-        next.add(tracker);
-      }
-      return next;
-    });
-  };
 
   // Water intake state
   const [waterAmount, setWaterAmount] = useState('');
@@ -3620,7 +3608,7 @@ function HomeContent() {
 
               {/* Graph Area */}
               <div ref={chartContainerRef} className="h-64 mb-6">
-                {selectedTrackers.size === 0 ? (
+                {!selectedTracker ? (
                   <div className="h-full rounded-xl bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
                     <div className="text-center space-y-2">
                       <svg className="h-12 w-12 text-zinc-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3645,17 +3633,9 @@ function HomeContent() {
                         tickLine={false}
                         axisLine={{ stroke: '#e4e4e7' }}
                         allowDecimals={false}
+                        domain={[0, 'auto']}
+                        unit={selectedTracker === 'water' ? ' oz' : ''}
                       />
-                      {selectedTrackers.has('water') && (
-                        <YAxis
-                          yAxisId="right"
-                          orientation="right"
-                          tick={{ fontSize: 12, fill: '#71717a' }}
-                          tickLine={false}
-                          axisLine={{ stroke: '#e4e4e7' }}
-                          unit=" oz"
-                        />
-                      )}
                       <Tooltip
                         contentStyle={{
                           backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -3667,7 +3647,7 @@ function HomeContent() {
                       <Legend
                         wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
                       />
-                      {selectedTrackers.has('potty') && (
+                      {selectedTracker === 'potty' && (
                         <>
                           <Line
                             yAxisId="left"
@@ -3691,9 +3671,9 @@ function HomeContent() {
                           />
                         </>
                       )}
-                      {selectedTrackers.has('water') && (
+                      {selectedTracker === 'water' && (
                         <Line
-                          yAxisId={selectedTrackers.has('potty') ? 'right' : 'left'}
+                          yAxisId="left"
                           type="monotone"
                           dataKey="water"
                           name="Water (oz)"
@@ -3703,7 +3683,7 @@ function HomeContent() {
                           activeDot={{ r: 6 }}
                         />
                       )}
-                      {selectedTrackers.has('food') && (
+                      {selectedTracker === 'food' && (
                         <Line
                           yAxisId="left"
                           type="monotone"
@@ -3720,46 +3700,30 @@ function HomeContent() {
                 )}
               </div>
 
-              {/* Tracker Selection - Multi-select toggles */}
+              {/* Tracker Selection - Single select */}
               <div className="space-y-4 pt-2 border-t border-zinc-100 dark:border-zinc-700">
-                <div className="flex items-center justify-between pt-4">
-                  <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Select trackers to display</p>
-                  <button
-                    onClick={() => {
-                      if (selectedTrackers.size === 3) {
-                        setSelectedTrackers(new Set());
-                      } else {
-                        setSelectedTrackers(new Set(['potty', 'water', 'food']));
-                      }
-                    }}
-                    className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors ${
-                      gender === 'female'
-                        ? 'text-pink-600 dark:text-pink-400 hover:bg-pink-100 dark:hover:bg-pink-900/30'
-                        : 'text-teal-600 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-900/30'
-                    }`}
-                  >
-                    {selectedTrackers.size === 3 ? 'Clear All' : 'Select All'}
-                  </button>
+                <div className="pt-4">
+                  <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Select tracker to display</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                  {/* Food Journal - Toggle */}
+                  {/* Food Journal - Select */}
                   <button
-                    onClick={() => toggleTracker('food')}
+                    onClick={() => setSelectedTracker('food')}
                     className={`rounded-2xl p-4 text-center transition-all duration-200 border ${
-                      selectedTrackers.has('food')
+                      selectedTracker === 'food'
                         ? 'bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/40 border-orange-300 dark:border-orange-700 shadow-lg shadow-orange-500/20'
                         : 'bg-zinc-50 dark:bg-zinc-700/50 border-zinc-200/50 dark:border-zinc-600/30 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-500'
                     }`}
                   >
                     <div className="relative inline-block">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center mx-auto mb-2 transition-all ${selectedTrackers.has('food') ? 'bg-orange-500 shadow-md shadow-orange-500/30' : 'bg-zinc-200 dark:bg-zinc-600'}`}>
-                        <svg className={`h-5 w-5 ${selectedTrackers.has('food') ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center mx-auto mb-2 transition-all ${selectedTracker === 'food' ? 'bg-orange-500 shadow-md shadow-orange-500/30' : 'bg-zinc-200 dark:bg-zinc-600'}`}>
+                        <svg className={`h-5 w-5 ${selectedTracker === 'food' ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                           <path d="M7 4v17m-3 -17v3a3 3 0 1 0 6 0v-3" />
                           <path d="M14 8a3 4 0 1 0 6 0a3 4 0 1 0 -6 0" />
                           <path d="M17 12v9" />
                         </svg>
                       </div>
-                      {selectedTrackers.has('food') && (
+                      {selectedTracker === 'food' && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center shadow-sm">
                           <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -3767,7 +3731,7 @@ function HomeContent() {
                         </div>
                       )}
                     </div>
-                    <p className={`text-xs font-bold ${selectedTrackers.has('food') ? 'text-orange-700 dark:text-orange-300' : 'text-zinc-600 dark:text-zinc-400'}`}>Food</p>
+                    <p className={`text-xs font-bold ${selectedTracker === 'food' ? 'text-orange-700 dark:text-orange-300' : 'text-zinc-600 dark:text-zinc-400'}`}>Food</p>
                   </button>
 
                   {/* Physical Therapy - Coming Soon */}
@@ -3786,11 +3750,11 @@ function HomeContent() {
                     <p className="text-xs font-semibold text-zinc-400">Physical</p>
                   </div>
 
-                  {/* Potty Logger - Toggle */}
+                  {/* Potty Logger - Select */}
                   <button
-                    onClick={() => toggleTracker('potty')}
+                    onClick={() => setSelectedTracker('potty')}
                     className={`rounded-2xl p-4 text-center transition-all duration-200 border ${
-                      selectedTrackers.has('potty')
+                      selectedTracker === 'potty'
                         ? gender === 'female'
                           ? 'bg-gradient-to-br from-pink-100 to-purple-100 dark:from-pink-900/40 dark:to-purple-900/40 border-pink-300 dark:border-pink-700 shadow-lg shadow-pink-500/20'
                           : 'bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/40 dark:to-cyan-900/40 border-teal-300 dark:border-teal-700 shadow-lg shadow-teal-500/20'
@@ -3798,8 +3762,8 @@ function HomeContent() {
                     }`}
                   >
                     <div className="relative inline-block">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center mx-auto mb-2 transition-all ${selectedTrackers.has('potty') ? (gender === 'female' ? 'bg-pink-500 shadow-md shadow-pink-500/30' : 'bg-teal-500 shadow-md shadow-teal-500/30') : 'bg-zinc-200 dark:bg-zinc-600'}`}>
-                        <svg className={`h-5 w-5 ${selectedTrackers.has('potty') ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center mx-auto mb-2 transition-all ${selectedTracker === 'potty' ? (gender === 'female' ? 'bg-pink-500 shadow-md shadow-pink-500/30' : 'bg-teal-500 shadow-md shadow-teal-500/30') : 'bg-zinc-200 dark:bg-zinc-600'}`}>
+                        <svg className={`h-5 w-5 ${selectedTracker === 'potty' ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                           <path d="M3 10a3 7 0 1 0 6 0a3 7 0 1 0 -6 0" />
                           <path d="M21 10c0 -3.866 -1.343 -7 -3 -7" />
                           <path d="M6 3h12" />
@@ -3807,7 +3771,7 @@ function HomeContent() {
                           <path d="M6 10h.01" />
                         </svg>
                       </div>
-                      {selectedTrackers.has('potty') && (
+                      {selectedTracker === 'potty' && (
                         <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-sm ${gender === 'female' ? 'bg-pink-500' : 'bg-teal-500'}`}>
                           <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -3815,27 +3779,27 @@ function HomeContent() {
                         </div>
                       )}
                     </div>
-                    <p className={`text-xs font-bold ${selectedTrackers.has('potty') ? (gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300') : 'text-zinc-600 dark:text-zinc-400'}`}>Potty</p>
+                    <p className={`text-xs font-bold ${selectedTracker === 'potty' ? (gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300') : 'text-zinc-600 dark:text-zinc-400'}`}>Potty</p>
                   </button>
 
-                  {/* Water Intake - Toggle */}
+                  {/* Water Intake - Select */}
                   <button
-                    onClick={() => toggleTracker('water')}
+                    onClick={() => setSelectedTracker('water')}
                     className={`rounded-2xl p-4 text-center transition-all duration-200 border ${
-                      selectedTrackers.has('water')
+                      selectedTracker === 'water'
                         ? 'bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/40 dark:to-blue-900/40 border-cyan-300 dark:border-cyan-700 shadow-lg shadow-cyan-500/20'
                         : 'bg-zinc-50 dark:bg-zinc-700/50 border-zinc-200/50 dark:border-zinc-600/30 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-500'
                     }`}
                   >
                     <div className="relative inline-block">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center mx-auto mb-2 transition-all ${selectedTrackers.has('water') ? 'bg-cyan-500 shadow-md shadow-cyan-500/30' : 'bg-zinc-200 dark:bg-zinc-600'}`}>
-                        <svg className={`h-5 w-5 ${selectedTrackers.has('water') ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center mx-auto mb-2 transition-all ${selectedTracker === 'water' ? 'bg-cyan-500 shadow-md shadow-cyan-500/30' : 'bg-zinc-200 dark:bg-zinc-600'}`}>
+                        <svg className={`h-5 w-5 ${selectedTracker === 'water' ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                           <path d="M10 5h4v-2a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v2" />
                           <path d="M14 3.5c0 1.626 .507 3.212 1.45 4.537l.05 .07a8.093 8.093 0 0 1 1.5 4.694v6.199a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2v-6.2c0 -1.682 .524 -3.322 1.5 -4.693l.05 -.07a7.823 7.823 0 0 0 1.45 -4.537" />
                           <path d="M7 14.803a2.4 2.4 0 0 0 1 -.803a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 1 -.805" />
                         </svg>
                       </div>
-                      {selectedTrackers.has('water') && (
+                      {selectedTracker === 'water' && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-cyan-500 flex items-center justify-center shadow-sm">
                           <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -3843,7 +3807,7 @@ function HomeContent() {
                         </div>
                       )}
                     </div>
-                    <p className={`text-xs font-bold ${selectedTrackers.has('water') ? 'text-cyan-700 dark:text-cyan-300' : 'text-zinc-600 dark:text-zinc-400'}`}>Water</p>
+                    <p className={`text-xs font-bold ${selectedTracker === 'water' ? 'text-cyan-700 dark:text-cyan-300' : 'text-zinc-600 dark:text-zinc-400'}`}>Water</p>
                   </button>
                 </div>
               </div>

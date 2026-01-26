@@ -23,7 +23,9 @@ interface HealthcareReportProps {
   bathroomEntries: BathroomEntry[];
   waterEntries: WaterEntry[];
   foodEntries: FoodEntry[];
-  chartRef: RefObject<HTMLDivElement | null>;
+  pottyChartRef: RefObject<HTMLDivElement | null>;
+  waterChartRef: RefObject<HTMLDivElement | null>;
+  foodChartRef: RefObject<HTMLDivElement | null>;
   gender: 'male' | 'female';
 }
 
@@ -34,7 +36,9 @@ export function HealthcareReport({
   bathroomEntries,
   waterEntries,
   foodEntries,
-  chartRef,
+  pottyChartRef,
+  waterChartRef,
+  foodChartRef,
   gender,
 }: HealthcareReportProps) {
   const [dateRangeOption, setDateRangeOption] = useState<DateRangeOption>('7days');
@@ -80,7 +84,9 @@ export function HealthcareReport({
           foodEntries,
           dateRange,
         },
-        chartRef.current
+        pottyChartRef.current,
+        waterChartRef.current,
+        foodChartRef.current
       );
 
       const patientName = [profile.first_name, profile.last_name]
