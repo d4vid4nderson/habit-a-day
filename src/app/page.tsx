@@ -1504,8 +1504,8 @@ function HomeContent() {
     };
     const streak = calculateStreak();
 
-    // Recent entries (last 5)
-    const recentEntries = entries.slice(0, 5);
+    // Today's entries (newest first)
+    const recentEntries = todayEntries.sort((a, b) => b.timestamp - a.timestamp);
 
     return (
       <div className="min-h-screen bg-zinc-50 pb-safe dark:bg-zinc-950">
@@ -2075,9 +2075,17 @@ function HomeContent() {
                   View All
                 </button>
               </div>
-              {waterEntries.slice(0, 5).length > 0 ? (
+              {(() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const todayStart = today.getTime();
+                const todayEnd = todayStart + 24 * 60 * 60 * 1000;
+                const todayWaterEntries = waterEntries
+                  .filter((e) => e.timestamp >= todayStart && e.timestamp < todayEnd)
+                  .sort((a, b) => b.timestamp - a.timestamp); // Newest first
+                return todayWaterEntries.length > 0 ? (
                 <div className="space-y-2">
-                  {waterEntries.slice(0, 5).map((entry) => {
+                  {todayWaterEntries.map((entry) => {
                     // Convert entry to selected unit
                     const toOz = (amount: number, unit: WaterUnit): number => {
                       switch (unit) {
@@ -2133,7 +2141,8 @@ function HomeContent() {
                 </div>
               ) : (
                 <p className="text-center text-zinc-400 py-4">No entries yet. Start tracking!</p>
-              )}
+              );
+              })()}
             </div>
             </div>
           </div>
