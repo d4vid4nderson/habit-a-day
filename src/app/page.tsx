@@ -167,6 +167,9 @@ function HomeContent() {
   const [foodHistoryAmPm, setFoodHistoryAmPm] = useState<'AM' | 'PM'>('AM');
   const [healthcareReportOpen, setHealthcareReportOpen] = useState(false);
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const pottyChartRef = useRef<HTMLDivElement>(null);
+  const waterChartRef = useRef<HTMLDivElement>(null);
+  const foodChartRef = useRef<HTMLDivElement>(null);
 
   // Chart data - configurable time range
   const chartData = useMemo(() => {
@@ -3700,6 +3703,120 @@ function HomeContent() {
                 )}
               </div>
 
+              {/* Offscreen charts for PDF capture */}
+              <div className="fixed -left-[10000px] top-0 w-[640px] h-[260px] bg-white pointer-events-none">
+                <div ref={pottyChartRef} className="w-full h-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
+                      <XAxis
+                        dataKey="label"
+                        tick={{ fontSize: 12, fill: '#71717a' }}
+                        tickLine={false}
+                        axisLine={{ stroke: '#e4e4e7' }}
+                      />
+                      <YAxis
+                        yAxisId="left"
+                        tick={{ fontSize: 12, fill: '#71717a' }}
+                        tickLine={false}
+                        axisLine={{ stroke: '#e4e4e7' }}
+                        allowDecimals={false}
+                        domain={[0, 'auto']}
+                      />
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="poop"
+                        name="Poop"
+                        stroke={gender === 'female' ? '#ec4899' : '#14b8a6'}
+                        strokeWidth={2}
+                        dot={{ fill: gender === 'female' ? '#ec4899' : '#14b8a6', r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="pee"
+                        name="Pee"
+                        stroke={gender === 'female' ? '#a855f7' : '#3b82f6'}
+                        strokeWidth={2}
+                        dot={{ fill: gender === 'female' ? '#a855f7' : '#3b82f6', r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="fixed -left-[10000px] top-[300px] w-[640px] h-[260px] bg-white pointer-events-none">
+                <div ref={waterChartRef} className="w-full h-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
+                      <XAxis
+                        dataKey="label"
+                        tick={{ fontSize: 12, fill: '#71717a' }}
+                        tickLine={false}
+                        axisLine={{ stroke: '#e4e4e7' }}
+                      />
+                      <YAxis
+                        yAxisId="left"
+                        tick={{ fontSize: 12, fill: '#71717a' }}
+                        tickLine={false}
+                        axisLine={{ stroke: '#e4e4e7' }}
+                        allowDecimals={false}
+                        domain={[0, 'auto']}
+                        unit=" oz"
+                      />
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="water"
+                        name="Water (oz)"
+                        stroke="#06b6d4"
+                        strokeWidth={2}
+                        dot={{ fill: '#06b6d4', r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="fixed -left-[10000px] top-[600px] w-[640px] h-[260px] bg-white pointer-events-none">
+                <div ref={foodChartRef} className="w-full h-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
+                      <XAxis
+                        dataKey="label"
+                        tick={{ fontSize: 12, fill: '#71717a' }}
+                        tickLine={false}
+                        axisLine={{ stroke: '#e4e4e7' }}
+                      />
+                      <YAxis
+                        yAxisId="left"
+                        tick={{ fontSize: 12, fill: '#71717a' }}
+                        tickLine={false}
+                        axisLine={{ stroke: '#e4e4e7' }}
+                        allowDecimals={false}
+                        domain={[0, 'auto']}
+                      />
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="calories"
+                        name="Calories"
+                        stroke="#f97316"
+                        strokeWidth={2}
+                        dot={{ fill: '#f97316', r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
               {/* Tracker Selection - Single select */}
               <div className="space-y-4 pt-2 border-t border-zinc-100 dark:border-zinc-700">
                 <div className="pt-4">
@@ -3959,7 +4076,9 @@ function HomeContent() {
           bathroomEntries={entries}
           waterEntries={waterEntries}
           foodEntries={foodEntries}
-          chartRef={chartContainerRef}
+          pottyChartRef={pottyChartRef}
+          waterChartRef={waterChartRef}
+          foodChartRef={foodChartRef}
           gender={gender}
         />
       )}

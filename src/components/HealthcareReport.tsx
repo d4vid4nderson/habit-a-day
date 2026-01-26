@@ -81,6 +81,9 @@ export function HealthcareReport({
     setIsComplete(false);
 
     try {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve());
+      });
       const dateRange = getDateRange();
       const blob = await generateHealthcareReport(
         {
