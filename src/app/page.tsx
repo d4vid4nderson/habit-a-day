@@ -3307,6 +3307,26 @@ function HomeContent() {
           onOpenMore={() => setMenuOpen(true)}
           gender={gender}
         />
+
+        {/* Calorie AI Modal */}
+        <CalorieAIModal
+          isOpen={calorieAIModalOpen}
+          onClose={() => setCalorieAIModalOpen(false)}
+          onSelectCalories={(calories, foodDescription) => {
+            if (calorieAISource === 'food-history') {
+              setFoodHistoryCalories(calories.toString());
+              if (foodDescription) {
+                setFoodHistoryNotes(foodDescription);
+              }
+            } else {
+              setFoodCalories(calories.toString());
+              if (foodDescription) {
+                setFoodNotes(foodDescription);
+              }
+            }
+          }}
+          gender={gender}
+        />
       </div>
     );
   }
