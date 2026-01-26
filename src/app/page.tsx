@@ -444,7 +444,7 @@ function HomeContent() {
     const dateEnd = dateStart + 24 * 60 * 60 * 1000;
     return waterEntries
       .filter((e) => e.timestamp >= dateStart && e.timestamp < dateEnd)
-      .sort((a, b) => a.timestamp - b.timestamp); // Chronological order (earliest first)
+      .sort((a, b) => b.timestamp - a.timestamp); // Reverse chronological order (newest first)
   };
 
   const hasWaterEntriesOnDate = (dateStr: string): boolean => {
@@ -464,7 +464,7 @@ function HomeContent() {
     const dateEnd = dateStart + 24 * 60 * 60 * 1000;
     return entries
       .filter((e) => e.timestamp >= dateStart && e.timestamp < dateEnd)
-      .sort((a, b) => a.timestamp - b.timestamp); // Chronological order (earliest first)
+      .sort((a, b) => b.timestamp - a.timestamp); // Reverse chronological order (newest first)
   };
 
   const typeConfig = {
@@ -594,7 +594,7 @@ function HomeContent() {
     const dateEnd = dateStart + 24 * 60 * 60 * 1000;
     return foodEntries
       .filter((e) => e.timestamp >= dateStart && e.timestamp < dateEnd)
-      .sort((a, b) => a.timestamp - b.timestamp); // Chronological order (earliest first)
+      .sort((a, b) => b.timestamp - a.timestamp); // Reverse chronological order (newest first)
   };
 
   const hasFoodEntriesOnDate = (dateStr: string): boolean => {
