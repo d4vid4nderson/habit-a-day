@@ -1646,17 +1646,17 @@ function HomeContent() {
 
             {/* Right Column - Recent Entries */}
             <div className="space-y-4 mt-4 lg:mt-0">
-            {/* Recent Entries */}
+            {/* Today's Entries */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Recent Activity</h2>
+                <h2 className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Today&apos;s Entries</h2>
                 <button
                   onClick={() => setCurrentView('history')}
                   className={`text-sm font-medium ${
                     gender === 'female' ? 'text-pink-600 dark:text-pink-400' : 'text-teal-600 dark:text-teal-400'
                   }`}
                 >
-                  View All
+                  View History
                 </button>
               </div>
 
@@ -2062,17 +2062,17 @@ function HomeContent() {
               </button>
             </div>
 
-            {/* Recent Entries */}
+            {/* Today's Entries */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Recent Entries</p>
+                <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Today&apos;s Entries</p>
                 <button
                   onClick={() => setCurrentView('water-history')}
                   className={`text-sm font-medium ${
                     gender === 'female' ? 'text-pink-600 dark:text-pink-400' : 'text-teal-600 dark:text-teal-400'
                   }`}
                 >
-                  View All
+                  View History
                 </button>
               </div>
               {(() => {
