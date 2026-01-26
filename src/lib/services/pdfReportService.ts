@@ -162,7 +162,9 @@ function getUrineColorLabel(color: number): string {
 
 export async function generateHealthcareReport(
   data: ReportData,
-  chartElement?: HTMLElement | null
+  pottyChartElement?: HTMLElement | null,
+  waterChartElement?: HTMLElement | null,
+  foodChartElement?: HTMLElement | null
 ): Promise<Blob> {
   const pdf = new jsPDF('p', 'mm', 'letter');
   const pageWidth = 215.9;
@@ -264,39 +266,6 @@ export async function generateHealthcareReport(
 
   y += 8;
 
-  // ============ Chart Section (between demographics and stats) ============
-  if (chartElement) {
-    pdf.setTextColor(20, 184, 166);
-    pdf.setFontSize(14);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('HEALTH TRENDS', margin, y);
-    y += 2;
-
-    pdf.setDrawColor(20, 184, 166);
-    pdf.line(margin, y, margin + contentWidth, y);
-    y += 8;
-
-    try {
-      const canvas = await html2canvas(chartElement, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        logging: false,
-      } as Parameters<typeof html2canvas>[1]);
-      const imgData = canvas.toDataURL('image/png');
-      const imgWidth = contentWidth;
-      const imgHeight = (canvas.height / canvas.width) * imgWidth;
-      const chartHeight = Math.min(imgHeight, 80); // Smaller chart to fit on page 1
-      pdf.addImage(imgData, 'PNG', margin, y, imgWidth, chartHeight);
-      y += chartHeight + 10;
-    } catch (error) {
-      console.error('Error capturing chart:', error);
-      pdf.setTextColor(150, 150, 150);
-      pdf.setFontSize(11);
-      pdf.text('Chart could not be captured', margin, y);
-      y += 10;
-    }
-  }
-
   // Summary Statistics Section
   pdf.setTextColor(20, 184, 166);
   pdf.setFontSize(14);
@@ -391,10 +360,51 @@ export async function generateHealthcareReport(
     return pdf.splitTextToSize(text, maxWidth);
   };
 
+  // Helper function to capture and add chart
+  const addChartToPage = async (chartElement: HTMLElement | null | undefined, title: string): Promise<void> => {
+    if (!chartElement) return;
+
+    pdf.setTextColor(20, 184, 166);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(title, margin, y);
+    y += 2;
+
+    pdf.setDrawColor(20, 184, 166);
+    pdf.line(margin, y, margin + contentWidth, y);
+    y += 8;
+
+    try {
+      const canvas = await html2canvas(chartElement, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        logging: false,
+      } as Parameters<typeof html2canvas>[1]);
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = contentWidth;
+      const imgHeight = (canvas.height / canvas.width) * imgWidth;
+      const chartHeight = Math.min(imgHeight, 90);
+
+      checkPageBreak(chartHeight);
+
+      pdf.addImage(imgData, 'PNG', margin, y, imgWidth, chartHeight);
+      y += chartHeight + 12;
+    } catch (error) {
+      console.error('Error capturing chart:', error);
+      pdf.setTextColor(150, 150, 150);
+      pdf.setFontSize(11);
+      pdf.text('Chart could not be captured', margin, y);
+      y += 10;
+    }
+  };
+
   // Bathroom Log
   if (bathroomEntries.length > 0) {
     pdf.addPage();
     y = margin;
+
+    // Add potty chart before bathroom log
+    await addChartToPage(pottyChartElement, 'BATHROOM ACTIVITY');
 
     pdf.setTextColor(20, 184, 166);
     pdf.setFontSize(14);
@@ -414,9 +424,9 @@ export async function generateHealthcareReport(
     pdf.setFontSize(9);
     pdf.setFont('helvetica', 'bold');
     pdf.text('Date/Time', margin + 2, y);
-    pdf.text('Type', margin + 45, y);
-    pdf.text('Details', margin + 70, y);
-    pdf.text('Notes', margin + 120, y);
+    pdf.text('Type', margin + 42, y);
+    pdf.text('Details', margin + 60, y);
+    pdf.text('Notes', margin + 115, y);
     y += 6;
 
     pdf.setFont('helvetica', 'normal');
@@ -427,14 +437,8 @@ export async function generateHealthcareReport(
 
     sortedBathroom.forEach((entry) => {
       const notes = entry.notes || '-';
-      const notesMaxWidth = contentWidth - 120; // Width available for notes column
+      const notesMaxWidth = contentWidth - 115; // Width available for notes column
       const wrappedNotes = wrapText(notes, notesMaxWidth);
-      const rowHeight = Math.max(6, wrappedNotes.length * 4 + 2);
-
-      checkPageBreak(rowHeight);
-
-      pdf.text(formatDateTime(entry.timestamp), margin + 2, y);
-      pdf.text(entry.type === 'poop' ? 'Bowel Movement' : 'Urination', margin + 45, y);
 
       let details = '';
       if (entry.type === 'pee') {
@@ -445,14 +449,21 @@ export async function generateHealthcareReport(
           details += details ? `, Stream: ${entry.stream_strength}` : `Stream: ${entry.stream_strength}`;
         }
       }
-      const detailsMaxWidth = 48; // Width for details column
+      const detailsMaxWidth = 53; // Width for details column
       const wrappedDetails = wrapText(details || '-', detailsMaxWidth);
+      const rowHeight = Math.max(6, Math.max(wrappedNotes.length, wrappedDetails.length) * 4 + 2);
+
+      checkPageBreak(rowHeight);
+
+      pdf.text(formatDateTime(entry.timestamp), margin + 2, y);
+      pdf.text(entry.type === 'poop' ? 'Bowel Movement' : 'Urination', margin + 42, y);
+
       wrappedDetails.forEach((line, i) => {
-        pdf.text(line, margin + 70, y + i * 4);
+        pdf.text(line, margin + 60, y + i * 4);
       });
 
       wrappedNotes.forEach((line, i) => {
-        pdf.text(line, margin + 120, y + i * 4);
+        pdf.text(line, margin + 115, y + i * 4);
       });
 
       y += rowHeight;
@@ -466,6 +477,9 @@ export async function generateHealthcareReport(
       pdf.addPage();
       y = margin;
     }
+
+    // Add water chart before water intake log
+    await addChartToPage(waterChartElement, 'WATER INTAKE ACTIVITY');
 
     pdf.setTextColor(20, 184, 166);
     pdf.setFontSize(14);
@@ -520,6 +534,9 @@ export async function generateHealthcareReport(
       pdf.addPage();
       y = margin;
     }
+
+    // Add food chart before food journal
+    await addChartToPage(foodChartElement, 'FOOD INTAKE ACTIVITY');
 
     pdf.setTextColor(20, 184, 166);
     pdf.setFontSize(14);
