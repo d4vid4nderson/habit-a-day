@@ -1307,6 +1307,7 @@ function HomeContent() {
                   <select
                     value={selectedUrineColor || ''}
                     onChange={(e) => setSelectedUrineColor(e.target.value ? Number(e.target.value) as UrineColor : undefined)}
+                    autoFocus
                     className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
                       gender === 'female' ? 'focus:border-purple-500' : 'focus:border-blue-500'
                     }`}
@@ -1379,6 +1380,7 @@ function HomeContent() {
                 <select
                   value={poopConsistency}
                   onChange={(e) => setPoopConsistency(e.target.value)}
+                  autoFocus
                   className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
                     gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
                   }`}
@@ -1412,7 +1414,6 @@ function HomeContent() {
               className={`min-h-[120px] w-full resize-none rounded-xl border-2 border-zinc-200 bg-white p-4 text-base leading-relaxed focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500 ${
                 gender === 'female' ? 'focus:!border-purple-500' : 'focus:!border-blue-500'
               }`}
-              autoFocus
             />
 
             <div className="flex gap-3">
