@@ -126,7 +126,7 @@ function HomeContent() {
   const [addEntryConsistency, setAddEntryConsistency] = useState('');
   const [addEntryStream, setAddEntryStream] = useState('');
   const [showMigration, setShowMigration] = useState(true);
-  const [selectedTracker, setSelectedTracker] = useState<'potty' | 'water' | 'food'>('potty');
+  const [selectedTracker, setSelectedTracker] = useState<'potty' | 'water' | 'food'>('food');
   const [chartDays, setChartDays] = useState<7 | 30 | 90 | 365>(7);
   const [chartDropdownOpen, setChartDropdownOpen] = useState(false);
   const addDropdownRef = useRef<HTMLDivElement | null>(null);

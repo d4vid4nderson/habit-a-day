@@ -84,6 +84,14 @@ export function HealthcareReport({
       await new Promise<void>((resolve) => {
         requestAnimationFrame(() => resolve());
       });
+      await new Promise<void>((resolve) => {
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          (window as { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number })
+            .requestIdleCallback(() => resolve(), { timeout: 500 });
+          return;
+        }
+        setTimeout(resolve, 0);
+      });
       const dateRange = getDateRange();
       const blob = await generateHealthcareReport(
         {

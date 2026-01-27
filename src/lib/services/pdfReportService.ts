@@ -361,7 +361,11 @@ export async function generateHealthcareReport(
   };
 
   // Helper function to capture and add chart
-  const addChartToPage = async (chartElement: HTMLElement | null | undefined, title: string): Promise<void> => {
+  const addChartToPage = async (
+    chartElement: HTMLElement | null | undefined,
+    title: string,
+    legendItems?: { label: string; color: [number, number, number] }[]
+  ): Promise<void> => {
     if (!chartElement) return;
 
     pdf.setTextColor(20, 184, 166);
@@ -396,6 +400,27 @@ export async function generateHealthcareReport(
       pdf.text('Chart could not be captured', margin, y);
       y += 10;
     }
+
+    if (legendItems && legendItems.length > 0) {
+      const legendY = y;
+      const swatchSize = 4;
+      const itemGap = 4;
+      let cursorX = margin;
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(80, 80, 80);
+
+      legendItems.forEach((item) => {
+        pdf.setFillColor(item.color[0], item.color[1], item.color[2]);
+        pdf.rect(cursorX, legendY - swatchSize + 1, swatchSize, swatchSize, 'F');
+        cursorX += swatchSize + 2;
+        pdf.text(item.label, cursorX, legendY);
+        cursorX += pdf.getTextWidth(item.label) + itemGap + 6;
+      });
+
+      y += 8;
+    }
   };
 
   // Bathroom Log
@@ -404,7 +429,10 @@ export async function generateHealthcareReport(
     y = margin;
 
     // Add potty chart before bathroom log
-    await addChartToPage(pottyChartElement, 'BATHROOM ACTIVITY');
+    await addChartToPage(pottyChartElement, 'BATHROOM ACTIVITY', [
+      { label: 'Poop', color: [20, 184, 166] },
+      { label: 'Pee', color: [59, 130, 246] },
+    ]);
 
     pdf.setTextColor(20, 184, 166);
     pdf.setFontSize(14);
@@ -479,7 +507,9 @@ export async function generateHealthcareReport(
     }
 
     // Add water chart before water intake log
-    await addChartToPage(waterChartElement, 'WATER INTAKE ACTIVITY');
+    await addChartToPage(waterChartElement, 'WATER INTAKE ACTIVITY', [
+      { label: 'Water (oz)', color: [6, 182, 212] },
+    ]);
 
     pdf.setTextColor(20, 184, 166);
     pdf.setFontSize(14);
@@ -536,7 +566,9 @@ export async function generateHealthcareReport(
     }
 
     // Add food chart before food journal
-    await addChartToPage(foodChartElement, 'FOOD INTAKE ACTIVITY');
+    await addChartToPage(foodChartElement, 'FOOD INTAKE ACTIVITY', [
+      { label: 'Calories', color: [249, 115, 22] },
+    ]);
 
     pdf.setTextColor(20, 184, 166);
     pdf.setFontSize(14);
