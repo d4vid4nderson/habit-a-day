@@ -466,7 +466,8 @@ function HomeContent() {
   // Food journal handlers
   const handleFoodLog = async () => {
     const calories = parseInt(foodCalories);
-    if (isNaN(calories) || calories < 0) return;
+    // Allow 0 calories for beverages, but not for other meal types
+    if (isNaN(calories) || calories < 0 || (calories === 0 && foodMealType !== 'beverage')) return;
 
     // Parse time if provided, otherwise use current time
     let timestamp = Date.now();
@@ -549,6 +550,10 @@ function HomeContent() {
   // Food history add handlers
   const handleFoodHistoryAdd = async () => {
     if (!foodHistoryCalories || !foodHistoryHour || !foodHistoryMinute) return;
+
+    const calories = parseInt(foodHistoryCalories);
+    // Allow 0 calories for beverages, but not for other meal types
+    if (isNaN(calories) || calories < 0 || (calories === 0 && foodHistoryMealType !== 'beverage')) return;
 
     let hours = parseInt(foodHistoryHour);
     const minutes = parseInt(foodHistoryMinute);
@@ -2834,7 +2839,7 @@ function HomeContent() {
 
               <button
                 onClick={handleFoodLog}
-                disabled={!foodCalories || parseInt(foodCalories) <= 0}
+                disabled={!foodCalories || (parseInt(foodCalories) <= 0 && foodMealType !== 'beverage') || (parseInt(foodCalories) < 0)}
                 className={`w-full rounded-xl py-3 text-base font-semibold text-white transition-colors disabled:opacity-50 ${
                   gender === 'female'
                     ? 'bg-pink-500 hover:bg-pink-600 disabled:hover:bg-pink-500'
@@ -3216,7 +3221,7 @@ function HomeContent() {
                       </button>
                       <button
                         onClick={handleFoodHistoryAdd}
-                        disabled={!foodHistoryCalories || !foodHistoryHour || !foodHistoryMinute}
+                        disabled={!foodHistoryCalories || !foodHistoryHour || !foodHistoryMinute || (parseInt(foodHistoryCalories) <= 0 && foodHistoryMealType !== 'beverage') || (parseInt(foodHistoryCalories) < 0)}
                         className={`flex-1 cursor-pointer rounded-xl py-3 text-base font-semibold text-white transition-colors disabled:opacity-50 ${
                           gender === 'female'
                             ? 'bg-pink-500 hover:bg-pink-600 disabled:hover:bg-pink-500'
