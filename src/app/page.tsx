@@ -466,13 +466,8 @@ function HomeContent() {
   // Food journal handlers
   const handleFoodLog = async () => {
     const calories = parseInt(foodCalories);
-    console.log('[Food Quick Log] Meal type:', foodMealType, 'Calories:', calories);
-
     // Allow 0 calories for beverages, but not for other meal types
-    if (isNaN(calories) || calories < 0 || (calories === 0 && foodMealType !== 'beverage')) {
-      console.log('[Food Quick Log] Validation failed - blocking save');
-      return;
-    }
+    if (isNaN(calories) || calories < 0 || (calories === 0 && foodMealType !== 'beverage')) return;
 
     // Parse time if provided, otherwise use current time
     let timestamp = Date.now();
@@ -492,18 +487,14 @@ function HomeContent() {
       timestamp = now.getTime();
     }
 
-    console.log('[Food Quick Log] Attempting to save entry with timestamp:', timestamp, new Date(timestamp).toISOString());
-
     try {
-      const result = await createFoodEntry(foodMealType, calories, foodNotes, timestamp);
-      console.log('[Food Quick Log] Successfully saved entry:', result);
+      await createFoodEntry(foodMealType, calories, foodNotes, timestamp);
       setFoodCalories('');
       setFoodNotes('');
       setFoodEntryHour('');
       setFoodEntryMinute('');
     } catch (err) {
-      console.error('[Food Quick Log] Failed to log food entry:', err);
-      alert(`Failed to save food entry: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      console.error('Failed to log food entry:', err);
     }
   };
 
@@ -561,13 +552,8 @@ function HomeContent() {
     if (!foodHistoryCalories || !foodHistoryHour || !foodHistoryMinute) return;
 
     const calories = parseInt(foodHistoryCalories);
-    console.log('[Food History Add] Meal type:', foodHistoryMealType, 'Calories:', calories);
-
     // Allow 0 calories for beverages, but not for other meal types
-    if (isNaN(calories) || calories < 0 || (calories === 0 && foodHistoryMealType !== 'beverage')) {
-      console.log('[Food History Add] Validation failed - blocking save');
-      return;
-    }
+    if (isNaN(calories) || calories < 0 || (calories === 0 && foodHistoryMealType !== 'beverage')) return;
 
     let hours = parseInt(foodHistoryHour);
     const minutes = parseInt(foodHistoryMinute);
@@ -580,15 +566,12 @@ function HomeContent() {
 
     const entryDate = new Date(foodSelectedDate + 'T00:00:00');
     entryDate.setHours(hours, minutes, 0, 0);
-    console.log('[Food History Add] Attempting to save entry with timestamp:', entryDate.getTime(), new Date(entryDate.getTime()).toISOString());
 
     try {
-      const result = await createFoodEntry(foodHistoryMealType, calories, foodHistoryNotes, entryDate.getTime());
-      console.log('[Food History Add] Successfully saved entry:', result);
+      await createFoodEntry(foodHistoryMealType, calories, foodHistoryNotes, entryDate.getTime());
       handleFoodHistoryCancel();
     } catch (err) {
-      console.error('[Food History Add] Failed to add food entry:', err);
-      alert(`Failed to save food entry: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      console.error('Failed to add food entry:', err);
     }
   };
 
