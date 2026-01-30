@@ -8,6 +8,7 @@ import {
   createFoodEntry as createFoodEntryService,
   deleteFoodEntry as deleteFoodEntryService,
   subscribeToFoodEntries,
+  CreateFoodEntryOptions,
 } from '@/lib/services/foodService';
 
 export function useFoodJournal() {
@@ -54,7 +55,7 @@ export function useFoodJournal() {
   }, [user]);
 
   const createEntry = useCallback(
-    async (mealType: MealType, calories: number, notes?: string, timestamp?: number) => {
+    async (mealType: MealType, calories: number, notes?: string, timestamp?: number, options?: CreateFoodEntryOptions) => {
       if (!user) return;
 
       // Optimistic update
@@ -63,6 +64,9 @@ export function useFoodJournal() {
         id: tempId,
         meal_type: mealType,
         calories,
+        carbs: options?.carbs,
+        fat: options?.fat,
+        protein: options?.protein,
         timestamp: timestamp || Date.now(),
         notes: notes?.trim() || undefined,
       };
@@ -70,7 +74,7 @@ export function useFoodJournal() {
       setEntries((prev) => [optimisticEntry, ...prev]);
 
       try {
-        const newEntry = await createFoodEntryService(user.id, mealType, calories, notes, timestamp);
+        const newEntry = await createFoodEntryService(user.id, mealType, calories, notes, timestamp, options);
         // Replace optimistic entry with real one
         setEntries((prev) =>
           prev.map((e) => (e.id === tempId ? newEntry : e))
@@ -150,6 +154,24 @@ export function useFoodJournal() {
     };
   }, [getTodayByMeal]);
 
+  // Get macro totals for today
+  const getTodayMacros = useCallback(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStart = today.getTime();
+    const todayEnd = todayStart + 24 * 60 * 60 * 1000;
+
+    const todayEntries = entries.filter(
+      (e) => e.timestamp >= todayStart && e.timestamp < todayEnd
+    );
+
+    return {
+      carbs: todayEntries.reduce((sum, e) => sum + (e.carbs || 0), 0),
+      fat: todayEntries.reduce((sum, e) => sum + (e.fat || 0), 0),
+      protein: todayEntries.reduce((sum, e) => sum + (e.protein || 0), 0),
+    };
+  }, [entries]);
+
   return {
     entries,
     loading,
@@ -159,5 +181,6 @@ export function useFoodJournal() {
     getTodayTotal,
     getTodayByMeal,
     getTodayCaloriesByMeal,
+    getTodayMacros,
   };
 }

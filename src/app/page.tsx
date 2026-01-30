@@ -157,6 +157,9 @@ function HomeContent() {
   const [foodEntryAmPm, setFoodEntryAmPm] = useState<'AM' | 'PM'>('AM');
   const [calorieAIModalOpen, setCalorieAIModalOpen] = useState(false);
   const [calorieAISource, setCalorieAISource] = useState<'food' | 'food-history'>('food');
+  const [foodCarbs, setFoodCarbs] = useState('');
+  const [foodFat, setFoodFat] = useState('');
+  const [foodProtein, setFoodProtein] = useState('');
   // Food history add form state
   const [foodHistoryAddOpen, setFoodHistoryAddOpen] = useState(false);
   const [foodHistoryMealType, setFoodHistoryMealType] = useState<MealType>('breakfast');
@@ -165,6 +168,9 @@ function HomeContent() {
   const [foodHistoryHour, setFoodHistoryHour] = useState('');
   const [foodHistoryMinute, setFoodHistoryMinute] = useState('');
   const [foodHistoryAmPm, setFoodHistoryAmPm] = useState<'AM' | 'PM'>('AM');
+  const [foodHistoryCarbs, setFoodHistoryCarbs] = useState('');
+  const [foodHistoryFat, setFoodHistoryFat] = useState('');
+  const [foodHistoryProtein, setFoodHistoryProtein] = useState('');
   const [healthcareReportOpen, setHealthcareReportOpen] = useState(false);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const pottyChartRef = useRef<HTMLDivElement>(null);
@@ -173,7 +179,7 @@ function HomeContent() {
 
   // Chart data - configurable time range
   const chartData = useMemo(() => {
-    const days: { date: string; label: string; poop: number; pee: number; water: number; calories: number }[] = [];
+    const days: { date: string; label: string; poop: number; pee: number; water: number; calories: number; carbs: number; fat: number; protein: number }[] = [];
     const today = new Date();
 
     for (let i = chartDays - 1; i >= 0; i--) {
@@ -195,10 +201,12 @@ function HomeContent() {
           return sum + amount;
         }, 0);
 
-      // Sum food calories
-      const caloriesTotal = foodEntries
-        .filter(e => e.timestamp >= dateStart && e.timestamp < dateEnd)
-        .reduce((sum, e) => sum + e.calories, 0);
+      // Sum food calories and macros
+      const dayFoodEntries = foodEntries.filter(e => e.timestamp >= dateStart && e.timestamp < dateEnd);
+      const caloriesTotal = dayFoodEntries.reduce((sum, e) => sum + e.calories, 0);
+      const carbsTotal = dayFoodEntries.reduce((sum, e) => sum + (e.carbs || 0), 0);
+      const fatTotal = dayFoodEntries.reduce((sum, e) => sum + (e.fat || 0), 0);
+      const proteinTotal = dayFoodEntries.reduce((sum, e) => sum + (e.protein || 0), 0);
 
       // Format label based on range
       let label: string;
@@ -217,6 +225,9 @@ function HomeContent() {
         pee: peeCount,
         water: Math.round(waterTotal * 10) / 10,
         calories: caloriesTotal,
+        carbs: carbsTotal,
+        fat: fatTotal,
+        protein: proteinTotal,
       });
     }
 
@@ -488,8 +499,16 @@ function HomeContent() {
     }
 
     try {
-      await createFoodEntry(foodMealType, calories, foodNotes, timestamp);
+      const macroOptions = {
+        carbs: foodCarbs ? parseInt(foodCarbs) : undefined,
+        fat: foodFat ? parseInt(foodFat) : undefined,
+        protein: foodProtein ? parseInt(foodProtein) : undefined,
+      };
+      await createFoodEntry(foodMealType, calories, foodNotes, timestamp, macroOptions);
       setFoodCalories('');
+      setFoodCarbs('');
+      setFoodFat('');
+      setFoodProtein('');
       setFoodNotes('');
       setFoodEntryHour('');
       setFoodEntryMinute('');
@@ -506,9 +525,14 @@ function HomeContent() {
     }
   };
 
-  const handleFoodDuplicate = async (entry: { meal_type: MealType; calories: number; notes?: string }) => {
+  const handleFoodDuplicate = async (entry: { meal_type: MealType; calories: number; carbs?: number; fat?: number; protein?: number; notes?: string }) => {
     try {
-      await createFoodEntry(entry.meal_type, entry.calories, entry.notes);
+      const macroOptions = {
+        carbs: entry.carbs,
+        fat: entry.fat,
+        protein: entry.protein,
+      };
+      await createFoodEntry(entry.meal_type, entry.calories, entry.notes, undefined, macroOptions);
     } catch (err) {
       console.error('Failed to duplicate food entry:', err);
     }
@@ -568,7 +592,12 @@ function HomeContent() {
     entryDate.setHours(hours, minutes, 0, 0);
 
     try {
-      await createFoodEntry(foodHistoryMealType, calories, foodHistoryNotes, entryDate.getTime());
+      const macroOptions = {
+        carbs: foodHistoryCarbs ? parseInt(foodHistoryCarbs) : undefined,
+        fat: foodHistoryFat ? parseInt(foodHistoryFat) : undefined,
+        protein: foodHistoryProtein ? parseInt(foodHistoryProtein) : undefined,
+      };
+      await createFoodEntry(foodHistoryMealType, calories, foodHistoryNotes, entryDate.getTime(), macroOptions);
       handleFoodHistoryCancel();
     } catch (err) {
       console.error('Failed to add food entry:', err);
@@ -579,6 +608,9 @@ function HomeContent() {
     setFoodHistoryAddOpen(false);
     setFoodHistoryMealType('breakfast');
     setFoodHistoryCalories('');
+    setFoodHistoryCarbs('');
+    setFoodHistoryFat('');
+    setFoodHistoryProtein('');
     setFoodHistoryNotes('');
     setFoodHistoryHour('');
     setFoodHistoryMinute('');
@@ -2827,6 +2859,43 @@ function HomeContent() {
                 </button>
               </div>
 
+              {/* Macros Input Row */}
+              <div className="flex gap-2 mb-3">
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={foodCarbs}
+                    onChange={(e) => setFoodCarbs(e.target.value)}
+                    placeholder="Carbs (g)"
+                    className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-3 py-2.5 text-sm focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                    }`}
+                  />
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={foodFat}
+                    onChange={(e) => setFoodFat(e.target.value)}
+                    placeholder="Fat (g)"
+                    className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-3 py-2.5 text-sm focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                    }`}
+                  />
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={foodProtein}
+                    onChange={(e) => setFoodProtein(e.target.value)}
+                    placeholder="Protein (g)"
+                    className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-3 py-2.5 text-sm focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                    }`}
+                  />
+                </div>
+              </div>
+
               {/* Notes */}
               <textarea
                 value={foodNotes}
@@ -2895,6 +2964,15 @@ function HomeContent() {
                           <p className="font-medium text-zinc-800 dark:text-zinc-200 capitalize truncate">
                             {getMealTypeLabel(entry.meal_type)} - {entry.calories} cal
                           </p>
+                          {(entry.carbs !== undefined || entry.fat !== undefined || entry.protein !== undefined) && (
+                            <p className="text-xs text-zinc-600 dark:text-zinc-300">
+                              {entry.carbs !== undefined && <span className="text-green-600 dark:text-green-400">C: {entry.carbs}g</span>}
+                              {entry.carbs !== undefined && (entry.fat !== undefined || entry.protein !== undefined) && ' • '}
+                              {entry.fat !== undefined && <span className="text-yellow-600 dark:text-yellow-400">F: {entry.fat}g</span>}
+                              {entry.fat !== undefined && entry.protein !== undefined && ' • '}
+                              {entry.protein !== undefined && <span className="text-purple-600 dark:text-purple-400">P: {entry.protein}g</span>}
+                            </p>
+                          )}
                           <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                             {new Date(entry.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                             {entry.notes && ` • ${entry.notes.substring(0, 30)}${entry.notes.length > 30 ? '...' : ''}`}
@@ -3198,6 +3276,40 @@ function HomeContent() {
                       </div>
                     </div>
 
+                    {/* Macros Input */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Macros (optional)</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          value={foodHistoryCarbs}
+                          onChange={(e) => setFoodHistoryCarbs(e.target.value)}
+                          placeholder="Carbs (g)"
+                          className={`flex-1 rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        />
+                        <input
+                          type="number"
+                          value={foodHistoryFat}
+                          onChange={(e) => setFoodHistoryFat(e.target.value)}
+                          placeholder="Fat (g)"
+                          className={`flex-1 rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        />
+                        <input
+                          type="number"
+                          value={foodHistoryProtein}
+                          onChange={(e) => setFoodHistoryProtein(e.target.value)}
+                          placeholder="Protein (g)"
+                          className={`flex-1 rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
                     {/* Notes */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Notes</label>
@@ -3256,6 +3368,15 @@ function HomeContent() {
                           <p className="font-medium text-zinc-800 dark:text-zinc-200 capitalize truncate">
                             {getMealTypeLabel(entry.meal_type)} - {entry.calories} cal
                           </p>
+                          {(entry.carbs !== undefined || entry.fat !== undefined || entry.protein !== undefined) && (
+                            <p className="text-xs text-zinc-600 dark:text-zinc-300">
+                              {entry.carbs !== undefined && <span className="text-green-600 dark:text-green-400">C: {entry.carbs}g</span>}
+                              {entry.carbs !== undefined && (entry.fat !== undefined || entry.protein !== undefined) && ' • '}
+                              {entry.fat !== undefined && <span className="text-yellow-600 dark:text-yellow-400">F: {entry.fat}g</span>}
+                              {entry.fat !== undefined && entry.protein !== undefined && ' • '}
+                              {entry.protein !== undefined && <span className="text-purple-600 dark:text-purple-400">P: {entry.protein}g</span>}
+                            </p>
+                          )}
                           <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                             {new Date(entry.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                             {entry.notes && ` • ${entry.notes}`}
@@ -3693,16 +3814,48 @@ function HomeContent() {
                         />
                       )}
                       {selectedTracker === 'food' && (
-                        <Line
-                          yAxisId="left"
-                          type="monotone"
-                          dataKey="calories"
-                          name="Calories"
-                          stroke="#f97316"
-                          strokeWidth={2}
-                          dot={{ fill: '#f97316', r: 4 }}
-                          activeDot={{ r: 6 }}
-                        />
+                        <>
+                          <Line
+                            yAxisId="left"
+                            type="monotone"
+                            dataKey="calories"
+                            name="Calories"
+                            stroke="#f97316"
+                            strokeWidth={2}
+                            dot={{ fill: '#f97316', r: 4 }}
+                            activeDot={{ r: 6 }}
+                          />
+                          <Line
+                            yAxisId="left"
+                            type="monotone"
+                            dataKey="carbs"
+                            name="Carbs (g)"
+                            stroke="#22c55e"
+                            strokeWidth={2}
+                            dot={{ fill: '#22c55e', r: 4 }}
+                            activeDot={{ r: 6 }}
+                          />
+                          <Line
+                            yAxisId="left"
+                            type="monotone"
+                            dataKey="fat"
+                            name="Fat (g)"
+                            stroke="#eab308"
+                            strokeWidth={2}
+                            dot={{ fill: '#eab308', r: 4 }}
+                            activeDot={{ r: 6 }}
+                          />
+                          <Line
+                            yAxisId="left"
+                            type="monotone"
+                            dataKey="protein"
+                            name="Protein (g)"
+                            stroke="#8b5cf6"
+                            strokeWidth={2}
+                            dot={{ fill: '#8b5cf6', r: 4 }}
+                            activeDot={{ r: 6 }}
+                          />
+                        </>
                       )}
                     </LineChart>
                   </ResponsiveContainer>
@@ -3808,6 +3961,7 @@ function HomeContent() {
                         allowDecimals={false}
                         domain={[0, 'auto']}
                       />
+                      <Legend wrapperStyle={{ fontSize: '10px' }} />
                       <Line
                         yAxisId="left"
                         type="monotone"
@@ -3816,6 +3970,36 @@ function HomeContent() {
                         stroke="#f97316"
                         strokeWidth={2}
                         dot={{ fill: '#f97316', r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="carbs"
+                        name="Carbs (g)"
+                        stroke="#22c55e"
+                        strokeWidth={2}
+                        dot={{ fill: '#22c55e', r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="fat"
+                        name="Fat (g)"
+                        stroke="#eab308"
+                        strokeWidth={2}
+                        dot={{ fill: '#eab308', r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="protein"
+                        name="Protein (g)"
+                        stroke="#8b5cf6"
+                        strokeWidth={2}
+                        dot={{ fill: '#8b5cf6', r: 4 }}
                         activeDot={{ r: 6 }}
                       />
                     </LineChart>

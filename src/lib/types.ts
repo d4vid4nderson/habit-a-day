@@ -61,6 +61,9 @@ export interface FoodEntry {
   user_id?: string;
   meal_type: MealType;
   calories: number;
+  carbs?: number; // grams
+  fat?: number; // grams
+  protein?: number; // grams
   timestamp: number; // Unix timestamp in milliseconds
   notes?: string;
 }
