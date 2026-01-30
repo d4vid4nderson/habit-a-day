@@ -40,6 +40,15 @@ interface SummaryStats {
     dailyAvgCalories: number;
     recommendedCalories: number;
     percentOfRecommended: number;
+    totalCarbs: number;
+    totalFat: number;
+    totalProtein: number;
+    dailyAvgCarbs: number;
+    dailyAvgFat: number;
+    dailyAvgProtein: number;
+    recommendedCarbs: number;
+    recommendedFat: number;
+    recommendedProtein: number;
   };
 }
 
@@ -86,6 +95,9 @@ function calculateSummaryStats(data: ReportData): SummaryStats {
 
   // Food stats
   const totalCalories = foodEntries.reduce((sum, entry) => sum + entry.calories, 0);
+  const totalCarbs = foodEntries.reduce((sum, entry) => sum + (entry.carbs || 0), 0);
+  const totalFat = foodEntries.reduce((sum, entry) => sum + (entry.fat || 0), 0);
+  const totalProtein = foodEntries.reduce((sum, entry) => sum + (entry.protein || 0), 0);
 
   // Get recommended values
   const weightLbs = profile.weight_unit === 'kg' && profile.weight
@@ -113,6 +125,15 @@ function calculateSummaryStats(data: ReportData): SummaryStats {
       percentOfRecommended: Math.round(
         (totalCalories / days / dietaryNeeds.dailyCalories) * 100
       ),
+      totalCarbs: Math.round(totalCarbs),
+      totalFat: Math.round(totalFat),
+      totalProtein: Math.round(totalProtein),
+      dailyAvgCarbs: Math.round(totalCarbs / days),
+      dailyAvgFat: Math.round(totalFat / days),
+      dailyAvgProtein: Math.round(totalProtein / days),
+      recommendedCarbs: dietaryNeeds.carbs,
+      recommendedFat: dietaryNeeds.fat,
+      recommendedProtein: dietaryNeeds.protein,
     },
   };
 }
@@ -343,6 +364,60 @@ export async function generateHealthcareReport(
 
   y += 15;
 
+  // Macronutrient Summary
+  pdf.setTextColor(20, 184, 166);
+  pdf.setFontSize(14);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('MACRONUTRIENT SUMMARY', margin, y);
+  y += 2;
+
+  pdf.setDrawColor(20, 184, 166);
+  pdf.line(margin, y, margin + contentWidth, y);
+  y += 10;
+
+  // Three columns for macros
+  // Carbs
+  pdf.setTextColor(34, 197, 94); // Green
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Carbohydrates', margin, y);
+
+  pdf.setTextColor(60, 60, 60);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  const macroY = y + 7;
+  pdf.text(`Total: ${stats.food.totalCarbs}g`, margin, macroY);
+  pdf.text(`Daily Avg: ${stats.food.dailyAvgCarbs}g`, margin, macroY + 5);
+  pdf.text(`Recommended: ${stats.food.recommendedCarbs}g/day`, margin, macroY + 10);
+
+  // Fat
+  pdf.setTextColor(234, 179, 8); // Yellow
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Fat', margin + colWidth, y);
+
+  pdf.setTextColor(60, 60, 60);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(`Total: ${stats.food.totalFat}g`, margin + colWidth, macroY);
+  pdf.text(`Daily Avg: ${stats.food.dailyAvgFat}g`, margin + colWidth, macroY + 5);
+  pdf.text(`Recommended: ${stats.food.recommendedFat}g/day`, margin + colWidth, macroY + 10);
+
+  // Protein
+  pdf.setTextColor(139, 92, 246); // Purple
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Protein', margin + colWidth * 2, y);
+
+  pdf.setTextColor(60, 60, 60);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(`Total: ${stats.food.totalProtein}g`, margin + colWidth * 2, macroY);
+  pdf.text(`Daily Avg: ${stats.food.dailyAvgProtein}g`, margin + colWidth * 2, macroY + 5);
+  pdf.text(`Recommended: ${stats.food.recommendedProtein}g/day`, margin + colWidth * 2, macroY + 10);
+
+  y = macroY + 20;
+
   // ============ PAGES 2+: Detailed Logs ============
 
   // Helper function to add a new page if needed
@@ -568,6 +643,9 @@ export async function generateHealthcareReport(
     // Add food chart before food journal
     await addChartToPage(foodChartElement, 'FOOD INTAKE ACTIVITY', [
       { label: 'Calories', color: [249, 115, 22] },
+      { label: 'Carbs (g)', color: [34, 197, 94] },
+      { label: 'Fat (g)', color: [234, 179, 8] },
+      { label: 'Protein (g)', color: [139, 92, 246] },
     ]);
 
     pdf.setTextColor(20, 184, 166);
@@ -588,9 +666,10 @@ export async function generateHealthcareReport(
     pdf.setFontSize(9);
     pdf.setFont('helvetica', 'bold');
     pdf.text('Date/Time', margin + 2, y);
-    pdf.text('Meal', margin + 50, y);
-    pdf.text('Calories', margin + 85, y);
-    pdf.text('Notes', margin + 110, y);
+    pdf.text('Meal', margin + 42, y);
+    pdf.text('Cals', margin + 70, y);
+    pdf.text('C/F/P', margin + 90, y);
+    pdf.text('Notes', margin + 120, y);
     y += 6;
 
     pdf.setFont('helvetica', 'normal');
@@ -600,18 +679,24 @@ export async function generateHealthcareReport(
 
     sortedFood.forEach((entry) => {
       const notes = entry.notes || '-';
-      const notesMaxWidth = contentWidth - 110; // Width available for notes column
+      const notesMaxWidth = contentWidth - 120; // Width available for notes column
       const wrappedNotes = wrapText(notes, notesMaxWidth);
       const rowHeight = Math.max(6, wrappedNotes.length * 4 + 2);
 
       checkPageBreak(rowHeight);
 
       pdf.text(formatDateTime(entry.timestamp), margin + 2, y);
-      pdf.text(getMealTypeLabel(entry.meal_type), margin + 50, y);
-      pdf.text(`${entry.calories} cal`, margin + 85, y);
+      pdf.text(getMealTypeLabel(entry.meal_type), margin + 42, y);
+      pdf.text(`${entry.calories}`, margin + 70, y);
+
+      // Macros: C/F/P format
+      const carbs = entry.carbs !== undefined ? entry.carbs : '-';
+      const fat = entry.fat !== undefined ? entry.fat : '-';
+      const protein = entry.protein !== undefined ? entry.protein : '-';
+      pdf.text(`${carbs}/${fat}/${protein}`, margin + 90, y);
 
       wrappedNotes.forEach((line, i) => {
-        pdf.text(line, margin + 110, y + i * 4);
+        pdf.text(line, margin + 120, y + i * 4);
       });
 
       y += rowHeight;

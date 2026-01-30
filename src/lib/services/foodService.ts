@@ -10,6 +10,9 @@ export interface DbFoodEntry {
   user_id: string;
   meal_type: MealType;
   calories: number;
+  carbs: number | null;
+  fat: number | null;
+  protein: number | null;
   timestamp: number;
   notes: string | null;
   created_at: string;
@@ -21,6 +24,9 @@ function toAppEntry(dbEntry: DbFoodEntry): FoodEntry {
     id: dbEntry.id,
     meal_type: dbEntry.meal_type,
     calories: dbEntry.calories,
+    carbs: dbEntry.carbs ?? undefined,
+    fat: dbEntry.fat ?? undefined,
+    protein: dbEntry.protein ?? undefined,
     timestamp: dbEntry.timestamp,
     notes: dbEntry.notes || undefined,
   };
@@ -41,12 +47,19 @@ export async function fetchFoodEntries(userId: string): Promise<FoodEntry[]> {
   return (data || []).map(toAppEntry);
 }
 
+export interface CreateFoodEntryOptions {
+  carbs?: number;
+  fat?: number;
+  protein?: number;
+}
+
 export async function createFoodEntry(
   userId: string,
   mealType: MealType,
   calories: number,
   notes?: string,
-  timestamp?: number
+  timestamp?: number,
+  options?: CreateFoodEntryOptions
 ): Promise<FoodEntry> {
   const now = timestamp || Date.now();
 
@@ -56,6 +69,9 @@ export async function createFoodEntry(
       user_id: userId,
       meal_type: mealType,
       calories,
+      carbs: options?.carbs ?? null,
+      fat: options?.fat ?? null,
+      protein: options?.protein ?? null,
       timestamp: now,
       notes: notes?.trim() || null,
     })
@@ -64,7 +80,7 @@ export async function createFoodEntry(
 
   if (error) {
     console.error('Error creating food entry:', JSON.stringify(error, null, 2));
-    console.error('Input data:', { userId, mealType, calories, notes, timestamp: now });
+    console.error('Input data:', { userId, mealType, calories, notes, timestamp: now, ...options });
     throw new Error(error.message || 'Failed to create food entry');
   }
 
@@ -85,7 +101,7 @@ export async function deleteFoodEntry(entryId: string): Promise<void> {
 
 export async function updateFoodEntry(
   entryId: string,
-  updates: Partial<Pick<FoodEntry, 'meal_type' | 'calories' | 'notes' | 'timestamp'>>
+  updates: Partial<Pick<FoodEntry, 'meal_type' | 'calories' | 'carbs' | 'fat' | 'protein' | 'notes' | 'timestamp'>>
 ): Promise<FoodEntry> {
   const { data, error } = await getSupabase()
     .from('food_entries')
