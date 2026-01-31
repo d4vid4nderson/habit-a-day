@@ -24,13 +24,15 @@ import { BathroomType, BathroomEntry, WaterUnit, MealType, UrineColor, URINE_COL
 import { PoopIcon, PeeIcon, SimplePoopIcon, SimpleDropletIcon } from '@/components/icons/BathroomIcons';
 import { CalorieAIModal } from '@/components/CalorieAIModal';
 import { HealthcareReport } from '@/components/HealthcareReport';
-import { Flame, Sparkles, FileText, Share2, Copy } from 'lucide-react';
+import BarcodeScanner from '@/components/BarcodeScanner';
+import { Flame, Sparkles, FileText, Share2, Copy, ScanBarcode } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useEntries } from '@/lib/hooks/useEntries';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useWaterIntake } from '@/lib/hooks/useWaterIntake';
 import { useFoodJournal } from '@/lib/hooks/useFoodJournal';
 import { calculateDietaryNeeds, getMealTypeLabel } from '@/lib/services/foodService';
+import { createCustomFood } from '@/lib/services/customFoodsService';
 
 function toLocalDateString(date: Date): string {
   const year = date.getFullYear();
@@ -157,6 +159,8 @@ function HomeContent() {
   const [foodEntryAmPm, setFoodEntryAmPm] = useState<'AM' | 'PM'>('AM');
   const [calorieAIModalOpen, setCalorieAIModalOpen] = useState(false);
   const [calorieAISource, setCalorieAISource] = useState<'food' | 'food-history'>('food');
+  const [barcodeScannerOpen, setBarcodeScannerOpen] = useState(false);
+  const [barcodeScannerSource, setBarcodeScannerSource] = useState<'food' | 'food-history'>('food');
   const [foodCarbs, setFoodCarbs] = useState('');
   const [foodFat, setFoodFat] = useState('');
   const [foodProtein, setFoodProtein] = useState('');
@@ -536,6 +540,42 @@ function HomeContent() {
     } catch (err) {
       console.error('Failed to duplicate food entry:', err);
     }
+  };
+
+  // Barcode scanner handler
+  const handleBarcodeProductFound = (product: { name: string; brand?: string; calories?: number; carbs?: number; fat?: number; protein?: number; servingSize?: string }) => {
+    const productName = product.brand ? `${product.brand} ${product.name}` : product.name;
+    const servingInfo = product.servingSize ? ` (${product.servingSize})` : '';
+
+    if (barcodeScannerSource === 'food-history') {
+      setFoodHistoryCalories(product.calories?.toString() || '');
+      setFoodHistoryCarbs(product.carbs?.toString() || '');
+      setFoodHistoryFat(product.fat?.toString() || '');
+      setFoodHistoryProtein(product.protein?.toString() || '');
+      setFoodHistoryNotes(productName + servingInfo);
+    } else {
+      setFoodCalories(product.calories?.toString() || '');
+      setFoodCarbs(product.carbs?.toString() || '');
+      setFoodFat(product.fat?.toString() || '');
+      setFoodProtein(product.protein?.toString() || '');
+      setFoodNotes(productName + servingInfo);
+    }
+  };
+
+  // Save custom food from barcode scanner
+  const handleSaveCustomFood = async (food: { name: string; brand?: string; barcode: string; calories?: number; carbs?: number; fat?: number; protein?: number; servingSize?: string }) => {
+    if (!user) return;
+
+    await createCustomFood(user.id, {
+      name: food.name,
+      brand: food.brand,
+      barcode: food.barcode,
+      calories: food.calories || 0,
+      carbs: food.carbs,
+      fat: food.fat,
+      protein: food.protein,
+      serving_size: food.servingSize,
+    });
   };
 
   // Water history add handlers
@@ -2844,6 +2884,21 @@ function HomeContent() {
                 <button
                   type="button"
                   onClick={() => {
+                    setBarcodeScannerSource('food');
+                    setBarcodeScannerOpen(true);
+                  }}
+                  className={`px-3 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center gap-1 ${
+                    gender === 'female'
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600'
+                      : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
+                  }`}
+                  title="Scan barcode"
+                >
+                  <ScanBarcode className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
                     setCalorieAISource('food');
                     setCalorieAIModalOpen(true);
                   }}
@@ -3082,6 +3137,16 @@ function HomeContent() {
           }}
           gender={gender}
         />
+
+        {/* Barcode Scanner Modal */}
+        <BarcodeScanner
+          isOpen={barcodeScannerOpen}
+          onClose={() => setBarcodeScannerOpen(false)}
+          onProductFound={handleBarcodeProductFound}
+          onSaveCustomFood={handleSaveCustomFood}
+          userId={user?.id}
+          gender={gender}
+        />
       </div>
     );
   }
@@ -3257,6 +3322,21 @@ function HomeContent() {
                             gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
                           }`}
                         />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setBarcodeScannerSource('food-history');
+                            setBarcodeScannerOpen(true);
+                          }}
+                          className={`px-3 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center gap-1 ${
+                            gender === 'female'
+                              ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600'
+                              : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
+                          }`}
+                          title="Scan barcode"
+                        >
+                          <ScanBarcode className="w-5 h-5" />
+                        </button>
                         <button
                           type="button"
                           onClick={() => {
@@ -3452,6 +3532,16 @@ function HomeContent() {
               }
             }
           }}
+          gender={gender}
+        />
+
+        {/* Barcode Scanner Modal */}
+        <BarcodeScanner
+          isOpen={barcodeScannerOpen}
+          onClose={() => setBarcodeScannerOpen(false)}
+          onProductFound={handleBarcodeProductFound}
+          onSaveCustomFood={handleSaveCustomFood}
+          userId={user?.id}
           gender={gender}
         />
       </div>

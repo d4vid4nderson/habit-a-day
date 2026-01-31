@@ -68,6 +68,19 @@ export interface FoodEntry {
   notes?: string;
 }
 
+export interface CustomFood {
+  id: string;
+  user_id?: string;
+  name: string;
+  brand?: string;
+  barcode?: string;
+  calories: number;
+  carbs?: number; // grams
+  fat?: number; // grams
+  protein?: number; // grams
+  serving_size?: string;
+}
+
 export interface UserGoal {
   id: string;
   user_id: string;
