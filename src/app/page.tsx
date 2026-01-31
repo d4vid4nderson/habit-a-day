@@ -2870,31 +2870,22 @@ function HomeContent() {
                 </div>
               </div>
 
-              {/* Calories Input with AI Button */}
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="number"
-                  value={foodCalories}
-                  onChange={(e) => setFoodCalories(e.target.value)}
-                  placeholder="Estimated calories"
-                  className={`flex-1 rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                    gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
-                  }`}
-                />
+              {/* Scanner and AI Buttons Row */}
+              <div className="flex gap-3 mb-3">
                 <button
                   type="button"
                   onClick={() => {
                     setBarcodeScannerSource('food');
                     setBarcodeScannerOpen(true);
                   }}
-                  className={`px-3 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center gap-1 ${
+                  className={`flex-1 py-3 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center justify-center gap-2 ${
                     gender === 'female'
                       ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600'
                       : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
                   }`}
-                  title="Scan barcode"
                 >
                   <ScanBarcode className="w-5 h-5" />
+                  <span>Scan Barcode</span>
                 </button>
                 <button
                   type="button"
@@ -2902,16 +2893,28 @@ function HomeContent() {
                     setCalorieAISource('food');
                     setCalorieAIModalOpen(true);
                   }}
-                  className={`px-4 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center gap-2 ${
+                  className={`flex-1 py-3 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center justify-center gap-2 ${
                     gender === 'female'
                       ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600'
                       : 'bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600'
                   }`}
-                  title="Ask AI for calorie estimate"
                 >
                   <Sparkles className="w-5 h-5" />
-                  <span className="hidden sm:inline">AI</span>
+                  <span>Ask AI</span>
                 </button>
+              </div>
+
+              {/* Calories Input */}
+              <div className="mb-3">
+                <input
+                  type="number"
+                  value={foodCalories}
+                  onChange={(e) => setFoodCalories(e.target.value)}
+                  placeholder="Estimated calories"
+                  className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                    gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                  }`}
+                />
               </div>
 
               {/* Macros Input Row */}
@@ -3315,33 +3318,24 @@ function HomeContent() {
                       </select>
                     </div>
 
-                    {/* Calories Input with AI Button */}
+                    {/* Scanner and AI Buttons Row */}
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Calories</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          value={foodHistoryCalories}
-                          onChange={(e) => setFoodHistoryCalories(e.target.value)}
-                          placeholder="Estimated calories"
-                          className={`flex-1 rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                            gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
-                          }`}
-                        />
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Quick Fill</label>
+                      <div className="flex gap-3">
                         <button
                           type="button"
                           onClick={() => {
                             setBarcodeScannerSource('food-history');
                             setBarcodeScannerOpen(true);
                           }}
-                          className={`px-3 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center gap-1 ${
+                          className={`flex-1 py-3 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center justify-center gap-2 ${
                             gender === 'female'
                               ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600'
                               : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
                           }`}
-                          title="Scan barcode"
                         >
                           <ScanBarcode className="w-5 h-5" />
+                          <span>Scan Barcode</span>
                         </button>
                         <button
                           type="button"
@@ -3349,17 +3343,30 @@ function HomeContent() {
                             setCalorieAISource('food-history');
                             setCalorieAIModalOpen(true);
                           }}
-                          className={`px-4 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center gap-2 ${
+                          className={`flex-1 py-3 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center justify-center gap-2 ${
                             gender === 'female'
                               ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600'
                               : 'bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600'
                           }`}
-                          title="Ask AI for calorie estimate"
                         >
                           <Sparkles className="w-5 h-5" />
-                          <span className="hidden sm:inline">AI</span>
+                          <span>Ask AI</span>
                         </button>
                       </div>
+                    </div>
+
+                    {/* Calories Input */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Calories</label>
+                      <input
+                        type="number"
+                        value={foodHistoryCalories}
+                        onChange={(e) => setFoodHistoryCalories(e.target.value)}
+                        placeholder="Estimated calories"
+                        className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                          gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
+                        }`}
+                      />
                     </div>
 
                     {/* Macros Input */}
