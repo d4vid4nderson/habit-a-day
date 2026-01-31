@@ -7,42 +7,44 @@ const anthropic = new Anthropic({
 
 const SYSTEM_PROMPT = `You are a precise nutrition assistant that helps users estimate calories AND macronutrients (carbs, fat, protein) for their meals.
 
-IMPORTANT: Be accurate and realistic with all nutritional estimates. Do NOT underestimate or be overly conservative.
+CRITICAL RULES:
+1. NEVER underestimate. Users prefer accurate or slightly high estimates over low ones.
+2. For chain restaurants (Panda Express, Chipotle, McDonald's, etc.), ALWAYS use their official published nutrition data - do NOT guess.
+3. Use the web_search tool for ANY brand name, restaurant, or packaged food to get accurate data.
+
+For chain restaurants - USE OFFICIAL DATA:
+- Panda Express: Large Orange Chicken = 490 cal, 51g carbs, 23g fat, 25g protein (entree only)
+- Panda Express: Large plate with 2 entrees + side = typically 800-1200+ calories
+- Chipotle: Burrito with standard toppings = 1000-1200 cal
+- McDonald's Big Mac = 550 cal, 45g carbs, 30g fat, 25g protein
 
 Guidelines:
 1. Use realistic portion sizes that Americans actually eat (not small/diet portions)
-2. Account for cooking oils, butter, sauces, and dressings that are commonly added
+2. Account for cooking oils, butter, sauces, and dressings
 3. Restaurant portions are typically 1.5-2x larger than home-cooked meals
-4. Fast food and chain restaurant items often have more calories than people expect
-5. When in doubt, estimate on the higher side rather than the lower side
+4. When in doubt, estimate on the HIGHER side
+5. If user says "large" or "entree size" - use the large/full portion values
 
 When a user mentions a brand name, restaurant, or specific product:
-- Use the web_search tool to look up the actual nutritional information
-- Search for "[brand/restaurant name] [item] nutrition calories macros"
-- Provide the official nutritional values when available
-
-When estimating nutrition:
-1. Provide specific estimates for calories, carbs, fat, and protein (not ranges)
-2. Be direct and confident in your estimates
-3. If the description is vague, ask ONE clarifying question about the most important detail (usually portion size)
-4. Always format the nutritional info clearly for easy extraction
+- ALWAYS use the web_search tool to look up official nutritional information
+- Search for "[restaurant] [item] nutrition facts calories"
+- Provide the OFFICIAL nutritional values, not estimates
 
 CRITICAL: Always provide ALL four values in this exact format at the end of your response:
 **Calories: [number]** | **Carbs: [number]g** | **Fat: [number]g** | **Protein: [number]g**
 
 Examples:
-- "A medium apple: **Calories: 95** | **Carbs: 25g** | **Fat: 0g** | **Protein: 0g**"
+- "Panda Express Large Orange Chicken (entree only): **Calories: 490** | **Carbs: 51g** | **Fat: 23g** | **Protein: 25g**"
+- "Panda Express Plate (orange chicken + beijing beef + fried rice): **Calories: 1190** | **Carbs: 125g** | **Fat: 48g** | **Protein: 42g**"
 - "Chipotle burrito bowl with chicken, rice, beans, cheese, sour cream, guac: **Calories: 1150** | **Carbs: 105g** | **Fat: 50g** | **Protein: 55g**"
-- "Starbucks Grande Caramel Frappuccino: **Calories: 380** | **Carbs: 54g** | **Fat: 16g** | **Protein: 5g**"
 
-Common reference values:
-- Restaurant pasta dishes: 800-1500 cal, 80-150g carbs, 25-50g fat, 20-40g protein
-- Burgers with fries: 1000-1500 cal, 80-120g carbs, 50-80g fat, 40-60g protein
-- Large muffins/pastries: 400-600 cal, 50-80g carbs, 15-30g fat, 5-10g protein
-- Salads with dressing and toppings: 500-900 cal, 20-40g carbs, 35-60g fat, 20-40g protein
-- Smoothies and frappuccinos: 300-600 cal, 50-90g carbs, 8-20g fat, 5-15g protein
+Common reference values (use these as MINIMUMS, not maximums):
+- Chinese takeout entrees: 400-600 cal per entree, plates 800-1400 cal total
+- Restaurant pasta dishes: 800-1500 cal
+- Burgers with fries: 1000-1500 cal
+- Fast food combos: 900-1400 cal
 
-Be encouraging but honest about nutritional content.`;
+Be direct and confident. Do not hedge or give ranges - give specific numbers.`;
 
 // Web search tool definition
 const webSearchTool: Anthropic.Tool = {
@@ -60,10 +62,170 @@ const webSearchTool: Anthropic.Tool = {
   },
 };
 
-// Simple web search function using a search API
-async function performWebSearch(query: string): Promise<string> {
+// FatSecret API for comprehensive food nutrition data
+// Documentation: https://platform.fatsecret.com/docs/guides/authentication/oauth2
+
+// Cache the access token to avoid requesting a new one for every search
+let fatSecretToken: { token: string; expiresAt: number } | null = null;
+
+async function getFatSecretToken(): Promise<string | null> {
+  const clientId = process.env.FATSECRET_CLIENT_ID;
+  const clientSecret = process.env.FATSECRET_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    return null;
+  }
+
+  // Return cached token if still valid (with 5 min buffer)
+  if (fatSecretToken && fatSecretToken.expiresAt > Date.now() + 300000) {
+    return fatSecretToken.token;
+  }
+
   try {
-    // Use DuckDuckGo instant answer API for quick nutrition lookups
+    const response = await fetch('https://oauth.fatsecret.com/connect/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
+      },
+      body: 'grant_type=client_credentials&scope=basic',
+    });
+
+    if (!response.ok) {
+      console.error('FatSecret token error:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    fatSecretToken = {
+      token: data.access_token,
+      expiresAt: Date.now() + (data.expires_in * 1000),
+    };
+
+    return fatSecretToken.token;
+  } catch (error) {
+    console.error('FatSecret token error:', error);
+    return null;
+  }
+}
+
+// Search FatSecret for food nutrition data
+async function searchFatSecret(query: string): Promise<string | null> {
+  const token = await getFatSecretToken();
+  if (!token) {
+    return null;
+  }
+
+  try {
+    // Search for foods using v3 API
+    const searchParams = new URLSearchParams({
+      method: 'foods.search.v3',
+      search_expression: query,
+      format: 'json',
+      max_results: '10',
+      include_food_attributes: 'true',
+    });
+
+    const response = await fetch('https://platform.fatsecret.com/rest/server.api', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: searchParams.toString(),
+    });
+
+    if (!response.ok) {
+      console.error('FatSecret search error:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (data.foods_search?.results?.food) {
+      const foods = Array.isArray(data.foods_search.results.food)
+        ? data.foods_search.results.food
+        : [data.foods_search.results.food];
+
+      const results: string[] = ['NUTRITION DATA FROM FATSECRET DATABASE:'];
+
+      for (const food of foods.slice(0, 5)) {
+        const name = food.food_name || '';
+        const brand = food.brand_name || '';
+        const foodType = food.food_type || '';
+
+        // Get servings data
+        let servingInfo = '';
+        let calories = 'N/A';
+        let fat = 'N/A';
+        let carbs = 'N/A';
+        let protein = 'N/A';
+
+        if (food.servings?.serving) {
+          const servings = Array.isArray(food.servings.serving)
+            ? food.servings.serving
+            : [food.servings.serving];
+
+          // Prefer standard serving or first available
+          const serving = servings[0];
+          if (serving) {
+            servingInfo = serving.serving_description || serving.measurement_description || 'per serving';
+            calories = serving.calories ? Math.round(parseFloat(serving.calories)).toString() : 'N/A';
+            fat = serving.fat ? Math.round(parseFloat(serving.fat)).toString() : 'N/A';
+            carbs = serving.carbohydrate ? Math.round(parseFloat(serving.carbohydrate)).toString() : 'N/A';
+            protein = serving.protein ? Math.round(parseFloat(serving.protein)).toString() : 'N/A';
+          }
+        } else {
+          // Fallback: Parse the food_description which contains nutrition info
+          const description = food.food_description || '';
+          // FatSecret format: "Per 100g - Calories: 250kcal | Fat: 10.00g | Carbs: 30.00g | Protein: 8.00g"
+          const caloriesMatch = description.match(/Calories:\s*(\d+(?:\.\d+)?)/i);
+          const fatMatch = description.match(/Fat:\s*(\d+(?:\.\d+)?)/i);
+          const carbsMatch = description.match(/Carbs:\s*(\d+(?:\.\d+)?)/i);
+          const proteinMatch = description.match(/Protein:\s*(\d+(?:\.\d+)?)/i);
+          const servingMatch = description.match(/^Per\s+([^-]+)/i);
+
+          servingInfo = servingMatch ? servingMatch[1].trim() : 'per serving';
+          calories = caloriesMatch ? Math.round(parseFloat(caloriesMatch[1])).toString() : 'N/A';
+          fat = fatMatch ? Math.round(parseFloat(fatMatch[1])).toString() : 'N/A';
+          carbs = carbsMatch ? Math.round(parseFloat(carbsMatch[1])).toString() : 'N/A';
+          protein = proteinMatch ? Math.round(parseFloat(proteinMatch[1])).toString() : 'N/A';
+        }
+
+        const typeLabel = foodType === 'Brand' ? ` (${brand || 'Brand'})` : brand ? ` (${brand})` : '';
+
+        results.push(`
+Food: ${name}${typeLabel}
+Serving: ${servingInfo}
+Calories: ${calories}
+Fat: ${fat}g
+Carbs: ${carbs}g
+Protein: ${protein}g`);
+      }
+
+      results.push('\nThis is data from the FatSecret database which includes restaurant and brand nutrition information.');
+      results.push('Use the most relevant match above to provide the nutrition information to the user.');
+
+      return results.join('\n');
+    }
+
+    return null;
+  } catch (error) {
+    console.error('FatSecret search error:', error);
+    return null;
+  }
+}
+
+// Web search function - tries FatSecret first, then falls back to DuckDuckGo
+async function performWebSearch(query: string): Promise<string> {
+  // Try FatSecret API first (comprehensive food database)
+  const fatSecretResult = await searchFatSecret(query);
+  if (fatSecretResult) {
+    return fatSecretResult;
+  }
+
+  // Fall back to DuckDuckGo for general searches
+  try {
     const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query + ' nutrition calories')}&format=json&no_html=1`;
 
     const response = await fetch(searchUrl, {
@@ -78,7 +240,6 @@ async function performWebSearch(query: string): Promise<string> {
 
     const data = await response.json();
 
-    // Extract relevant information from DuckDuckGo response
     const results: string[] = [];
 
     if (data.Abstract) {
@@ -89,7 +250,6 @@ async function performWebSearch(query: string): Promise<string> {
       results.push(`Answer: ${data.Answer}`);
     }
 
-    // Check related topics for nutrition info
     if (data.RelatedTopics && Array.isArray(data.RelatedTopics)) {
       for (const topic of data.RelatedTopics.slice(0, 3)) {
         if (topic.Text && (topic.Text.toLowerCase().includes('calorie') || topic.Text.toLowerCase().includes('nutrition'))) {
@@ -98,21 +258,8 @@ async function performWebSearch(query: string): Promise<string> {
       }
     }
 
-    // Also try to get infobox data if available
-    if (data.Infobox && data.Infobox.content) {
-      for (const item of data.Infobox.content) {
-        if (item.label && item.value) {
-          const label = item.label.toLowerCase();
-          if (label.includes('calorie') || label.includes('energy') || label.includes('nutrition')) {
-            results.push(`${item.label}: ${item.value}`);
-          }
-        }
-      }
-    }
-
     if (results.length === 0) {
-      // If DuckDuckGo doesn't have direct info, provide guidance
-      return `No direct nutritional data found. Based on typical values for this type of food, provide your best estimate. If this is a major chain restaurant or brand, their official website or MyFitnessPal typically has accurate information.`;
+      return `No direct nutritional data found for "${query}". Please provide your best estimate based on typical nutritional values for this type of food. For chain restaurants, check their official website for nutrition information.`;
     }
 
     return results.join('\n');
