@@ -1880,8 +1880,8 @@ function HomeContent() {
                 {/* Tank inner shadow */}
                 <div className="absolute inset-0 shadow-inner pointer-events-none z-[5]" />
 
-                {/* Center Stats - BEHIND water */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center z-[1]">
+                {/* Center Stats - IN FRONT of water */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-[3]">
                   <p className="text-5xl font-black text-cyan-600 dark:text-white">
                     {todayTotal.toFixed(1)}
                   </p>
@@ -1890,7 +1890,7 @@ function HomeContent() {
                   </p>
                 </div>
 
-                {/* Water fill with wave animation - IN FRONT of numbers */}
+                {/* Water fill with wave animation - BEHIND numbers */}
                 <div
                   className="absolute bottom-0 left-0 right-0 transition-all duration-1000 ease-out z-[2]"
                   style={{ height: `${progress}%` }}
