@@ -511,8 +511,12 @@ function HomeContent() {
     const hour12 = currentHour > 12 ? currentHour - 12 : (currentHour === 0 ? 12 : currentHour);
     const ampm: 'AM' | 'PM' = currentHour >= 12 ? 'PM' : 'AM';
 
+    // Round minute to nearest 5 to match dropdown options
+    const roundedMinute = Math.round(currentMinute / 5) * 5;
+    const minuteValue = roundedMinute === 60 ? '00' : roundedMinute.toString().padStart(2, '0');
+
     setFoodEntryHour(hour12.toString());
-    setFoodEntryMinute(currentMinute.toString().padStart(2, '0'));
+    setFoodEntryMinute(minuteValue);
     setFoodEntryAmPm(ampm);
   };
 
@@ -661,8 +665,9 @@ function HomeContent() {
     const hour12 = currentHour > 12 ? currentHour - 12 : (currentHour === 0 ? 12 : currentHour);
     const ampm: 'AM' | 'PM' = currentHour >= 12 ? 'PM' : 'AM';
 
+    // Use string number for minute (dropdown values are 0-59 as numbers)
     setFoodHistoryHour(hour12.toString());
-    setFoodHistoryMinute(currentMinute.toString().padStart(2, '0'));
+    setFoodHistoryMinute(currentMinute.toString());
     setFoodHistoryAmPm(ampm);
   };
 
