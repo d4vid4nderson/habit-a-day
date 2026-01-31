@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { X, Camera, Loader2, AlertCircle, Save } from 'lucide-react';
+import { Html5Qrcode, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { X, Camera, Loader2, AlertCircle, Save, Focus } from 'lucide-react';
 
 interface FoodProduct {
   name: string;
@@ -104,6 +104,46 @@ export default function BarcodeScanner({
     }
   }, [onProductFound, onClose, userId]);
 
+  const captureAndScan = useCallback(async () => {
+    if (!scannerRef.current) return;
+
+    try {
+      // Take a photo and try to decode it
+      const imageData = await scannerRef.current.scanFileV2(
+        await (async () => {
+          // Get the video element and capture a frame
+          const videoElement = document.querySelector('#barcode-reader video') as HTMLVideoElement;
+          if (!videoElement) throw new Error('Video not ready');
+
+          const canvas = document.createElement('canvas');
+          canvas.width = videoElement.videoWidth;
+          canvas.height = videoElement.videoHeight;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('Canvas not supported');
+
+          ctx.drawImage(videoElement, 0, 0);
+
+          return new Promise<File>((resolve) => {
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve(new File([blob], 'capture.jpg', { type: 'image/jpeg' }));
+              }
+            }, 'image/jpeg', 0.95);
+          });
+        })(),
+        true
+      );
+
+      if (imageData && imageData.decodedText) {
+        await stopScanner();
+        await lookupBarcode(imageData.decodedText);
+      }
+    } catch (err) {
+      console.error('Manual capture error:', err);
+      setError('Could not read barcode. Try adjusting the angle or lighting.');
+    }
+  }, [lookupBarcode, stopScanner]);
+
   const startScanner = useCallback(async () => {
     if (!containerRef.current || isInitializedRef.current) return;
 
@@ -111,15 +151,28 @@ export default function BarcodeScanner({
     isInitializedRef.current = true;
 
     try {
-      const html5QrCode = new Html5Qrcode('barcode-reader');
+      // Configure for common barcode formats (UPC, EAN, etc.)
+      const html5QrCode = new Html5Qrcode('barcode-reader', {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.QR_CODE,
+        ],
+        verbose: false,
+      });
       scannerRef.current = html5QrCode;
 
       await html5QrCode.start(
         { facingMode: 'environment' }, // Use back camera
         {
-          fps: 10,
-          qrbox: { width: 250, height: 150 },
+          fps: 15, // Increased from 10 for faster detection
+          qrbox: { width: 280, height: 160 }, // Larger scanning area
           aspectRatio: 1.5,
+          disableFlip: false,
         },
         async (decodedText) => {
           // Stop scanner immediately to prevent multiple scans
@@ -426,6 +479,20 @@ export default function BarcodeScanner({
                 </p>
                 <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
                   Supports UPC, EAN, and other common formats
+                </p>
+                <button
+                  onClick={captureAndScan}
+                  className={`mt-4 px-6 py-3 rounded-xl font-semibold text-white transition-all active:scale-95 flex items-center justify-center gap-2 mx-auto ${
+                    gender === 'female'
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600'
+                      : 'bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600'
+                  }`}
+                >
+                  <Focus className="w-5 h-5" />
+                  Capture Barcode
+                </button>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-2">
+                  Auto-detect not working? Tap to capture manually.
                 </p>
               </div>
             </>
