@@ -649,6 +649,23 @@ function HomeContent() {
   };
 
   // Food history add handlers
+  const handleFoodHistoryMealTypeSelect = (meal: MealType) => {
+    setFoodHistoryMealType(meal);
+
+    // Auto-populate with current time
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    // Convert to 12-hour format
+    const hour12 = currentHour > 12 ? currentHour - 12 : (currentHour === 0 ? 12 : currentHour);
+    const ampm: 'AM' | 'PM' = currentHour >= 12 ? 'PM' : 'AM';
+
+    setFoodHistoryHour(hour12.toString());
+    setFoodHistoryMinute(currentMinute.toString().padStart(2, '0'));
+    setFoodHistoryAmPm(ampm);
+  };
+
   const handleFoodHistoryAdd = async () => {
     if (!foodHistoryCalories || !foodHistoryHour || !foodHistoryMinute) return;
 
@@ -3341,7 +3358,7 @@ function HomeContent() {
                       <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Meal Type</label>
                       <select
                         value={foodHistoryMealType}
-                        onChange={(e) => setFoodHistoryMealType(e.target.value as MealType)}
+                        onChange={(e) => handleFoodHistoryMealTypeSelect(e.target.value as MealType)}
                         className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
                           gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
                         }`}
