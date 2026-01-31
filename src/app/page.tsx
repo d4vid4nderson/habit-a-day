@@ -131,6 +131,9 @@ function HomeContent() {
   const [selectedTracker, setSelectedTracker] = useState<'potty' | 'water' | 'food'>('food');
   const [chartDays, setChartDays] = useState<7 | 30 | 90 | 365>(7);
   const [chartDropdownOpen, setChartDropdownOpen] = useState(false);
+  const [macroFilterOpen, setMacroFilterOpen] = useState(false);
+  const [selectedMacroFilter, setSelectedMacroFilter] = useState<'all' | 'calories' | 'carbs' | 'fat' | 'protein'>('all');
+  const macroFilterRef = useRef<HTMLDivElement | null>(null);
   const addDropdownRef = useRef<HTMLDivElement | null>(null);
   const chartDropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -321,6 +324,23 @@ function HomeContent() {
       document.removeEventListener('touchstart', handlePointerDown);
     };
   }, [chartDropdownOpen]);
+
+  // Close macro filter dropdown when clicking outside
+  useEffect(() => {
+    if (!macroFilterOpen) return;
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (macroFilterRef.current && !macroFilterRef.current.contains(target)) {
+        setMacroFilterOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+    };
+  }, [macroFilterOpen]);
 
   // Show loading state while checking auth
   if (authLoading || profileLoading) {
@@ -3924,46 +3944,54 @@ function HomeContent() {
                       )}
                       {selectedTracker === 'food' && (
                         <>
-                          <Line
-                            yAxisId="left"
-                            type="monotone"
-                            dataKey="calories"
-                            name="Calories"
-                            stroke="#f97316"
-                            strokeWidth={2}
-                            dot={{ fill: '#f97316', r: 4 }}
-                            activeDot={{ r: 6 }}
-                          />
-                          <Line
-                            yAxisId="left"
-                            type="monotone"
-                            dataKey="carbs"
-                            name="Carbs (g)"
-                            stroke="#22c55e"
-                            strokeWidth={2}
-                            dot={{ fill: '#22c55e', r: 4 }}
-                            activeDot={{ r: 6 }}
-                          />
-                          <Line
-                            yAxisId="left"
-                            type="monotone"
-                            dataKey="fat"
-                            name="Fat (g)"
-                            stroke="#eab308"
-                            strokeWidth={2}
-                            dot={{ fill: '#eab308', r: 4 }}
-                            activeDot={{ r: 6 }}
-                          />
-                          <Line
-                            yAxisId="left"
-                            type="monotone"
-                            dataKey="protein"
-                            name="Protein (g)"
-                            stroke="#8b5cf6"
-                            strokeWidth={2}
-                            dot={{ fill: '#8b5cf6', r: 4 }}
-                            activeDot={{ r: 6 }}
-                          />
+                          {(selectedMacroFilter === 'all' || selectedMacroFilter === 'calories') && (
+                            <Line
+                              yAxisId="left"
+                              type="monotone"
+                              dataKey="calories"
+                              name="Calories"
+                              stroke="#f97316"
+                              strokeWidth={2}
+                              dot={{ fill: '#f97316', r: 4 }}
+                              activeDot={{ r: 6 }}
+                            />
+                          )}
+                          {(selectedMacroFilter === 'all' || selectedMacroFilter === 'carbs') && (
+                            <Line
+                              yAxisId="left"
+                              type="monotone"
+                              dataKey="carbs"
+                              name="Carbs (g)"
+                              stroke="#22c55e"
+                              strokeWidth={2}
+                              dot={{ fill: '#22c55e', r: 4 }}
+                              activeDot={{ r: 6 }}
+                            />
+                          )}
+                          {(selectedMacroFilter === 'all' || selectedMacroFilter === 'fat') && (
+                            <Line
+                              yAxisId="left"
+                              type="monotone"
+                              dataKey="fat"
+                              name="Fat (g)"
+                              stroke="#eab308"
+                              strokeWidth={2}
+                              dot={{ fill: '#eab308', r: 4 }}
+                              activeDot={{ r: 6 }}
+                            />
+                          )}
+                          {(selectedMacroFilter === 'all' || selectedMacroFilter === 'protein') && (
+                            <Line
+                              yAxisId="left"
+                              type="monotone"
+                              dataKey="protein"
+                              name="Protein (g)"
+                              stroke="#8b5cf6"
+                              strokeWidth={2}
+                              dot={{ fill: '#8b5cf6', r: 4 }}
+                              activeDot={{ r: 6 }}
+                            />
+                          )}
                         </>
                       )}
                     </LineChart>
@@ -4122,33 +4150,172 @@ function HomeContent() {
                   <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Select tracker to display</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                  {/* Food Journal - Select */}
-                  <button
-                    onClick={() => setSelectedTracker('food')}
-                    className={`rounded-2xl p-4 text-center transition-all duration-200 border ${
-                      selectedTracker === 'food'
-                        ? 'bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/40 border-orange-300 dark:border-orange-700 shadow-lg shadow-orange-500/20'
-                        : 'bg-zinc-50 dark:bg-zinc-700/50 border-zinc-200/50 dark:border-zinc-600/30 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-500'
-                    }`}
-                  >
-                    <div className="relative inline-block">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center mx-auto mb-2 transition-all ${selectedTracker === 'food' ? 'bg-orange-500 shadow-md shadow-orange-500/30' : 'bg-zinc-200 dark:bg-zinc-600'}`}>
-                        <svg className={`h-5 w-5 ${selectedTracker === 'food' ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                          <path d="M7 4v17m-3 -17v3a3 3 0 1 0 6 0v-3" />
-                          <path d="M14 8a3 4 0 1 0 6 0a3 4 0 1 0 -6 0" />
-                          <path d="M17 12v9" />
+                  {/* Food Journal - Select with Macro Filter */}
+                  <div ref={macroFilterRef} className="relative">
+                    <div className="flex gap-1">
+                      {/* Expand button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMacroFilterOpen(!macroFilterOpen);
+                          if (selectedTracker !== 'food') {
+                            setSelectedTracker('food');
+                          }
+                        }}
+                        className={`rounded-l-2xl p-2 flex items-center justify-center transition-all duration-200 border-y border-l ${
+                          selectedTracker === 'food'
+                            ? 'bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/40 border-orange-300 dark:border-orange-700'
+                            : 'bg-zinc-50 dark:bg-zinc-700/50 border-zinc-200/50 dark:border-zinc-600/30 hover:bg-zinc-100 dark:hover:bg-zinc-700'
+                        }`}
+                      >
+                        <svg
+                          className={`h-4 w-4 transition-transform duration-200 ${macroFilterOpen ? 'rotate-90' : ''} ${selectedTracker === 'food' ? 'text-orange-600 dark:text-orange-400' : 'text-zinc-500 dark:text-zinc-400'}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                      </div>
-                      {selectedTracker === 'food' && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center shadow-sm">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
+                      </button>
+                      {/* Main food button */}
+                      <button
+                        onClick={() => {
+                          setSelectedTracker('food');
+                          setSelectedMacroFilter('all');
+                        }}
+                        className={`flex-1 rounded-r-2xl p-4 text-center transition-all duration-200 border-y border-r ${
+                          selectedTracker === 'food'
+                            ? 'bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/40 border-orange-300 dark:border-orange-700 shadow-lg shadow-orange-500/20'
+                            : 'bg-zinc-50 dark:bg-zinc-700/50 border-zinc-200/50 dark:border-zinc-600/30 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-500'
+                        }`}
+                      >
+                        <div className="relative inline-block">
+                          <div className={`h-10 w-10 rounded-xl flex items-center justify-center mx-auto mb-2 transition-all ${selectedTracker === 'food' ? 'bg-orange-500 shadow-md shadow-orange-500/30' : 'bg-zinc-200 dark:bg-zinc-600'}`}>
+                            <svg className={`h-5 w-5 ${selectedTracker === 'food' ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                              <path d="M7 4v17m-3 -17v3a3 3 0 1 0 6 0v-3" />
+                              <path d="M14 8a3 4 0 1 0 6 0a3 4 0 1 0 -6 0" />
+                              <path d="M17 12v9" />
+                            </svg>
+                          </div>
+                          {selectedTracker === 'food' && (
+                            <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center shadow-sm">
+                              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
                         </div>
-                      )}
+                        <p className={`text-xs font-bold ${selectedTracker === 'food' ? 'text-orange-700 dark:text-orange-300' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                          {selectedMacroFilter === 'all' ? 'Food' : selectedMacroFilter === 'calories' ? 'Calories' : selectedMacroFilter === 'carbs' ? 'Carbs' : selectedMacroFilter === 'fat' ? 'Fat' : 'Protein'}
+                        </p>
+                      </button>
                     </div>
-                    <p className={`text-xs font-bold ${selectedTracker === 'food' ? 'text-orange-700 dark:text-orange-300' : 'text-zinc-600 dark:text-zinc-400'}`}>Food</p>
-                  </button>
+                    {/* Macro filter dropdown */}
+                    {macroFilterOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 z-20 overflow-hidden">
+                        <button
+                          onClick={() => {
+                            setSelectedMacroFilter('all');
+                            setSelectedTracker('food');
+                            setMacroFilterOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-colors ${
+                            selectedMacroFilter === 'all'
+                              ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300'
+                              : 'hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                          }`}
+                        >
+                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-orange-500 via-green-500 to-purple-500"></div>
+                          Food (All)
+                          {selectedMacroFilter === 'all' && (
+                            <svg className="w-3 h-3 ml-auto text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedMacroFilter('calories');
+                            setSelectedTracker('food');
+                            setMacroFilterOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-colors ${
+                            selectedMacroFilter === 'calories'
+                              ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300'
+                              : 'hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                          }`}
+                        >
+                          <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                          Calories
+                          {selectedMacroFilter === 'calories' && (
+                            <svg className="w-3 h-3 ml-auto text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedMacroFilter('carbs');
+                            setSelectedTracker('food');
+                            setMacroFilterOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-colors ${
+                            selectedMacroFilter === 'carbs'
+                              ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
+                              : 'hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                          }`}
+                        >
+                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                          Carbs
+                          {selectedMacroFilter === 'carbs' && (
+                            <svg className="w-3 h-3 ml-auto text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedMacroFilter('fat');
+                            setSelectedTracker('food');
+                            setMacroFilterOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-colors ${
+                            selectedMacroFilter === 'fat'
+                              ? 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300'
+                              : 'hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                          }`}
+                        >
+                          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                          Fat
+                          {selectedMacroFilter === 'fat' && (
+                            <svg className="w-3 h-3 ml-auto text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedMacroFilter('protein');
+                            setSelectedTracker('food');
+                            setMacroFilterOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-colors ${
+                            selectedMacroFilter === 'protein'
+                              ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300'
+                              : 'hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                          }`}
+                        >
+                          <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                          Protein
+                          {selectedMacroFilter === 'protein' && (
+                            <svg className="w-3 h-3 ml-auto text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Physical Therapy - Coming Soon */}
                   <div className="rounded-2xl p-4 text-center bg-zinc-100/50 dark:bg-zinc-700/30 opacity-50 cursor-not-allowed border border-zinc-200/50 dark:border-zinc-600/30">
