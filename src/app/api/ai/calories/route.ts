@@ -1,5 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  sanitizeForExternalAPI,
+  sanitizeAIResponse,
+  createExternalAPIAuditHash,
+} from '@/lib/security/sanitizer';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -302,22 +307,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
     }
 
+    // HIPAA: Sanitize user input before sending to external AI service
+    // This removes any potential PHI (emails, phone numbers, health conditions, etc.)
+    const sanitizedMessage = sanitizeForExternalAPI(message);
+
+    // Create audit hash for logging (logs that external API was called, not the content)
+    const auditInfo = createExternalAPIAuditHash(message);
+    if (auditInfo.containedPHI) {
+      console.warn(
+        '[HIPAA] Potential PHI detected and sanitized before AI API call. Hash:',
+        auditInfo.hash
+      );
+    }
+
     // Build messages array from conversation history
     const messages: Anthropic.MessageParam[] = [];
 
     if (conversationHistory && Array.isArray(conversationHistory)) {
       for (const msg of conversationHistory) {
+        // Sanitize conversation history as well
+        const sanitizedContent =
+          msg.role === 'user'
+            ? sanitizeForExternalAPI(msg.content)
+            : msg.content;
         messages.push({
           role: msg.role as 'user' | 'assistant',
-          content: msg.content,
+          content: sanitizedContent,
         });
       }
     }
 
-    // Add the new user message
+    // Add the new sanitized user message
     messages.push({
       role: 'user',
-      content: message,
+      content: sanitizedMessage,
     });
 
     // First API call - may trigger tool use
@@ -373,7 +396,8 @@ export async function POST(request: NextRequest) {
     const textBlock = response.content.find(
       (block): block is Anthropic.TextBlock => block.type === 'text'
     );
-    const assistantMessage = textBlock?.text || '';
+    // HIPAA: Sanitize AI response in case it echoed any PHI
+    const assistantMessage = sanitizeAIResponse(textBlock?.text || '');
 
     // Extract nutritional values from the response using regex
     // Look for the formatted pattern: **Calories: X** | **Carbs: Xg** | **Fat: Xg** | **Protein: Xg**

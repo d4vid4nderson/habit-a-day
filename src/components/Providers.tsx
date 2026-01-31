@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { AuthProvider, useAuth } from '@/lib/auth/AuthContext';
 import { ProfileProvider, useProfile } from '@/lib/hooks/useProfile';
 import { TermsAcceptanceModal } from '@/components/TermsAcceptanceModal';
+import { SessionTimeoutProvider } from '@/components/SessionTimeoutProvider';
 
 // Paths that don't require terms acceptance
 const PUBLIC_PATHS = ['/auth/login', '/auth/callback', '/auth/setup'];
@@ -54,7 +55,9 @@ function TermsGate({ children }: { children: ReactNode }) {
 function ProvidersInner({ children }: { children: ReactNode }) {
   return (
     <ProfileProvider>
-      <TermsGate>{children}</TermsGate>
+      <SessionTimeoutProvider>
+        <TermsGate>{children}</TermsGate>
+      </SessionTimeoutProvider>
     </ProfileProvider>
   );
 }
