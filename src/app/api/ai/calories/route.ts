@@ -12,6 +12,24 @@ CRITICAL RULES:
 2. For chain restaurants (Panda Express, Chipotle, McDonald's, etc.), ALWAYS use their official published nutrition data - do NOT guess.
 3. Use the web_search tool for ANY brand name, restaurant, or packaged food to get accurate data.
 
+IMPORTANT - SERVING SIZE:
+If the user does NOT specify a quantity or serving size, ASK THEM before giving nutrition info!
+Example: "How many tablespoons of Coffee-mate did you use?" or "What size serving - 1 cup, 2 cups?"
+
+When you DO have the quantity:
+- Nutrition data from searches is PER SERVING (e.g., "per 1 tablespoon" or "per 100g")
+- YOU MUST MULTIPLY the values by the user's requested quantity!
+
+Examples:
+- If data shows "35 calories per 1 tablespoon" and user says 2 tablespoons → 70 calories
+- If data shows "150 calories per cup" and user says 1.5 cups → 225 calories
+- If data shows "100 calories per serving (30g)" and user says 60g → 200 calories
+
+ALWAYS:
+1. Ask for quantity/serving size if not provided
+2. Note what serving size the nutrition data is for
+3. Multiply/adjust based on user's actual quantity
+
 For chain restaurants - USE OFFICIAL DATA:
 - Panda Express: Large Orange Chicken = 490 cal, 51g carbs, 23g fat, 25g protein (entree only)
 - Panda Express: Large plate with 2 entrees + side = typically 800-1200+ calories
@@ -27,15 +45,16 @@ Guidelines:
 
 When a user mentions a brand name, restaurant, or specific product:
 - ALWAYS use the web_search tool to look up official nutritional information
-- Search for "[restaurant] [item] nutrition facts calories"
+- Search for "[product name] nutrition facts calories" or "[brand] [product] nutrition"
 - Provide the OFFICIAL nutritional values, not estimates
+- REMEMBER to multiply by the user's quantity if different from the serving size!
 
 CRITICAL: Always provide ALL four values in this exact format at the end of your response:
 **Calories: [number]** | **Carbs: [number]g** | **Fat: [number]g** | **Protein: [number]g**
 
 Examples:
 - "Panda Express Large Orange Chicken (entree only): **Calories: 490** | **Carbs: 51g** | **Fat: 23g** | **Protein: 25g**"
-- "Panda Express Plate (orange chicken + beijing beef + fried rice): **Calories: 1190** | **Carbs: 125g** | **Fat: 48g** | **Protein: 42g**"
+- "Coffee-mate creamer (2 tablespoons): **Calories: 70** | **Carbs: 10g** | **Fat: 3g** | **Protein: 0g**"
 - "Chipotle burrito bowl with chicken, rice, beans, cheese, sour cream, guac: **Calories: 1150** | **Carbs: 105g** | **Fat: 50g** | **Protein: 55g**"
 
 Common reference values (use these as MINIMUMS, not maximums):
@@ -195,16 +214,18 @@ async function searchFatSecret(query: string): Promise<string | null> {
         const typeLabel = foodType === 'Brand' ? ` (${brand || 'Brand'})` : brand ? ` (${brand})` : '';
 
         results.push(`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Food: ${name}${typeLabel}
-Serving: ${servingInfo}
-Calories: ${calories}
-Fat: ${fat}g
-Carbs: ${carbs}g
-Protein: ${protein}g`);
+⚠️ SERVING SIZE: ${servingInfo} ← IMPORTANT: This is the serving size for the values below!
+• Calories: ${calories} (per ${servingInfo})
+• Fat: ${fat}g (per ${servingInfo})
+• Carbs: ${carbs}g (per ${servingInfo})
+• Protein: ${protein}g (per ${servingInfo})
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
       }
 
-      results.push('\nThis is data from the FatSecret database which includes restaurant and brand nutrition information.');
-      results.push('Use the most relevant match above to provide the nutrition information to the user.');
+      results.push('\n⚠️ REMINDER: The values above are PER SERVING. If the user asked about a different quantity, you MUST multiply the values accordingly!');
+      results.push('Example: If data shows 35 cal per 1 tbsp and user asks about 2 tbsp, return 70 calories.');
 
       return results.join('\n');
     }
