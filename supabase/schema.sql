@@ -280,3 +280,45 @@ CREATE TRIGGER update_pt_entries_updated_at
 
 -- Enable realtime for pt_entries
 ALTER PUBLICATION supabase_realtime ADD TABLE pt_entries;
+
+-- Custom foods table for user-saved food items
+CREATE TABLE IF NOT EXISTS custom_foods (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  brand TEXT,
+  barcode TEXT,
+  calories INTEGER NOT NULL CHECK (calories >= 0),
+  carbs INTEGER CHECK (carbs IS NULL OR carbs >= 0),
+  fat INTEGER CHECK (fat IS NULL OR fat >= 0),
+  protein INTEGER CHECK (protein IS NULL OR protein >= 0),
+  serving_size TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create indexes for custom_foods
+CREATE INDEX IF NOT EXISTS custom_foods_user_id_idx ON custom_foods(user_id);
+CREATE INDEX IF NOT EXISTS custom_foods_barcode_idx ON custom_foods(barcode) WHERE barcode IS NOT NULL;
+CREATE INDEX IF NOT EXISTS custom_foods_name_idx ON custom_foods(user_id, name);
+
+-- Enable RLS for custom_foods
+ALTER TABLE custom_foods ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for custom_foods
+CREATE POLICY "Users can view own custom foods" ON custom_foods
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own custom foods" ON custom_foods
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own custom foods" ON custom_foods
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own custom foods" ON custom_foods
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Updated_at trigger for custom_foods
+CREATE TRIGGER update_custom_foods_updated_at
+  BEFORE UPDATE ON custom_foods
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Enable realtime for custom_foods
+ALTER PUBLICATION supabase_realtime ADD TABLE custom_foods;
