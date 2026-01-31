@@ -3122,14 +3122,20 @@ function HomeContent() {
         <CalorieAIModal
           isOpen={calorieAIModalOpen}
           onClose={() => setCalorieAIModalOpen(false)}
-          onSelectCalories={(calories, foodDescription) => {
+          onSelectNutrition={(nutrition, foodDescription) => {
             if (calorieAISource === 'food-history') {
-              setFoodHistoryCalories(calories.toString());
+              setFoodHistoryCalories(nutrition.calories.toString());
+              if (nutrition.carbs !== undefined) setFoodHistoryCarbs(nutrition.carbs.toString());
+              if (nutrition.fat !== undefined) setFoodHistoryFat(nutrition.fat.toString());
+              if (nutrition.protein !== undefined) setFoodHistoryProtein(nutrition.protein.toString());
               if (foodDescription) {
                 setFoodHistoryNotes(foodDescription);
               }
             } else {
-              setFoodCalories(calories.toString());
+              setFoodCalories(nutrition.calories.toString());
+              if (nutrition.carbs !== undefined) setFoodCarbs(nutrition.carbs.toString());
+              if (nutrition.fat !== undefined) setFoodFat(nutrition.fat.toString());
+              if (nutrition.protein !== undefined) setFoodProtein(nutrition.protein.toString());
               if (foodDescription) {
                 setFoodNotes(foodDescription);
               }
@@ -3519,14 +3525,20 @@ function HomeContent() {
         <CalorieAIModal
           isOpen={calorieAIModalOpen}
           onClose={() => setCalorieAIModalOpen(false)}
-          onSelectCalories={(calories, foodDescription) => {
+          onSelectNutrition={(nutrition, foodDescription) => {
             if (calorieAISource === 'food-history') {
-              setFoodHistoryCalories(calories.toString());
+              setFoodHistoryCalories(nutrition.calories.toString());
+              if (nutrition.carbs !== undefined) setFoodHistoryCarbs(nutrition.carbs.toString());
+              if (nutrition.fat !== undefined) setFoodHistoryFat(nutrition.fat.toString());
+              if (nutrition.protein !== undefined) setFoodHistoryProtein(nutrition.protein.toString());
               if (foodDescription) {
                 setFoodHistoryNotes(foodDescription);
               }
             } else {
-              setFoodCalories(calories.toString());
+              setFoodCalories(nutrition.calories.toString());
+              if (nutrition.carbs !== undefined) setFoodCarbs(nutrition.carbs.toString());
+              if (nutrition.fat !== undefined) setFoodFat(nutrition.fat.toString());
+              if (nutrition.protein !== undefined) setFoodProtein(nutrition.protein.toString());
               if (foodDescription) {
                 setFoodNotes(foodDescription);
               }

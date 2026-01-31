@@ -3,21 +3,31 @@
 import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Send, X, Loader2 } from 'lucide-react';
 
+interface NutritionData {
+  calories: number;
+  carbs?: number;
+  fat?: number;
+  protein?: number;
+}
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   extractedCalories?: number[];
+  extractedCarbs?: number | null;
+  extractedFat?: number | null;
+  extractedProtein?: number | null;
   foodDescription?: string; // The food being discussed when this response was generated
 }
 
 interface CalorieAIModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectCalories: (calories: number, foodDescription: string) => void;
+  onSelectNutrition: (nutrition: NutritionData, foodDescription: string) => void;
   gender: 'male' | 'female';
 }
 
-export function CalorieAIModal({ isOpen, onClose, onSelectCalories, gender }: CalorieAIModalProps) {
+export function CalorieAIModal({ isOpen, onClose, onSelectNutrition, gender }: CalorieAIModalProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -66,6 +76,9 @@ export function CalorieAIModal({ isOpen, onClose, onSelectCalories, gender }: Ca
           role: 'assistant',
           content: data.message,
           extractedCalories: data.extractedCalories,
+          extractedCarbs: data.extractedCarbs,
+          extractedFat: data.extractedFat,
+          extractedProtein: data.extractedProtein,
           foodDescription: userMessage, // Store what the user asked about
         },
       ]);
@@ -83,8 +96,22 @@ export function CalorieAIModal({ isOpen, onClose, onSelectCalories, gender }: Ca
     }
   };
 
-  const handleSelectCalories = (calories: number, foodDescription: string) => {
-    onSelectCalories(calories, foodDescription);
+  const handleSelectNutrition = (
+    calories: number,
+    carbs: number | null | undefined,
+    fat: number | null | undefined,
+    protein: number | null | undefined,
+    foodDescription: string
+  ) => {
+    onSelectNutrition(
+      {
+        calories,
+        carbs: carbs ?? undefined,
+        fat: fat ?? undefined,
+        protein: protein ?? undefined,
+      },
+      foodDescription
+    );
     onClose();
   };
 
@@ -172,22 +199,35 @@ export function CalorieAIModal({ isOpen, onClose, onSelectCalories, gender }: Ca
               >
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
 
-                {/* Calorie selection buttons */}
+                {/* Nutrition selection buttons */}
                 {message.role === 'assistant' && message.extractedCalories && message.extractedCalories.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">Tap to use:</p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-col gap-2">
                       {message.extractedCalories.map((cal, i) => (
                         <button
                           key={i}
-                          onClick={() => handleSelectCalories(cal, message.foodDescription || '')}
-                          className={`px-3 py-1.5 text-sm font-semibold rounded-full transition-all active:scale-95 ${
+                          onClick={() => handleSelectNutrition(
+                            cal,
+                            message.extractedCarbs,
+                            message.extractedFat,
+                            message.extractedProtein,
+                            message.foodDescription || ''
+                          )}
+                          className={`px-3 py-2 text-sm font-semibold rounded-xl transition-all active:scale-95 ${
                             gender === 'female'
                               ? 'bg-pink-500 hover:bg-pink-600 text-white'
                               : 'bg-teal-500 hover:bg-teal-600 text-white'
                           }`}
                         >
-                          {cal} cal
+                          <div className="flex flex-col items-center gap-1">
+                            <span>{cal} cal</span>
+                            {(message.extractedCarbs != null || message.extractedFat != null || message.extractedProtein != null) && (
+                              <span className="text-xs opacity-90">
+                                {message.extractedCarbs ?? 0}g C / {message.extractedFat ?? 0}g F / {message.extractedProtein ?? 0}g P
+                              </span>
+                            )}
+                          </div>
                         </button>
                       ))}
                     </div>

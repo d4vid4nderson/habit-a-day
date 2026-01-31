@@ -5,9 +5,9 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const SYSTEM_PROMPT = `You are a precise nutrition assistant that helps users estimate calories for their meals.
+const SYSTEM_PROMPT = `You are a precise nutrition assistant that helps users estimate calories AND macronutrients (carbs, fat, protein) for their meals.
 
-IMPORTANT: Be accurate and realistic with calorie estimates. Do NOT underestimate or be overly conservative.
+IMPORTANT: Be accurate and realistic with all nutritional estimates. Do NOT underestimate or be overly conservative.
 
 Guidelines:
 1. Use realistic portion sizes that Americans actually eat (not small/diet portions)
@@ -18,28 +18,31 @@ Guidelines:
 
 When a user mentions a brand name, restaurant, or specific product:
 - Use the web_search tool to look up the actual nutritional information
-- Search for "[brand/restaurant name] [item] nutrition calories"
-- Provide the official calorie count when available
+- Search for "[brand/restaurant name] [item] nutrition calories macros"
+- Provide the official nutritional values when available
 
-When estimating calories:
-1. Provide a specific calorie estimate (not a range)
-2. Be direct and confident in your estimate
+When estimating nutrition:
+1. Provide specific estimates for calories, carbs, fat, and protein (not ranges)
+2. Be direct and confident in your estimates
 3. If the description is vague, ask ONE clarifying question about the most important detail (usually portion size)
-4. Always bold the calorie number for easy extraction
+4. Always format the nutritional info clearly for easy extraction
 
-Format calorie estimates clearly, like:
-- "A medium apple: **95 calories**"
-- "Chipotle burrito bowl with chicken, rice, beans, cheese, sour cream, guac: **1,150 calories**"
-- "Starbucks Grande Caramel Frappuccino: **380 calories**"
+CRITICAL: Always provide ALL four values in this exact format at the end of your response:
+**Calories: [number]** | **Carbs: [number]g** | **Fat: [number]g** | **Protein: [number]g**
 
-Common underestimated items (be accurate):
-- Restaurant pasta dishes: typically 800-1500 cal
-- Burgers with fries: typically 1000-1500 cal
-- Large muffins/pastries: typically 400-600 cal
-- Salads with dressing and toppings: typically 500-900 cal
-- Smoothies and frappuccinos: typically 300-600 cal
+Examples:
+- "A medium apple: **Calories: 95** | **Carbs: 25g** | **Fat: 0g** | **Protein: 0g**"
+- "Chipotle burrito bowl with chicken, rice, beans, cheese, sour cream, guac: **Calories: 1150** | **Carbs: 105g** | **Fat: 50g** | **Protein: 55g**"
+- "Starbucks Grande Caramel Frappuccino: **Calories: 380** | **Carbs: 54g** | **Fat: 16g** | **Protein: 5g**"
 
-Be encouraging but honest about calorie content.`;
+Common reference values:
+- Restaurant pasta dishes: 800-1500 cal, 80-150g carbs, 25-50g fat, 20-40g protein
+- Burgers with fries: 1000-1500 cal, 80-120g carbs, 50-80g fat, 40-60g protein
+- Large muffins/pastries: 400-600 cal, 50-80g carbs, 15-30g fat, 5-10g protein
+- Salads with dressing and toppings: 500-900 cal, 20-40g carbs, 35-60g fat, 20-40g protein
+- Smoothies and frappuccinos: 300-600 cal, 50-90g carbs, 8-20g fat, 5-15g protein
+
+Be encouraging but honest about nutritional content.`;
 
 // Web search tool definition
 const webSearchTool: Anthropic.Tool = {
@@ -204,28 +207,55 @@ export async function POST(request: NextRequest) {
     );
     const assistantMessage = textBlock?.text || '';
 
-    // Extract calorie values from the response using regex
-    const calorieMatches = assistantMessage.match(/\*\*(\d+(?:,\d+)?)\s*(?:calories?|cal)\*\*/gi);
-    const extractedCalories: number[] = [];
+    // Extract nutritional values from the response using regex
+    // Look for the formatted pattern: **Calories: X** | **Carbs: Xg** | **Fat: Xg** | **Protein: Xg**
+    const caloriesMatch = assistantMessage.match(/\*\*Calories:\s*(\d+(?:,\d+)?)\*\*/i);
+    const carbsMatch = assistantMessage.match(/\*\*Carbs:\s*(\d+(?:,\d+)?)g?\*\*/i);
+    const fatMatch = assistantMessage.match(/\*\*Fat:\s*(\d+(?:,\d+)?)g?\*\*/i);
+    const proteinMatch = assistantMessage.match(/\*\*Protein:\s*(\d+(?:,\d+)?)g?\*\*/i);
 
-    if (calorieMatches) {
-      for (const match of calorieMatches) {
-        const numStr = match.replace(/\*\*/g, '').replace(/,/g, '').match(/\d+/);
-        if (numStr) {
-          extractedCalories.push(parseInt(numStr[0], 10));
-        }
-      }
+    let extractedCalories: number[] = [];
+    let extractedCarbs: number | null = null;
+    let extractedFat: number | null = null;
+    let extractedProtein: number | null = null;
+
+    // Extract structured format values
+    if (caloriesMatch) {
+      const num = parseInt(caloriesMatch[1].replace(/,/g, ''), 10);
+      extractedCalories.push(num);
+    }
+    if (carbsMatch) {
+      extractedCarbs = parseInt(carbsMatch[1].replace(/,/g, ''), 10);
+    }
+    if (fatMatch) {
+      extractedFat = parseInt(fatMatch[1].replace(/,/g, ''), 10);
+    }
+    if (proteinMatch) {
+      extractedProtein = parseInt(proteinMatch[1].replace(/,/g, ''), 10);
     }
 
-    // Also try to find standalone calorie numbers
-    const standaloneMatches = assistantMessage.match(/(?:approximately|about|around|roughly|~)?\s*(\d+(?:,\d+)?)\s*(?:calories?|cal)/gi);
-    if (standaloneMatches) {
-      for (const match of standaloneMatches) {
-        const numStr = match.replace(/,/g, '').match(/\d+/);
-        if (numStr) {
-          const num = parseInt(numStr[0], 10);
-          if (!extractedCalories.includes(num)) {
-            extractedCalories.push(num);
+    // Fallback: also try to find calorie numbers in old formats
+    if (extractedCalories.length === 0) {
+      const calorieMatches = assistantMessage.match(/\*\*(\d+(?:,\d+)?)\s*(?:calories?|cal)\*\*/gi);
+      if (calorieMatches) {
+        for (const match of calorieMatches) {
+          const numStr = match.replace(/\*\*/g, '').replace(/,/g, '').match(/\d+/);
+          if (numStr) {
+            extractedCalories.push(parseInt(numStr[0], 10));
+          }
+        }
+      }
+
+      // Also try standalone calorie numbers
+      const standaloneMatches = assistantMessage.match(/(?:approximately|about|around|roughly|~)?\s*(\d+(?:,\d+)?)\s*(?:calories?|cal)/gi);
+      if (standaloneMatches) {
+        for (const match of standaloneMatches) {
+          const numStr = match.replace(/,/g, '').match(/\d+/);
+          if (numStr) {
+            const num = parseInt(numStr[0], 10);
+            if (!extractedCalories.includes(num)) {
+              extractedCalories.push(num);
+            }
           }
         }
       }
@@ -234,6 +264,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: assistantMessage,
       extractedCalories,
+      extractedCarbs,
+      extractedFat,
+      extractedProtein,
     });
   } catch (error) {
     console.error('AI API error:', error);
