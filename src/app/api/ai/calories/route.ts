@@ -62,139 +62,166 @@ const webSearchTool: Anthropic.Tool = {
   },
 };
 
-// Nutritionix API for comprehensive restaurant and food nutrition data
-// This API has data for 900,000+ foods including most restaurant chains
-async function searchNutritionix(query: string): Promise<string | null> {
-  const appId = process.env.NUTRITIONIX_APP_ID;
-  const appKey = process.env.NUTRITIONIX_APP_KEY;
+// FatSecret API for comprehensive food nutrition data
+// Documentation: https://platform.fatsecret.com/docs/guides/authentication/oauth2
 
-  if (!appId || !appKey) {
-    return null; // Fall back to other methods if Nutritionix not configured
+// Cache the access token to avoid requesting a new one for every search
+let fatSecretToken: { token: string; expiresAt: number } | null = null;
+
+async function getFatSecretToken(): Promise<string | null> {
+  const clientId = process.env.FATSECRET_CLIENT_ID;
+  const clientSecret = process.env.FATSECRET_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    return null;
+  }
+
+  // Return cached token if still valid (with 5 min buffer)
+  if (fatSecretToken && fatSecretToken.expiresAt > Date.now() + 300000) {
+    return fatSecretToken.token;
   }
 
   try {
-    // Use the natural language endpoint - it understands queries like "large orange chicken from panda express"
-    const response = await fetch('https://trackapi.nutritionix.com/v2/natural/nutrients', {
+    const response = await fetch('https://oauth.fatsecret.com/connect/token', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-app-id': appId,
-        'x-app-key': appKey,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
       },
-      body: JSON.stringify({
-        query: query,
-        timezone: 'US/Eastern',
-      }),
+      body: 'grant_type=client_credentials&scope=basic',
     });
 
     if (!response.ok) {
-      console.error('Nutritionix API error:', response.status);
+      console.error('FatSecret token error:', response.status);
       return null;
     }
 
     const data = await response.json();
+    fatSecretToken = {
+      token: data.access_token,
+      expiresAt: Date.now() + (data.expires_in * 1000),
+    };
 
-    if (data.foods && data.foods.length > 0) {
-      const results: string[] = ['NUTRITION DATA FROM NUTRITIONIX DATABASE:'];
-
-      for (const food of data.foods) {
-        results.push(`
-Food: ${food.food_name}${food.brand_name ? ` (${food.brand_name})` : ''}
-Serving: ${food.serving_qty} ${food.serving_unit} (${Math.round(food.serving_weight_grams)}g)
-Calories: ${Math.round(food.nf_calories)}
-Carbs: ${Math.round(food.nf_total_carbohydrate)}g
-Fat: ${Math.round(food.nf_total_fat)}g
-Protein: ${Math.round(food.nf_protein)}g`);
-      }
-
-      // Calculate totals if multiple items
-      if (data.foods.length > 1) {
-        const totals = data.foods.reduce(
-          (acc: { calories: number; carbs: number; fat: number; protein: number }, food: { nf_calories: number; nf_total_carbohydrate: number; nf_total_fat: number; nf_protein: number }) => ({
-            calories: acc.calories + food.nf_calories,
-            carbs: acc.carbs + food.nf_total_carbohydrate,
-            fat: acc.fat + food.nf_total_fat,
-            protein: acc.protein + food.nf_protein,
-          }),
-          { calories: 0, carbs: 0, fat: 0, protein: 0 }
-        );
-
-        results.push(`
-TOTAL:
-Calories: ${Math.round(totals.calories)}
-Carbs: ${Math.round(totals.carbs)}g
-Fat: ${Math.round(totals.fat)}g
-Protein: ${Math.round(totals.protein)}g`);
-      }
-
-      results.push('\nThis is verified data from the Nutritionix database which includes official restaurant nutrition information.');
-
-      return results.join('\n');
-    }
-
-    return null;
+    return fatSecretToken.token;
   } catch (error) {
-    console.error('Nutritionix search error:', error);
+    console.error('FatSecret token error:', error);
     return null;
   }
 }
 
-// Fallback: Search branded foods in Nutritionix
-async function searchNutritionixBranded(query: string): Promise<string | null> {
-  const appId = process.env.NUTRITIONIX_APP_ID;
-  const appKey = process.env.NUTRITIONIX_APP_KEY;
-
-  if (!appId || !appKey) {
+// Search FatSecret for food nutrition data
+async function searchFatSecret(query: string): Promise<string | null> {
+  const token = await getFatSecretToken();
+  if (!token) {
     return null;
   }
 
   try {
-    const response = await fetch(
-      `https://trackapi.nutritionix.com/v2/search/instant?query=${encodeURIComponent(query)}`,
-      {
-        headers: {
-          'x-app-id': appId,
-          'x-app-key': appKey,
-        },
-      }
-    );
+    // Search for foods using v3 API
+    const searchParams = new URLSearchParams({
+      method: 'foods.search.v3',
+      search_expression: query,
+      format: 'json',
+      max_results: '10',
+      include_food_attributes: 'true',
+    });
+
+    const response = await fetch('https://platform.fatsecret.com/rest/server.api', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: searchParams.toString(),
+    });
 
     if (!response.ok) {
+      console.error('FatSecret search error:', response.status);
       return null;
     }
 
     const data = await response.json();
 
-    if (data.branded && data.branded.length > 0) {
-      const results: string[] = ['BRANDED FOOD MATCHES FOUND:'];
+    if (data.foods_search?.results?.food) {
+      const foods = Array.isArray(data.foods_search.results.food)
+        ? data.foods_search.results.food
+        : [data.foods_search.results.food];
 
-      for (const item of data.branded.slice(0, 5)) {
-        results.push(`- ${item.food_name} (${item.brand_name}): ${Math.round(item.nf_calories)} cal per ${item.serving_unit}`);
+      const results: string[] = ['NUTRITION DATA FROM FATSECRET DATABASE:'];
+
+      for (const food of foods.slice(0, 5)) {
+        const name = food.food_name || '';
+        const brand = food.brand_name || '';
+        const foodType = food.food_type || '';
+
+        // Get servings data
+        let servingInfo = '';
+        let calories = 'N/A';
+        let fat = 'N/A';
+        let carbs = 'N/A';
+        let protein = 'N/A';
+
+        if (food.servings?.serving) {
+          const servings = Array.isArray(food.servings.serving)
+            ? food.servings.serving
+            : [food.servings.serving];
+
+          // Prefer standard serving or first available
+          const serving = servings[0];
+          if (serving) {
+            servingInfo = serving.serving_description || serving.measurement_description || 'per serving';
+            calories = serving.calories ? Math.round(parseFloat(serving.calories)).toString() : 'N/A';
+            fat = serving.fat ? Math.round(parseFloat(serving.fat)).toString() : 'N/A';
+            carbs = serving.carbohydrate ? Math.round(parseFloat(serving.carbohydrate)).toString() : 'N/A';
+            protein = serving.protein ? Math.round(parseFloat(serving.protein)).toString() : 'N/A';
+          }
+        } else {
+          // Fallback: Parse the food_description which contains nutrition info
+          const description = food.food_description || '';
+          // FatSecret format: "Per 100g - Calories: 250kcal | Fat: 10.00g | Carbs: 30.00g | Protein: 8.00g"
+          const caloriesMatch = description.match(/Calories:\s*(\d+(?:\.\d+)?)/i);
+          const fatMatch = description.match(/Fat:\s*(\d+(?:\.\d+)?)/i);
+          const carbsMatch = description.match(/Carbs:\s*(\d+(?:\.\d+)?)/i);
+          const proteinMatch = description.match(/Protein:\s*(\d+(?:\.\d+)?)/i);
+          const servingMatch = description.match(/^Per\s+([^-]+)/i);
+
+          servingInfo = servingMatch ? servingMatch[1].trim() : 'per serving';
+          calories = caloriesMatch ? Math.round(parseFloat(caloriesMatch[1])).toString() : 'N/A';
+          fat = fatMatch ? Math.round(parseFloat(fatMatch[1])).toString() : 'N/A';
+          carbs = carbsMatch ? Math.round(parseFloat(carbsMatch[1])).toString() : 'N/A';
+          protein = proteinMatch ? Math.round(parseFloat(proteinMatch[1])).toString() : 'N/A';
+        }
+
+        const typeLabel = foodType === 'Brand' ? ` (${brand || 'Brand'})` : brand ? ` (${brand})` : '';
+
+        results.push(`
+Food: ${name}${typeLabel}
+Serving: ${servingInfo}
+Calories: ${calories}
+Fat: ${fat}g
+Carbs: ${carbs}g
+Protein: ${protein}g`);
       }
 
-      results.push('\nAsk the user to confirm which item they had for exact nutrition data.');
+      results.push('\nThis is data from the FatSecret database which includes restaurant and brand nutrition information.');
+      results.push('Use the most relevant match above to provide the nutrition information to the user.');
+
       return results.join('\n');
     }
 
     return null;
   } catch (error) {
-    console.error('Nutritionix branded search error:', error);
+    console.error('FatSecret search error:', error);
     return null;
   }
 }
 
-// Web search function - tries Nutritionix first, then falls back to DuckDuckGo
+// Web search function - tries FatSecret first, then falls back to DuckDuckGo
 async function performWebSearch(query: string): Promise<string> {
-  // Try Nutritionix natural language API first (best for restaurant foods)
-  const nutritionixResult = await searchNutritionix(query);
-  if (nutritionixResult) {
-    return nutritionixResult;
-  }
-
-  // Try Nutritionix branded food search
-  const brandedResult = await searchNutritionixBranded(query);
-  if (brandedResult) {
-    return brandedResult;
+  // Try FatSecret API first (comprehensive food database)
+  const fatSecretResult = await searchFatSecret(query);
+  if (fatSecretResult) {
+    return fatSecretResult;
   }
 
   // Fall back to DuckDuckGo for general searches
