@@ -502,33 +502,18 @@ function HomeContent() {
   const handleMealTypeSelect = (meal: MealType) => {
     setFoodMealType(meal);
 
-    // Auto-populate time based on meal type
+    // Auto-populate with current time
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
 
-    // Default times for each meal type
-    const mealTimes: Record<MealType, { hour: number; minute: number; ampm: 'AM' | 'PM' }> = {
-      breakfast: { hour: 8, minute: 0, ampm: 'AM' },
-      lunch: { hour: 12, minute: 0, ampm: 'PM' },
-      dinner: { hour: 6, minute: 0, ampm: 'PM' },
-      snack: {
-        hour: currentHour > 12 ? currentHour - 12 : (currentHour === 0 ? 12 : currentHour),
-        minute: Math.floor(currentMinute / 15) * 15, // Round to nearest 15 min
-        ampm: currentHour >= 12 ? 'PM' : 'AM'
-      },
-      beverage: {
-        hour: currentHour > 12 ? currentHour - 12 : (currentHour === 0 ? 12 : currentHour),
-        minute: Math.floor(currentMinute / 15) * 15,
-        ampm: currentHour >= 12 ? 'PM' : 'AM'
-      },
-      dessert: { hour: 8, minute: 0, ampm: 'PM' },
-    };
+    // Convert to 12-hour format
+    const hour12 = currentHour > 12 ? currentHour - 12 : (currentHour === 0 ? 12 : currentHour);
+    const ampm: 'AM' | 'PM' = currentHour >= 12 ? 'PM' : 'AM';
 
-    const time = mealTimes[meal];
-    setFoodEntryHour(time.hour.toString());
-    setFoodEntryMinute(time.minute.toString().padStart(2, '0'));
-    setFoodEntryAmPm(time.ampm);
+    setFoodEntryHour(hour12.toString());
+    setFoodEntryMinute(currentMinute.toString().padStart(2, '0'));
+    setFoodEntryAmPm(ampm);
   };
 
   const handleFoodLog = async () => {
@@ -664,6 +649,23 @@ function HomeContent() {
   };
 
   // Food history add handlers
+  const handleFoodHistoryMealTypeSelect = (meal: MealType) => {
+    setFoodHistoryMealType(meal);
+
+    // Auto-populate with current time
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    // Convert to 12-hour format
+    const hour12 = currentHour > 12 ? currentHour - 12 : (currentHour === 0 ? 12 : currentHour);
+    const ampm: 'AM' | 'PM' = currentHour >= 12 ? 'PM' : 'AM';
+
+    setFoodHistoryHour(hour12.toString());
+    setFoodHistoryMinute(currentMinute.toString().padStart(2, '0'));
+    setFoodHistoryAmPm(ampm);
+  };
+
   const handleFoodHistoryAdd = async () => {
     if (!foodHistoryCalories || !foodHistoryHour || !foodHistoryMinute) return;
 
@@ -3356,7 +3358,7 @@ function HomeContent() {
                       <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Meal Type</label>
                       <select
                         value={foodHistoryMealType}
-                        onChange={(e) => setFoodHistoryMealType(e.target.value as MealType)}
+                        onChange={(e) => handleFoodHistoryMealTypeSelect(e.target.value as MealType)}
                         className={`w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 ${
                           gender === 'female' ? 'focus:border-pink-500' : 'focus:border-teal-500'
                         }`}
