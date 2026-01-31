@@ -499,6 +499,38 @@ function HomeContent() {
   };
 
   // Food journal handlers
+  const handleMealTypeSelect = (meal: MealType) => {
+    setFoodMealType(meal);
+
+    // Auto-populate time based on meal type
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    // Default times for each meal type
+    const mealTimes: Record<MealType, { hour: number; minute: number; ampm: 'AM' | 'PM' }> = {
+      breakfast: { hour: 8, minute: 0, ampm: 'AM' },
+      lunch: { hour: 12, minute: 0, ampm: 'PM' },
+      dinner: { hour: 6, minute: 0, ampm: 'PM' },
+      snack: {
+        hour: currentHour > 12 ? currentHour - 12 : (currentHour === 0 ? 12 : currentHour),
+        minute: Math.floor(currentMinute / 15) * 15, // Round to nearest 15 min
+        ampm: currentHour >= 12 ? 'PM' : 'AM'
+      },
+      beverage: {
+        hour: currentHour > 12 ? currentHour - 12 : (currentHour === 0 ? 12 : currentHour),
+        minute: Math.floor(currentMinute / 15) * 15,
+        ampm: currentHour >= 12 ? 'PM' : 'AM'
+      },
+      dessert: { hour: 8, minute: 0, ampm: 'PM' },
+    };
+
+    const time = mealTimes[meal];
+    setFoodEntryHour(time.hour.toString());
+    setFoodEntryMinute(time.minute.toString().padStart(2, '0'));
+    setFoodEntryAmPm(time.ampm);
+  };
+
   const handleFoodLog = async () => {
     const calories = parseInt(foodCalories);
     // Allow 0 calories for beverages, but not for other meal types
@@ -2822,7 +2854,7 @@ function HomeContent() {
                 {(['breakfast', 'lunch', 'dinner', 'snack', 'beverage', 'dessert'] as const).map((meal) => (
                   <button
                     key={meal}
-                    onClick={() => setFoodMealType(meal)}
+                    onClick={() => handleMealTypeSelect(meal)}
                     className={`rounded-xl py-2 text-xs font-medium transition-colors flex flex-col items-center ${
                       foodMealType === meal
                         ? gender === 'female'
