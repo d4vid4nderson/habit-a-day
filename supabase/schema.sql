@@ -19,6 +19,11 @@ CREATE TABLE IF NOT EXISTS profiles (
   gender TEXT CHECK (gender IN ('male', 'female')) DEFAULT 'male',
   theme TEXT CHECK (theme IN ('light', 'dark', 'system')) DEFAULT 'system',
   profile_completed BOOLEAN DEFAULT FALSE,
+  daily_calories_goal INTEGER CHECK (daily_calories_goal IS NULL OR daily_calories_goal > 0),
+  protein_goal INTEGER CHECK (protein_goal IS NULL OR protein_goal >= 0),
+  carbs_goal INTEGER CHECK (carbs_goal IS NULL OR carbs_goal >= 0),
+  fat_goal INTEGER CHECK (fat_goal IS NULL OR fat_goal >= 0),
+  water_goal INTEGER CHECK (water_goal IS NULL OR water_goal > 0),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

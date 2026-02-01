@@ -636,6 +636,15 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
                         </svg>
                         <span className="font-medium">Edit Profile</span>
                       </a>
+                      <a
+                        href="/settings"
+                        className="flex w-full items-center gap-3 rounded-xl bg-zinc-100 px-4 py-3 text-zinc-700 transition-colors active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
+                      >
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                        <span className="font-medium">Edit Settings</span>
+                      </a>
                     </div>
                   )}
                 </div>

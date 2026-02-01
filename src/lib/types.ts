@@ -109,6 +109,11 @@ export interface UserProfile {
   profile_completed: boolean;
   terms_accepted_at: string | null;
   terms_version: string | null;
+  daily_calories_goal: number | null;
+  protein_goal: number | null;
+  carbs_goal: number | null;
+  fat_goal: number | null;
+  water_goal: number | null;
   created_at: string;
   updated_at: string;
 }

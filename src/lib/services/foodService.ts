@@ -204,6 +204,37 @@ export function calculateDietaryNeeds(
   };
 }
 
+// Get dietary needs for a user profile (uses custom goals if set, otherwise calculates)
+export function getDietaryNeeds(profile: {
+  gender: 'male' | 'female';
+  age: number | null;
+  weight: number | null;
+  weight_unit: 'kg' | 'lbs' | null;
+  daily_calories_goal: number | null;
+  protein_goal: number | null;
+  carbs_goal: number | null;
+  fat_goal: number | null;
+  water_goal: number | null;
+}): DietaryNeeds {
+  // Convert weight to lbs if needed
+  const weightLbs = profile.weight && profile.weight_unit === 'kg'
+    ? profile.weight * 2.20462
+    : profile.weight;
+
+  // Calculate recommended values
+  const calculated = calculateDietaryNeeds(profile.gender, profile.age, weightLbs);
+
+  // Use custom goals if set, otherwise use calculated values
+  return {
+    dailyCalories: profile.daily_calories_goal ?? calculated.dailyCalories,
+    protein: profile.protein_goal ?? calculated.protein,
+    carbs: profile.carbs_goal ?? calculated.carbs,
+    fat: profile.fat_goal ?? calculated.fat,
+    fiber: calculated.fiber,
+    water: profile.water_goal ?? calculated.water,
+  };
+}
+
 export function getMealTypeLabel(mealType: MealType): string {
   switch (mealType) {
     case 'breakfast':

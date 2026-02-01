@@ -31,7 +31,7 @@ import { useEntries } from '@/lib/hooks/useEntries';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useWaterIntake } from '@/lib/hooks/useWaterIntake';
 import { useFoodJournal } from '@/lib/hooks/useFoodJournal';
-import { calculateDietaryNeeds, getMealTypeLabel } from '@/lib/services/foodService';
+import { getDietaryNeeds, getMealTypeLabel } from '@/lib/services/foodService';
 import { createCustomFood } from '@/lib/services/customFoodsService';
 
 function toLocalDateString(date: Date): string {
@@ -128,12 +128,15 @@ function HomeContent() {
   const [addEntryConsistency, setAddEntryConsistency] = useState('');
   const [addEntryStream, setAddEntryStream] = useState('');
   const [showMigration, setShowMigration] = useState(true);
-  const [selectedTracker, setSelectedTracker] = useState<'potty' | 'water' | 'food'>('food');
+  const [selectedTracker, setSelectedTracker] = useState<'potty' | 'water' | 'food' | 'physical'>('food');
   const [chartDays, setChartDays] = useState<7 | 30 | 90 | 365>(7);
   const [chartDropdownOpen, setChartDropdownOpen] = useState(false);
   const [macroFilterOpen, setMacroFilterOpen] = useState(false);
   const [selectedMacroFilter, setSelectedMacroFilter] = useState<'all' | 'calories' | 'carbs' | 'fat' | 'protein'>('all');
+  const [pottyFilterOpen, setPottyFilterOpen] = useState(false);
+  const [selectedPottyFilter, setSelectedPottyFilter] = useState<'all' | 'poop' | 'pee'>('all');
   const macroFilterRef = useRef<HTMLDivElement | null>(null);
+  const pottyFilterRef = useRef<HTMLDivElement | null>(null);
   const addDropdownRef = useRef<HTMLDivElement | null>(null);
   const chartDropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -186,7 +189,7 @@ function HomeContent() {
 
   // Chart data - configurable time range
   const chartData = useMemo(() => {
-    const days: { date: string; label: string; poop: number; pee: number; water: number; calories: number; carbs: number; fat: number; protein: number }[] = [];
+    const days: { date: string; label: string; poop: number; pee: number; water: number; calories: number; carbs: number; fat: number; protein: number; physical: number }[] = [];
     const today = new Date();
 
     for (let i = chartDays - 1; i >= 0; i--) {
@@ -215,6 +218,9 @@ function HomeContent() {
       const fatTotal = dayFoodEntries.reduce((sum, e) => sum + (e.fat || 0), 0);
       const proteinTotal = dayFoodEntries.reduce((sum, e) => sum + (e.protein || 0), 0);
 
+      // Count PT entries (placeholder for now - will be 0 until PT entries are implemented)
+      const physicalCount = 0; // TODO: Implement PT entries fetching
+
       // Format label based on range
       let label: string;
       if (chartDays <= 7) {
@@ -235,11 +241,12 @@ function HomeContent() {
         carbs: carbsTotal,
         fat: fatTotal,
         protein: proteinTotal,
+        physical: physicalCount,
       });
     }
 
     return days;
-  }, [entries, waterEntries, foodEntries, chartDays]);
+  }, [entries, waterEntries, foodEntries, chartDays, selectedPottyFilter]);
 
   const headerGradient = gender === 'female'
     ? 'from-pink-500 to-purple-600'
@@ -261,11 +268,28 @@ function HomeContent() {
 
   // Get dietary needs based on profile
   const dietaryNeeds = useMemo(() => {
-    const weightLbs = profile?.weight && profile?.weight_unit === 'kg'
-      ? profile.weight * 2.20462
-      : profile?.weight || null;
-    return calculateDietaryNeeds(gender, profile?.age || null, weightLbs);
-  }, [gender, profile?.age, profile?.weight, profile?.weight_unit]);
+    if (!profile) {
+      return {
+        dailyCalories: 2000,
+        protein: 110,
+        carbs: 250,
+        fat: 62,
+        fiber: 30,
+        water: 64,
+      };
+    }
+    return getDietaryNeeds({
+      gender: profile.gender,
+      age: profile.age,
+      weight: profile.weight,
+      weight_unit: profile.weight_unit,
+      daily_calories_goal: profile.daily_calories_goal,
+      protein_goal: profile.protein_goal,
+      carbs_goal: profile.carbs_goal,
+      fat_goal: profile.fat_goal,
+      water_goal: profile.water_goal,
+    });
+  }, [gender, profile]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -341,6 +365,23 @@ function HomeContent() {
       document.removeEventListener('touchstart', handlePointerDown);
     };
   }, [macroFilterOpen]);
+
+  // Close potty filter dropdown when clicking outside
+  useEffect(() => {
+    if (!pottyFilterOpen) return;
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (pottyFilterRef.current && !pottyFilterRef.current.contains(target)) {
+        setPottyFilterOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+    };
+  }, [pottyFilterOpen]);
 
   // Show loading state while checking auth
   if (authLoading || profileLoading) {
@@ -2852,6 +2893,49 @@ function HomeContent() {
                 </p>
               </div>
 
+              {/* Dietary Info Card */}
+              <div className={`rounded-2xl p-4 shadow-sm ${
+                gender === 'female' ? 'bg-pink-50 dark:bg-pink-900/20' : 'bg-teal-50 dark:bg-teal-900/20'
+              }`}>
+                <p className={`text-sm font-medium mb-2 ${
+                  gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300'
+                }`}>Your Daily Targets</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-600 dark:text-zinc-400">Calories:</span>
+                    <span className={`font-medium ${gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300'}`}>
+                      {dietaryNeeds.dailyCalories}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-600 dark:text-zinc-400">Protein:</span>
+                    <span className={`font-medium ${gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300'}`}>
+                      {dietaryNeeds.protein}g
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-600 dark:text-zinc-400">Carbs:</span>
+                    <span className={`font-medium ${gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300'}`}>
+                      {dietaryNeeds.carbs}g
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-600 dark:text-zinc-400">Fat:</span>
+                    <span className={`font-medium ${gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300'}`}>
+                      {dietaryNeeds.fat}g
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setCurrentView('food-faq')}
+                  className={`mt-3 text-xs font-medium ${
+                    gender === 'female' ? 'text-pink-600 dark:text-pink-400' : 'text-teal-600 dark:text-teal-400'
+                  }`}
+                >
+                  View Dietary FAQs →
+                </button>
+              </div>
+
               {/* Log New Entry */}
             <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
               <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-3">Log Food Entry</p>
@@ -3125,49 +3209,55 @@ function HomeContent() {
                 <p className="py-4 text-center text-zinc-400">No entries yet today</p>
               );
               })()}
-            </div>
 
-            {/* Dietary Info Card */}
-            <div className={`rounded-2xl p-4 shadow-sm ${
-              gender === 'female' ? 'bg-pink-50 dark:bg-pink-900/20' : 'bg-teal-50 dark:bg-teal-900/20'
-            }`}>
-              <p className={`text-sm font-medium mb-2 ${
-                gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300'
-              }`}>Your Daily Targets</p>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-zinc-600 dark:text-zinc-400">Calories:</span>
-                  <span className={`font-medium ${gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300'}`}>
-                    {dietaryNeeds.dailyCalories}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-600 dark:text-zinc-400">Protein:</span>
-                  <span className={`font-medium ${gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300'}`}>
-                    {dietaryNeeds.protein}g
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-600 dark:text-zinc-400">Carbs:</span>
-                  <span className={`font-medium ${gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300'}`}>
-                    {dietaryNeeds.carbs}g
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-600 dark:text-zinc-400">Fat:</span>
-                  <span className={`font-medium ${gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300'}`}>
-                    {dietaryNeeds.fat}g
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => setCurrentView('food-faq')}
-                className={`mt-3 text-xs font-medium ${
-                  gender === 'female' ? 'text-pink-600 dark:text-pink-400' : 'text-teal-600 dark:text-teal-400'
-                }`}
-              >
-                View Dietary FAQs →
-              </button>
+              {/* Today's Totals */}
+              {(() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const todayStart = today.getTime();
+                const todayEnd = todayStart + 24 * 60 * 60 * 1000;
+                const todayFoodEntries = foodEntries
+                  .filter((e) => e.timestamp >= todayStart && e.timestamp < todayEnd);
+
+                if (todayFoodEntries.length === 0) return null;
+
+                const totalCalories = todayFoodEntries.reduce((sum, e) => sum + e.calories, 0);
+                const totalCarbs = todayFoodEntries.reduce((sum, e) => sum + (e.carbs || 0), 0);
+                const totalFat = todayFoodEntries.reduce((sum, e) => sum + (e.fat || 0), 0);
+                const totalProtein = todayFoodEntries.reduce((sum, e) => sum + (e.protein || 0), 0);
+
+                return (
+                  <div className="mt-4 pt-3 border-t-2 border-zinc-200 dark:border-zinc-700">
+                    <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Today&apos;s Totals</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-zinc-600 dark:text-zinc-400">Calories:</span>
+                        <span className={`font-bold ${gender === 'female' ? 'text-pink-600 dark:text-pink-400' : 'text-teal-600 dark:text-teal-400'}`}>
+                          {totalCalories}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-600 dark:text-zinc-400">Protein:</span>
+                        <span className="font-bold text-purple-600 dark:text-purple-400">
+                          {totalProtein}g
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-600 dark:text-zinc-400">Carbs:</span>
+                        <span className="font-bold text-green-600 dark:text-green-400">
+                          {totalCarbs}g
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-600 dark:text-zinc-400">Fat:</span>
+                        <span className="font-bold text-yellow-600 dark:text-yellow-400">
+                          {totalFat}g
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
             </div>
           </div>
@@ -3822,8 +3912,24 @@ function HomeContent() {
   }
 
   // Home View (Landing Page)
+  const lightGradient = gender === 'female'
+    ? 'linear-gradient(180deg, #fdf2f8 0%, #fce7f3 10%, #fbcfe8 25%, #fafafa 50%, #fafafa 100%)'
+    : 'linear-gradient(180deg, #f0fdfa 0%, #ccfbf1 10%, #99f6e4 25%, #fafafa 50%, #fafafa 100%)';
+
+  const darkGradient = gender === 'female'
+    ? 'linear-gradient(180deg, #1c1917 0%, rgba(112, 26, 117, 0.15) 10%, rgba(147, 51, 234, 0.1) 25%, #18181b 50%, #09090b 100%)'
+    : 'linear-gradient(180deg, #1c1917 0%, rgba(19, 78, 74, 0.2) 10%, rgba(20, 184, 166, 0.15) 25%, #18181b 50%, #09090b 100%)';
+
   return (
-    <div className={`min-h-screen pb-safe bg-gradient-to-br ${gender === 'female' ? 'from-pink-50 via-purple-50 to-zinc-50 dark:from-zinc-950 dark:via-purple-950/20 dark:to-zinc-950' : 'from-teal-50 via-cyan-50 to-zinc-50 dark:from-zinc-950 dark:via-teal-950/20 dark:to-zinc-950'}`}>
+    <div className="min-h-screen pb-safe bg-zinc-50 dark:bg-zinc-950">
+      <div
+        className="fixed inset-0 -z-50 dark:hidden"
+        style={{ background: lightGradient }}
+      />
+      <div
+        className="fixed inset-0 -z-50 hidden dark:block"
+        style={{ background: darkGradient }}
+      />
       {showMigration && (
         <MigrationPrompt onComplete={() => setShowMigration(false)} />
       )}
@@ -3947,26 +4053,30 @@ function HomeContent() {
                       />
                       {selectedTracker === 'potty' && (
                         <>
-                          <Line
-                            yAxisId="left"
-                            type="monotone"
-                            dataKey="poop"
-                            name="Poop"
-                            stroke={gender === 'female' ? '#ec4899' : '#14b8a6'}
-                            strokeWidth={2}
-                            dot={{ fill: gender === 'female' ? '#ec4899' : '#14b8a6', r: 4 }}
-                            activeDot={{ r: 6 }}
-                          />
-                          <Line
-                            yAxisId="left"
-                            type="monotone"
-                            dataKey="pee"
-                            name="Pee"
-                            stroke={gender === 'female' ? '#a855f7' : '#3b82f6'}
-                            strokeWidth={2}
-                            dot={{ fill: gender === 'female' ? '#a855f7' : '#3b82f6', r: 4 }}
-                            activeDot={{ r: 6 }}
-                          />
+                          {(selectedPottyFilter === 'all' || selectedPottyFilter === 'poop') && (
+                            <Line
+                              yAxisId="left"
+                              type="monotone"
+                              dataKey="poop"
+                              name="Poop"
+                              stroke="#06b6d4"
+                              strokeWidth={2}
+                              dot={{ fill: '#06b6d4', r: 4 }}
+                              activeDot={{ r: 6 }}
+                            />
+                          )}
+                          {(selectedPottyFilter === 'all' || selectedPottyFilter === 'pee') && (
+                            <Line
+                              yAxisId="left"
+                              type="monotone"
+                              dataKey="pee"
+                              name="Pee"
+                              stroke="#3b82f6"
+                              strokeWidth={2}
+                              dot={{ fill: '#3b82f6', r: 4 }}
+                              activeDot={{ r: 6 }}
+                            />
+                          )}
                         </>
                       )}
                       {selectedTracker === 'water' && (
@@ -3978,6 +4088,18 @@ function HomeContent() {
                           stroke="#06b6d4"
                           strokeWidth={2}
                           dot={{ fill: '#06b6d4', r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      )}
+                      {selectedTracker === 'physical' && (
+                        <Line
+                          yAxisId="left"
+                          type="monotone"
+                          dataKey="physical"
+                          name="PT Sessions"
+                          stroke="#22c55e"
+                          strokeWidth={2}
+                          dot={{ fill: '#22c55e', r: 4 }}
                           activeDot={{ r: 6 }}
                         />
                       )}
@@ -4001,9 +4123,9 @@ function HomeContent() {
                               type="monotone"
                               dataKey="carbs"
                               name="Carbs (g)"
-                              stroke="#22c55e"
+                              stroke="#ef4444"
                               strokeWidth={2}
-                              dot={{ fill: '#22c55e', r: 4 }}
+                              dot={{ fill: '#ef4444', r: 4 }}
                               activeDot={{ r: 6 }}
                             />
                           )}
@@ -4025,9 +4147,9 @@ function HomeContent() {
                               type="monotone"
                               dataKey="protein"
                               name="Protein (g)"
-                              stroke="#8b5cf6"
+                              stroke="#f59e0b"
                               strokeWidth={2}
-                              dot={{ fill: '#8b5cf6', r: 4 }}
+                              dot={{ fill: '#f59e0b', r: 4 }}
                               activeDot={{ r: 6 }}
                             />
                           )}
@@ -4188,7 +4310,7 @@ function HomeContent() {
                 <div className="pt-4">
                   <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Select tracker to display</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 auto-rows-min" style={{ maxWidth: '900px' }}>
                   {/* Food Journal - Select with Expandable Macro Filter */}
                   <div ref={macroFilterRef} className="flex flex-col gap-2">
                     <button
@@ -4258,14 +4380,14 @@ function HomeContent() {
                           onClick={() => setSelectedMacroFilter('carbs')}
                           className={`rounded-xl px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-all border ${
                             selectedMacroFilter === 'carbs'
-                              ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600'
+                              ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border-red-300 dark:border-red-600'
                               : 'bg-zinc-50 dark:bg-zinc-700/50 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-600'
                           }`}
                         >
-                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                          <div className="w-3 h-3 rounded-full bg-red-500"></div>
                           Carbs
                           {selectedMacroFilter === 'carbs' && (
-                            <svg className="w-3 h-3 ml-auto text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 ml-auto text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                           )}
@@ -4290,14 +4412,14 @@ function HomeContent() {
                           onClick={() => setSelectedMacroFilter('protein')}
                           className={`rounded-xl px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-all border ${
                             selectedMacroFilter === 'protein'
-                              ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-600'
+                              ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-600'
                               : 'bg-zinc-50 dark:bg-zinc-700/50 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-600'
                           }`}
                         >
-                          <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                          <div className="w-3 h-3 rounded-full bg-amber-500"></div>
                           Protein
                           {selectedMacroFilter === 'protein' && (
-                            <svg className="w-3 h-3 ml-auto text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 ml-auto text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                           )}
@@ -4306,53 +4428,128 @@ function HomeContent() {
                     )}
                   </div>
 
-                  {/* Physical Therapy - Coming Soon */}
-                  <div className="rounded-2xl p-4 text-center bg-zinc-100/50 dark:bg-zinc-700/30 opacity-50 cursor-not-allowed border border-zinc-200/50 dark:border-zinc-600/30">
-                    <div className="h-10 w-10 rounded-xl bg-zinc-200 dark:bg-zinc-600 flex items-center justify-center mx-auto mb-2">
-                      <svg className="h-5 w-5 text-zinc-400" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                        <path d="M2 12h1" />
-                        <path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" />
-                        <path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
-                        <path d="M9 12h6" />
-                        <path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
-                        <path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2" />
-                        <path d="M22 12h-1" />
-                      </svg>
-                    </div>
-                    <p className="text-xs font-semibold text-zinc-400">Physical</p>
-                  </div>
-
-                  {/* Potty Logger - Select */}
+                  {/* Physical Therapy - Select */}
                   <button
-                    onClick={() => setSelectedTracker('potty')}
+                    onClick={() => setSelectedTracker('physical')}
                     className={`rounded-2xl p-4 text-center transition-all duration-200 border ${
-                      selectedTracker === 'potty'
-                        ? gender === 'female'
-                          ? 'bg-gradient-to-br from-pink-100 to-purple-100 dark:from-pink-900/40 dark:to-purple-900/40 border-pink-300 dark:border-pink-700 shadow-lg shadow-pink-500/20'
-                          : 'bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/40 dark:to-cyan-900/40 border-teal-300 dark:border-teal-700 shadow-lg shadow-teal-500/20'
+                      selectedTracker === 'physical'
+                        ? 'bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 border-green-300 dark:border-green-700 shadow-lg shadow-green-500/20'
                         : 'bg-zinc-50 dark:bg-zinc-700/50 border-zinc-200/50 dark:border-zinc-600/30 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-500'
                     }`}
                   >
                     <div className="relative inline-block">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center mx-auto mb-2 transition-all ${selectedTracker === 'potty' ? (gender === 'female' ? 'bg-pink-500 shadow-md shadow-pink-500/30' : 'bg-teal-500 shadow-md shadow-teal-500/30') : 'bg-zinc-200 dark:bg-zinc-600'}`}>
-                        <svg className={`h-5 w-5 ${selectedTracker === 'potty' ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                          <path d="M3 10a3 7 0 1 0 6 0a3 7 0 1 0 -6 0" />
-                          <path d="M21 10c0 -3.866 -1.343 -7 -3 -7" />
-                          <path d="M6 3h12" />
-                          <path d="M21 10v10l-3 -1l-3 2l-3 -3l-3 2v-10" />
-                          <path d="M6 10h.01" />
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center mx-auto mb-2 transition-all ${selectedTracker === 'physical' ? 'bg-green-500 shadow-md shadow-green-500/30' : 'bg-zinc-200 dark:bg-zinc-600'}`}>
+                        <svg className={`h-5 w-5 ${selectedTracker === 'physical' ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                          <path d="M2 12h1" />
+                          <path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" />
+                          <path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                          <path d="M9 12h6" />
+                          <path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                          <path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2" />
+                          <path d="M22 12h-1" />
                         </svg>
                       </div>
-                      {selectedTracker === 'potty' && (
-                        <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-sm ${gender === 'female' ? 'bg-pink-500' : 'bg-teal-500'}`}>
+                      {selectedTracker === 'physical' && (
+                        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
                           <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                       )}
                     </div>
-                    <p className={`text-xs font-bold ${selectedTracker === 'potty' ? (gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300') : 'text-zinc-600 dark:text-zinc-400'}`}>Potty</p>
+                    <p className={`text-xs font-bold ${selectedTracker === 'physical' ? 'text-green-700 dark:text-green-300' : 'text-zinc-600 dark:text-zinc-400'}`}>Physical</p>
                   </button>
+
+                  {/* Potty Logger - Select with Expandable Filter */}
+                  <div ref={pottyFilterRef} className="flex flex-col gap-2">
+                    <button
+                      onClick={() => {
+                        if (selectedTracker === 'potty') {
+                          // If already selected, toggle the dropdown
+                          setPottyFilterOpen(!pottyFilterOpen);
+                        } else {
+                          // If switching to potty, select it and show all data
+                          setSelectedTracker('potty');
+                          setSelectedPottyFilter('all');
+                          setPottyFilterOpen(true);
+                        }
+                      }}
+                      className={`rounded-2xl p-4 text-center transition-all duration-200 border ${
+                        selectedTracker === 'potty'
+                          ? gender === 'female'
+                            ? 'bg-gradient-to-br from-pink-100 to-purple-100 dark:from-pink-900/40 dark:to-purple-900/40 border-pink-300 dark:border-pink-700 shadow-lg shadow-pink-500/20'
+                            : 'bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/40 dark:to-cyan-900/40 border-teal-300 dark:border-teal-700 shadow-lg shadow-teal-500/20'
+                          : 'bg-zinc-50 dark:bg-zinc-700/50 border-zinc-200/50 dark:border-zinc-600/30 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-500'
+                      }`}
+                    >
+                      <div className="relative inline-block">
+                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center mx-auto mb-2 transition-all ${selectedTracker === 'potty' ? (gender === 'female' ? 'bg-pink-500 shadow-md shadow-pink-500/30' : 'bg-teal-500 shadow-md shadow-teal-500/30') : 'bg-zinc-200 dark:bg-zinc-600'}`}>
+                          <svg className={`h-5 w-5 ${selectedTracker === 'potty' ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                            <path d="M3 10a3 7 0 1 0 6 0a3 7 0 1 0 -6 0" />
+                            <path d="M21 10c0 -3.866 -1.343 -7 -3 -7" />
+                            <path d="M6 3h12" />
+                            <path d="M21 10v10l-3 -1l-3 2l-3 -3l-3 2v-10" />
+                            <path d="M6 10h.01" />
+                          </svg>
+                        </div>
+                        {selectedTracker === 'potty' && (
+                          <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-sm ${gender === 'female' ? 'bg-pink-500' : 'bg-teal-500'}`}>
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-center gap-1">
+                        <p className={`text-xs font-bold ${selectedTracker === 'potty' ? (gender === 'female' ? 'text-pink-700 dark:text-pink-300' : 'text-teal-700 dark:text-teal-300') : 'text-zinc-600 dark:text-zinc-400'}`}>Potty</p>
+                        <svg
+                          className={`h-3 w-3 transition-transform duration-200 ${pottyFilterOpen && selectedTracker === 'potty' ? 'rotate-180' : ''} ${selectedTracker === 'potty' ? (gender === 'female' ? 'text-pink-600 dark:text-pink-400' : 'text-teal-600 dark:text-teal-400') : 'text-zinc-500 dark:text-zinc-400'}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </button>
+                    {/* Expanded Potty Type Options */}
+                    {pottyFilterOpen && selectedTracker === 'potty' && (
+                      <div className="flex flex-col gap-1 pl-2">
+                        <button
+                          onClick={() => setSelectedPottyFilter('poop')}
+                          className={`rounded-xl px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-all border ${
+                            selectedPottyFilter === 'poop'
+                              ? 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border-cyan-300 dark:border-cyan-600'
+                              : 'bg-zinc-50 dark:bg-zinc-700/50 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-600'
+                          }`}
+                        >
+                          <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
+                          Poop
+                          {selectedPottyFilter === 'poop' && (
+                            <svg className="w-3 h-3 ml-auto text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setSelectedPottyFilter('pee')}
+                          className={`rounded-xl px-3 py-2 text-left text-xs font-medium flex items-center gap-2 transition-all border ${
+                            selectedPottyFilter === 'pee'
+                              ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-600'
+                              : 'bg-zinc-50 dark:bg-zinc-700/50 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-600'
+                          }`}
+                        >
+                          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                          Pee
+                          {selectedPottyFilter === 'pee' && (
+                            <svg className="w-3 h-3 ml-auto text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Water Intake - Select */}
                   <button
