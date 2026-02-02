@@ -5683,9 +5683,12 @@ function HomeContent() {
                 </button>
 
                 {/* Physical Therapy */}
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-100/50 dark:bg-zinc-700/30 opacity-60 border border-zinc-200/50 dark:border-zinc-600/30">
-                  <div className="h-9 w-9 rounded-lg bg-zinc-200 dark:bg-zinc-600 flex items-center justify-center">
-                    <svg className="h-5 w-5 text-zinc-400" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <button
+                  onClick={() => setCurrentView('physical')}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border group bg-green-50 dark:bg-green-900/20 border-green-200/50 dark:border-green-800/30 hover:bg-green-100 dark:hover:bg-green-900/30 hover:shadow-md hover:shadow-green-500/10"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-green-500 flex items-center justify-center">
+                    <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                       <path d="M2 12h1" />
                       <path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" />
                       <path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
@@ -5695,9 +5698,11 @@ function HomeContent() {
                       <path d="M22 12h-1" />
                     </svg>
                   </div>
-                  <span className="flex-1 text-sm font-semibold text-zinc-500 dark:text-zinc-400">Physical Therapy</span>
-                  <span className="text-xs bg-zinc-200 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-400 px-2.5 py-1 rounded-full font-medium">Soon</span>
-                </div>
+                  <span className="flex-1 text-sm font-semibold text-green-900 dark:text-green-100 text-left">Physical Therapy</span>
+                  <svg className="h-5 w-5 text-green-400 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
 
                 {/* Potty Logger */}
                 <button
