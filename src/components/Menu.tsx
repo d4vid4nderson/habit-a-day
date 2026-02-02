@@ -55,8 +55,8 @@ if (typeof window !== 'undefined') {
 interface MenuProps {
   isOpen: boolean;
   onClose: () => void;
-  onNavigate: (view: 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq') => void;
-  currentView: 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq';
+  onNavigate: (view: 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq' | 'physical' | 'physical-history' | 'physical-faq') => void;
+  currentView: 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq' | 'physical' | 'physical-history' | 'physical-faq';
 }
 
 function SunIcon({ className }: { className?: string }) {

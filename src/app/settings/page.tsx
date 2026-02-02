@@ -26,7 +26,7 @@ export default function SettingsPage() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Handle menu navigation
-  const handleNavigate = (view: 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq') => {
+  const handleNavigate = (view: 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq' | 'physical' | 'physical-history' | 'physical-faq') => {
     setMenuOpen(false);
     router.push('/');
   };

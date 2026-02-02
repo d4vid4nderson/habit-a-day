@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Gender } from '@/lib/types';
 
-type ViewType = 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq';
+type ViewType = 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq' | 'physical' | 'physical-history' | 'physical-faq';
 
 interface DesktopNavProps {
   currentView: ViewType;
@@ -72,8 +72,7 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
     {
       id: 'physical-therapy',
       label: 'Physical Therapy',
-      view: null,
-      disabled: true,
+      view: 'physical' as ViewType,
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
           <path d="M2 12h1" />
@@ -86,9 +85,9 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
         </svg>
       ),
       subItems: [
-        { label: 'Log PT', disabled: true },
-        { label: gender === 'female' ? 'Herstory' : 'History', disabled: true },
-        { label: 'PT FAQs', disabled: true },
+        { label: 'Log PT', view: 'physical' as ViewType },
+        { label: gender === 'female' ? 'Herstory' : 'History', view: 'physical-history' as ViewType },
+        { label: 'PT FAQs', view: 'physical-faq' as ViewType },
       ],
     },
     {
@@ -132,6 +131,7 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
   const isViewActive = (item: typeof navItems[0]) => {
     if (item.id === 'home') return currentView === 'home';
     if (item.id === 'food') return ['food', 'food-history', 'food-faq'].includes(currentView);
+    if (item.id === 'physical-therapy') return ['physical', 'physical-history', 'physical-faq'].includes(currentView);
     if (item.id === 'potty') return ['potty', 'history', 'faq'].includes(currentView);
     if (item.id === 'water') return ['water', 'water-history', 'water-faq'].includes(currentView);
     return false;
@@ -187,9 +187,7 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
                 <button
                   onClick={() => setActiveDropdown(activeDropdown === item.id ? null : item.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
-                    item.disabled
-                      ? 'text-zinc-400 dark:text-zinc-500'
-                      : isViewActive(item) ? activeClass : `text-zinc-600 dark:text-zinc-400 ${hoverClass}`
+                    isViewActive(item) ? activeClass : `text-zinc-600 dark:text-zinc-400 ${hoverClass}`
                   }`}
                 >
                   {item.icon}

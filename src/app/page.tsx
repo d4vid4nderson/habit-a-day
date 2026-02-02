@@ -31,6 +31,7 @@ import { useEntries } from '@/lib/hooks/useEntries';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useWaterIntake } from '@/lib/hooks/useWaterIntake';
 import { useFoodJournal } from '@/lib/hooks/useFoodJournal';
+import { usePhysicalTherapy } from '@/lib/hooks/usePhysicalTherapy';
 import { getDietaryNeeds, getMealTypeLabel } from '@/lib/services/foodService';
 import { createCustomFood } from '@/lib/services/customFoodsService';
 
@@ -108,8 +109,16 @@ function HomeContent() {
   const { profile, gender, loading: profileLoading } = useProfile();
   const { entries: waterEntries, loading: waterLoading, createEntry: createWaterEntry, deleteEntry: deleteWaterEntry, getTodayTotal } = useWaterIntake();
   const { entries: foodEntries, loading: foodLoading, createEntry: createFoodEntry, deleteEntry: deleteFoodEntry, getTodayTotal: getTodayCalories, getTodayCaloriesByMeal } = useFoodJournal();
+  const {
+    entries: ptEntries,
+    loading: ptLoading,
+    createEntry: createPTEntry,
+    deleteEntry: deletePTEntry,
+    getTodayTotal: getPTTodayTotal,
+    getTodayMinutes: getPTTodayMinutes,
+  } = usePhysicalTherapy();
 
-  const [currentView, setCurrentView] = useState<'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq' | 'physical' | 'physical-history' | 'physical-faq'>('home');
   const [selectedType, setSelectedType] = useState<BathroomType | null>(null);
   const [notes, setNotes] = useState('');
   const [poopConsistency, setPoopConsistency] = useState('');
@@ -187,6 +196,31 @@ function HomeContent() {
   const waterChartRef = useRef<HTMLDivElement>(null);
   const foodChartRef = useRef<HTMLDivElement>(null);
 
+  // Physical therapy state
+  const [ptSelectedExercise, setPTSelectedExercise] = useState<string | null>(null);
+  const [ptExerciseName, setPTExerciseName] = useState('');
+  const [ptDuration, setPTDuration] = useState('');
+  const [ptSets, setPTSets] = useState('');
+  const [ptReps, setPTReps] = useState('');
+  const [ptPainLevel, setPTPainLevel] = useState('');
+  const [ptNotes, setPTNotes] = useState('');
+  const [ptEntryHour, setPTEntryHour] = useState('');
+  const [ptEntryMinute, setPTEntryMinute] = useState('');
+  const [ptEntryAmPm, setPTEntryAmPm] = useState<'AM' | 'PM'>('PM');
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  // PT history state
+  const [ptSelectedDate, setPTSelectedDate] = useState(getToday());
+  const [ptHistoryAddOpen, setPTHistoryAddOpen] = useState(false);
+  const [ptHistoryExerciseName, setPTHistoryExerciseName] = useState('');
+  const [ptHistoryDuration, setPTHistoryDuration] = useState('');
+  const [ptHistorySets, setPTHistorySets] = useState('');
+  const [ptHistoryReps, setPTHistoryReps] = useState('');
+  const [ptHistoryPainLevel, setPTHistoryPainLevel] = useState('');
+  const [ptHistoryNotes, setPTHistoryNotes] = useState('');
+  const [ptHistoryHour, setPTHistoryHour] = useState('');
+  const [ptHistoryMinute, setPTHistoryMinute] = useState('');
+  const [ptHistoryAmPm, setPTHistoryAmPm] = useState<'AM' | 'PM'>('AM');
+
   // Chart data - configurable time range
   const chartData = useMemo(() => {
     const days: { date: string; label: string; poop: number; pee: number; water: number; calories: number; carbs: number; fat: number; protein: number; physical: number }[] = [];
@@ -218,8 +252,8 @@ function HomeContent() {
       const fatTotal = dayFoodEntries.reduce((sum, e) => sum + (e.fat || 0), 0);
       const proteinTotal = dayFoodEntries.reduce((sum, e) => sum + (e.protein || 0), 0);
 
-      // Count PT entries (placeholder for now - will be 0 until PT entries are implemented)
-      const physicalCount = 0; // TODO: Implement PT entries fetching
+      // Count PT entries
+      const physicalCount = ptEntries.filter(e => e.timestamp >= dateStart && e.timestamp < dateEnd).length;
 
       // Format label based on range
       let label: string;
@@ -246,7 +280,7 @@ function HomeContent() {
     }
 
     return days;
-  }, [entries, waterEntries, foodEntries, chartDays, selectedPottyFilter]);
+  }, [entries, waterEntries, foodEntries, ptEntries, chartDays, selectedPottyFilter]);
 
   const headerGradient = gender === 'female'
     ? 'from-pink-500 to-purple-600'
@@ -520,6 +554,20 @@ function HomeContent() {
     return waterEntries.some((e) => e.timestamp >= dateStart && e.timestamp < dateEnd);
   };
 
+  const getPTEntriesForDate = (dateStr: string) => {
+    const dateStart = new Date(dateStr + 'T00:00:00').getTime();
+    const dateEnd = dateStart + 24 * 60 * 60 * 1000;
+    return ptEntries
+      .filter((e) => e.timestamp >= dateStart && e.timestamp < dateEnd)
+      .sort((a, b) => b.timestamp - a.timestamp); // Reverse chronological order (newest first)
+  };
+
+  const hasPTEntriesOnDate = (dateStr: string): boolean => {
+    const dateStart = new Date(dateStr + 'T00:00:00').getTime();
+    const dateEnd = dateStart + 24 * 60 * 60 * 1000;
+    return ptEntries.some((e) => e.timestamp >= dateStart && e.timestamp < dateEnd);
+  };
+
   const hasEntriesOnDate = (dateStr: string): boolean => {
     const dateStart = new Date(dateStr + 'T00:00:00').getTime();
     const dateEnd = dateStart + 24 * 60 * 60 * 1000;
@@ -660,6 +708,97 @@ function HomeContent() {
     });
   };
 
+  // Physical therapy handlers
+  const handlePTExerciseSelect = (exerciseName: string) => {
+    setPTSelectedExercise(exerciseName);
+    setPTExerciseName(exerciseName);
+  };
+
+  const handlePTLog = async () => {
+    if (!ptExerciseName.trim()) return;
+
+    // Parse time if provided, otherwise use current time
+    let timestamp = Date.now();
+    if (ptEntryHour && ptEntryMinute) {
+      const now = new Date();
+      let hours = parseInt(ptEntryHour);
+      const minutes = parseInt(ptEntryMinute);
+
+      // Convert to 24-hour format
+      if (ptEntryAmPm === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (ptEntryAmPm === 'AM' && hours === 12) {
+        hours = 0;
+      }
+
+      now.setHours(hours, minutes, 0, 0);
+      timestamp = now.getTime();
+    }
+
+    try {
+      const options = {
+        duration_minutes: ptDuration ? parseInt(ptDuration) : undefined,
+        sets: ptSets ? parseInt(ptSets) : undefined,
+        reps: ptReps ? parseInt(ptReps) : undefined,
+        pain_level: ptPainLevel ? parseInt(ptPainLevel) : undefined,
+      };
+      await createPTEntry(ptExerciseName, ptNotes, timestamp, options);
+      // Reset form
+      setPTSelectedExercise(null);
+      setPTExerciseName('');
+      setPTDuration('');
+      setPTSets('');
+      setPTReps('');
+      setPTPainLevel('');
+      setPTNotes('');
+      setPTEntryHour('');
+      setPTEntryMinute('');
+    } catch (err) {
+      console.error('Failed to log PT entry:', err);
+    }
+  };
+
+  const handlePTDelete = async (id: string) => {
+    try {
+      await deletePTEntry(id);
+    } catch (err) {
+      console.error('Failed to delete PT entry:', err);
+    }
+  };
+
+  // Calculate PT streak (consecutive days with at least one entry)
+  const calculatePTStreak = () => {
+    if (ptEntries.length === 0) return 0;
+
+    // Get all unique dates with entries (sorted descending)
+    const datesWithEntries = new Set<string>();
+    ptEntries.forEach(entry => {
+      const date = new Date(entry.timestamp);
+      date.setHours(0, 0, 0, 0);
+      datesWithEntries.add(date.toISOString().split('T')[0]);
+    });
+
+    // Start from today and count backwards
+    let streak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let currentDate = new Date(today);
+
+    while (true) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      if (datesWithEntries.has(dateStr)) {
+        streak++;
+        // Move to previous day
+        currentDate.setDate(currentDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  };
+
   // Water history add handlers
   const handleWaterHistoryAdd = async () => {
     if (!waterHistoryAmount || !waterHistoryHour || !waterHistoryMinute) return;
@@ -691,6 +830,49 @@ function HomeContent() {
     setWaterHistoryHour('');
     setWaterHistoryMinute('');
     setWaterHistoryAmPm('AM');
+  };
+
+  // PT history add handlers
+  const handlePTHistoryAdd = async () => {
+    if (!ptHistoryExerciseName || !ptHistoryHour || !ptHistoryMinute) return;
+
+    let hours = parseInt(ptHistoryHour);
+    const minutes = parseInt(ptHistoryMinute);
+    // Convert 12-hour to 24-hour format
+    if (ptHistoryAmPm === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (ptHistoryAmPm === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    const entryDate = new Date(ptSelectedDate + 'T00:00:00');
+    entryDate.setHours(hours, minutes, 0, 0);
+
+    try {
+      const options = {
+        duration_minutes: ptHistoryDuration ? parseInt(ptHistoryDuration) : undefined,
+        sets: ptHistorySets ? parseInt(ptHistorySets) : undefined,
+        reps: ptHistoryReps ? parseInt(ptHistoryReps) : undefined,
+        pain_level: ptHistoryPainLevel ? parseInt(ptHistoryPainLevel) : undefined,
+      };
+      await createPTEntry(ptHistoryExerciseName, ptHistoryNotes, entryDate.getTime(), options);
+      handlePTHistoryCancel();
+    } catch (err) {
+      console.error('Failed to add PT entry:', err);
+    }
+  };
+
+  const handlePTHistoryCancel = () => {
+    setPTHistoryAddOpen(false);
+    setPTHistoryExerciseName('');
+    setPTHistoryDuration('');
+    setPTHistorySets('');
+    setPTHistoryReps('');
+    setPTHistoryPainLevel('');
+    setPTHistoryNotes('');
+    setPTHistoryHour('');
+    setPTHistoryMinute('');
+    setPTHistoryAmPm('AM');
   };
 
   // Food history add handlers
@@ -3303,6 +3485,893 @@ function HomeContent() {
           onProductFound={handleBarcodeProductFound}
           onSaveCustomFood={handleSaveCustomFood}
           userId={user?.id}
+          gender={gender}
+        />
+      </div>
+    );
+  }
+
+  // Physical Therapy View
+  if (currentView === 'physical') {
+    const todaySessions = getPTTodayTotal();
+    const todayMinutes = getPTTodayMinutes();
+
+    // Exercise database with instructions
+    const exercises = {
+      'Hamstring Stretch': {
+        name: 'Hamstring Stretch',
+        videoUrl: '/Hamstring stretch, hip flexor, adductor - Admin Rooted Therapy (720p, h264).mp4',
+        directions: [
+          'Lie on your back with one leg extended on the ground',
+          'Raise the other leg up, keeping it as straight as possible',
+          'Gently pull your raised leg towards your chest',
+          'Hold for 30 seconds, then switch legs'
+        ],
+        whatToLookFor: [
+          'Feel a stretch in the back of your thigh',
+          'Keep your back flat on the ground',
+          'No pain in your lower back',
+          'Breathing remains steady and relaxed'
+        ],
+        defaultDuration: 2,
+        defaultSets: 3,
+        defaultReps: 1
+      },
+      'Hip Flexor': {
+        name: 'Hip Flexor',
+        videoUrl: '/Hamstring stretch, hip flexor, adductor - Admin Rooted Therapy (720p, h264).mp4',
+        directions: [
+          'Start in a kneeling lunge position',
+          'Keep your back straight and core engaged',
+          'Gently push your hips forward',
+          'Hold for 30 seconds, then switch sides'
+        ],
+        whatToLookFor: [
+          'Feel a stretch in the front of your hip',
+          'Keep your torso upright',
+          'No pain in your knee',
+          'Slight squeeze in your glutes'
+        ],
+        defaultDuration: 2,
+        defaultSets: 3,
+        defaultReps: 1
+      },
+      'Adductor Stretch': {
+        name: 'Adductor Stretch',
+        videoUrl: '/Adductor rock back and foot rocks - Admin Rooted Therapy (720p, h264).mp4',
+        directions: [
+          'Start on hands and knees in tabletop position',
+          'Rock back towards your heels while keeping hands planted',
+          'Feel the stretch in your inner thighs and hips',
+          'Add foot rocks by shifting weight side to side'
+        ],
+        whatToLookFor: [
+          'Feel a stretch in your inner thighs',
+          'Keep your back straight (not rounded)',
+          'No pain in your knees',
+          'Controlled, smooth movements'
+        ],
+        defaultDuration: 2,
+        defaultSets: 3,
+        defaultReps: 1
+      },
+      'Upper Body Foam Roller': {
+        name: 'Upper Body Foam Roller',
+        videoUrl: '/1_2 foam roller upper body progressions - Admin Rooted Therapy (720p, h264).mp4',
+        directions: [
+          'Place foam roller under your upper back',
+          'Support your head with your hands',
+          'Roll slowly from upper back to mid-back',
+          'Pause on tender spots for 20-30 seconds'
+        ],
+        whatToLookFor: [
+          'Keep your core engaged throughout',
+          'Control the movement, don\'t rush',
+          'Breathe deeply through tender spots',
+          'Stop if you feel sharp pain'
+        ],
+        defaultDuration: 5,
+        defaultSets: 2,
+        defaultReps: 1
+      },
+      'Full Routine': {
+        name: 'Full Routine',
+        videoUrl: '/Hamstring stretch, hip flexor, adductor - Admin Rooted Therapy (720p, h264).mp4',
+        directions: [
+          'Complete all three stretches in sequence',
+          'Hamstring stretch → Hip flexor → Adductor stretch',
+          'Take breaks between exercises as needed',
+          'Focus on form over speed'
+        ],
+        whatToLookFor: [
+          'Completing all exercises with proper form',
+          'No sharp or shooting pains',
+          'Gradual improvement in flexibility',
+          'Feeling stretched but not strained'
+        ],
+        defaultDuration: 10,
+        defaultSets: 1,
+        defaultReps: 1
+      }
+    };
+
+    const selectedExerciseData = ptSelectedExercise ? exercises[ptSelectedExercise as keyof typeof exercises] : null;
+
+    return (
+      <div className="min-h-screen bg-zinc-50 pb-safe dark:bg-zinc-950">
+        <Menu
+          isOpen={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          onNavigate={(view) => setCurrentView(view)}
+          currentView="physical"
+        />
+
+        <DesktopNav
+          currentView="physical"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenSettings={() => setMenuOpen(true)}
+          gender={gender}
+          avatarUrl={profile?.avatar_url}
+          userName={profile?.first_name || undefined}
+        />
+
+        <header className="lg:hidden sticky top-0 z-10 bg-gradient-to-r from-green-500 to-emerald-600">
+          <div className="flex items-center justify-between px-4 py-5">
+            <button
+              onClick={() => setCurrentView('home')}
+              className="flex items-center gap-1 text-white/90 hover:text-white"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+            <h1 className="text-2xl font-light text-white">
+              Physical Therapy
+            </h1>
+            <div className="w-14" />
+          </div>
+        </header>
+
+        {/* Video Modal */}
+        {videoModalOpen && (
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setVideoModalOpen(false)}>
+            <div className="relative w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setVideoModalOpen(false)}
+                className="absolute -top-12 right-0 text-white hover:text-green-400 transition-colors"
+              >
+                <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <video
+                controls
+                autoPlay
+                className="w-full rounded-xl shadow-2xl"
+                key={selectedExerciseData?.videoUrl}
+              >
+                <source src={selectedExerciseData?.videoUrl || '/Hamstring stretch, hip flexor, adductor - Admin Rooted Therapy (720p, h264).mp4'} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+        )}
+
+        <main className="mx-auto max-w-6xl px-4 py-8 pb-24 lg:pb-8">
+          {/* Progress Card */}
+          <div className="max-w-2xl mx-auto mb-12">
+            <div className="rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 p-8 shadow-lg border-2 border-green-200 dark:border-green-800">
+              <h2 className="text-center text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-4">Today&apos;s Progress</h2>
+              <div className="flex items-center justify-center gap-8">
+                <div className="text-center">
+                  <p className="text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                    {todaySessions}
+                  </p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium mt-2">sessions</p>
+                </div>
+                <div className="h-20 w-px bg-green-300 dark:bg-green-700" />
+                <div className="text-center">
+                  <p className="text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                    {todayMinutes}
+                  </p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium mt-2">minutes</p>
+                </div>
+                <div className="h-20 w-px bg-green-300 dark:bg-green-700" />
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <p className="text-5xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                      {calculatePTStreak()}
+                    </p>
+                    <span className="text-3xl" role="img" aria-label="fire">🔥</span>
+                  </div>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium mt-2">day streak</p>
+                </div>
+              </div>
+              {(() => {
+                const streak = calculatePTStreak();
+                let message = '';
+                let emoji = '';
+
+                if (streak === 0) {
+                  message = "Start your streak today!";
+                  emoji = "💪";
+                } else if (streak === 1) {
+                  message = "Great start! Keep it up tomorrow!";
+                  emoji = "🌟";
+                } else if (streak < 7) {
+                  message = "You're building momentum!";
+                  emoji = "🚀";
+                } else if (streak < 14) {
+                  message = "One week down! You're crushing it!";
+                  emoji = "⭐";
+                } else if (streak < 30) {
+                  message = "Two weeks strong! This is a habit now!";
+                  emoji = "💎";
+                } else if (streak < 60) {
+                  message = "One month streak! Absolutely incredible!";
+                  emoji = "🏆";
+                } else {
+                  message = "Legendary dedication! You're unstoppable!";
+                  emoji = "👑";
+                }
+
+                return (
+                  <div className="mt-4 pt-4 border-t-2 border-green-200 dark:border-green-800/50 text-center">
+                    <p className="text-base font-semibold text-green-700 dark:text-green-300">
+                      <span className="mr-2" role="img" aria-label="motivation">{emoji}</span>
+                      {message}
+                    </p>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/* Visual Separator */}
+          <div className="relative mb-12">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t-2 border-dashed border-zinc-300 dark:border-zinc-700"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-zinc-50 dark:bg-zinc-950 px-6 py-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400 rounded-full border-2 border-zinc-300 dark:border-zinc-700">
+                Choose Exercise
+              </span>
+            </div>
+          </div>
+
+          {/* Exercise Selection */}
+          <div className="max-w-4xl mx-auto mb-16">
+            <div className="rounded-2xl bg-white dark:bg-zinc-800 p-8 shadow-xl border-2 border-zinc-200 dark:border-zinc-700">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-zinc-800 dark:text-zinc-200 mb-2">Select Your Exercise</h2>
+                <p className="text-zinc-500 dark:text-zinc-400">Click to view instructions and log your session</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {Object.keys(exercises).map((exerciseName) => (
+                  <button
+                    key={exerciseName}
+                    onClick={() => handlePTExerciseSelect(exerciseName)}
+                    className={`group rounded-2xl p-5 text-center font-medium transition-all relative ${
+                      ptSelectedExercise === exerciseName
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-2xl ring-4 ring-green-200 dark:ring-green-800'
+                        : 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-800 dark:text-green-300 hover:shadow-xl hover:border-green-400 dark:hover:border-green-600 border-2 border-green-200 dark:border-green-800'
+                    }`}
+                  >
+                    <div className="mb-2">
+                      <svg className={`h-8 w-8 mx-auto ${ptSelectedExercise === exerciseName ? 'text-white' : 'text-green-600 dark:text-green-400'}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path d="M2 12h1" />
+                        <path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" />
+                        <path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                        <path d="M9 12h6" />
+                        <path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                        <path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2" />
+                        <path d="M22 12h-1" />
+                      </svg>
+                    </div>
+                    <div className="text-base font-bold mb-2">{exerciseName}</div>
+                    {ptSelectedExercise === exerciseName && (
+                      <div className="flex items-center justify-center gap-1 text-sm font-semibold">
+                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        Selected
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Exercise Details - Only show when selected */}
+          {selectedExerciseData && (
+            <>
+              {/* Visual Separator */}
+              <div className="relative mb-12">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t-2 border-dashed border-zinc-300 dark:border-zinc-700"></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-zinc-50 dark:bg-zinc-950 px-6 py-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400 rounded-full border-2 border-zinc-300 dark:border-zinc-700">
+                    Exercise Instructions
+                  </span>
+                </div>
+              </div>
+
+              <div className="max-w-6xl mx-auto mb-16">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-zinc-800 dark:text-zinc-200 mb-2">{selectedExerciseData.name}</h2>
+                  <p className="text-zinc-500 dark:text-zinc-400">Follow these instructions carefully</p>
+                </div>
+
+                {/* Two Column Layout: Instructions + Video */}
+                <div className="grid lg:grid-cols-2 gap-8 mb-8">
+                  {/* Left Column: Directions & What to Look For */}
+                  <div className="space-y-6">
+                    {/* Directions */}
+                    <div className="rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 p-6 border-2 border-blue-200 dark:border-blue-800">
+                      <h3 className="text-lg font-bold text-blue-900 dark:text-blue-200 mb-4">How to Perform</h3>
+                      <ol className="space-y-3">
+                        {selectedExerciseData.directions.map((direction, idx) => (
+                          <li key={idx} className="flex gap-3 text-sm text-blue-900 dark:text-blue-200">
+                            <span className="flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full bg-blue-200 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 font-bold text-xs">
+                              {idx + 1}
+                            </span>
+                            <span className="pt-0.5 leading-relaxed">{direction}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+
+                    {/* What to Look For */}
+                    <div className="rounded-xl bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/10 dark:to-yellow-900/10 p-6 border-2 border-amber-200 dark:border-amber-800">
+                      <h3 className="text-lg font-bold text-amber-900 dark:text-amber-200 mb-4">What to Look For</h3>
+                      <ul className="space-y-3">
+                        {selectedExerciseData.whatToLookFor.map((item, idx) => (
+                          <li key={idx} className="flex gap-3 text-sm text-amber-900 dark:text-amber-200">
+                            <svg className="h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            <span className="leading-relaxed">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Video */}
+                  <div>
+                    <div className="rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/10 dark:to-pink-900/10 p-6 border-2 border-purple-200 dark:border-purple-800 sticky top-6">
+                      <div className="text-center mb-4">
+                        <h3 className="text-lg font-bold text-purple-900 dark:text-purple-200 mb-1">Video Guide</h3>
+                        <p className="text-xs text-purple-700 dark:text-purple-300">Watch for proper form</p>
+                      </div>
+                      <div className="relative rounded-xl overflow-hidden shadow-xl border-2 border-purple-300 dark:border-purple-700">
+                        <video
+                          controls
+                          className="w-full"
+                          key={selectedExerciseData.videoUrl}
+                        >
+                          <source src={selectedExerciseData.videoUrl} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
+                      <button
+                        onClick={() => setVideoModalOpen(true)}
+                        className="w-full mt-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                      >
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                        Fullscreen Video
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Log Form - Full width */}
+                <div className="rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 p-6 border-2 border-green-200 dark:border-green-800">
+                  <h3 className="text-lg font-bold text-green-900 dark:text-green-200 mb-4">Log Your Session</h3>
+
+                  {/* Duration, Sets, Reps */}
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <label className="text-xs text-zinc-500 dark:text-zinc-400 mb-1.5 block">Duration (min)</label>
+                      <input
+                        type="number"
+                        value={ptDuration}
+                        onChange={(e) => setPTDuration(e.target.value)}
+                        placeholder={selectedExerciseData.defaultDuration.toString()}
+                        className="w-full rounded-xl border-2 border-zinc-200 bg-white px-3 py-2.5 text-base focus:outline-none focus:border-green-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-zinc-500 dark:text-zinc-400 mb-1.5 block">Sets</label>
+                      <input
+                        type="number"
+                        value={ptSets}
+                        onChange={(e) => setPTSets(e.target.value)}
+                        placeholder={selectedExerciseData.defaultSets.toString()}
+                        className="w-full rounded-xl border-2 border-zinc-200 bg-white px-3 py-2.5 text-base focus:outline-none focus:border-green-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-zinc-500 dark:text-zinc-400 mb-1.5 block">Reps</label>
+                      <input
+                        type="number"
+                        value={ptReps}
+                        onChange={(e) => setPTReps(e.target.value)}
+                        placeholder={selectedExerciseData.defaultReps.toString()}
+                        className="w-full rounded-xl border-2 border-zinc-200 bg-white px-3 py-2.5 text-base focus:outline-none focus:border-green-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Pain Level Slider */}
+                  <div className="mb-4">
+                    <label className="text-xs text-zinc-500 dark:text-zinc-400 mb-2 block">
+                      Pain Level: {ptPainLevel ? `${ptPainLevel}/10` : 'Not set'}
+                    </label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      value={ptPainLevel || 5}
+                      onChange={(e) => setPTPainLevel(e.target.value)}
+                      className="w-full h-3 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: ptPainLevel
+                          ? `linear-gradient(to right, #22c55e 0%, #eab308 50%, #ef4444 100%)`
+                          : '#e5e7eb'
+                      }}
+                    />
+                    <div className="flex justify-between text-xs text-zinc-400 mt-1.5">
+                      <span>No pain</span>
+                      <span>Moderate</span>
+                      <span>Severe</span>
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  <div className="mb-4">
+                    <label className="text-xs text-zinc-500 dark:text-zinc-400 mb-1.5 block">Notes (optional)</label>
+                    <textarea
+                      value={ptNotes}
+                      onChange={(e) => setPTNotes(e.target.value)}
+                      placeholder="How did it feel? Any observations?"
+                      className="min-h-[80px] w-full resize-none rounded-xl border-2 border-zinc-200 bg-white p-3 text-sm focus:outline-none focus:border-green-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handlePTLog}
+                    disabled={!ptExerciseName.trim()}
+                    className="w-full rounded-xl py-5 text-xl font-bold text-white transition-all shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:hover:bg-green-500 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 flex items-center justify-center gap-3"
+                  >
+                    <svg className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Complete & Log Session
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Visual Separator */}
+          <div className="relative my-16">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t-2 border-dashed border-zinc-300 dark:border-zinc-700"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-zinc-50 dark:bg-zinc-950 px-6 py-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400 rounded-full border-2 border-zinc-300 dark:border-zinc-700">
+                Today&apos;s Completed Sessions
+              </span>
+            </div>
+          </div>
+
+          {/* Today's Sessions */}
+          <div className="max-w-6xl mx-auto">
+            <div className="rounded-2xl bg-white dark:bg-zinc-800 p-8 shadow-xl border-2 border-zinc-200 dark:border-zinc-700">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-zinc-800 dark:text-zinc-200 mb-1">Completed Today</h2>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">Your sessions for today</p>
+                </div>
+                <button
+                  onClick={() => setCurrentView('physical-history')}
+                  className="px-5 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+                >
+                  View All History
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+              {(() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const todayStart = today.getTime();
+                const todayEnd = todayStart + 24 * 60 * 60 * 1000;
+                const todayPTEntries = ptEntries
+                  .filter((e) => e.timestamp >= todayStart && e.timestamp < todayEnd)
+                  .sort((a, b) => b.timestamp - a.timestamp);
+                return todayPTEntries.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {todayPTEntries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="relative rounded-xl bg-green-50 p-4 dark:bg-green-900/10 border-2 border-green-100 dark:border-green-900/30"
+                      >
+                        <button
+                          onClick={() => handlePTDelete(entry.id)}
+                          className="absolute top-2 right-2 p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-white dark:hover:bg-zinc-800 transition-colors"
+                          title="Delete entry"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+
+                        <div className="mb-2">
+                          <h4 className="font-semibold text-zinc-800 dark:text-zinc-200 pr-8">
+                            {entry.exercise_name}
+                          </h4>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                            {new Date(entry.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {entry.duration_minutes && (
+                            <span className="px-2 py-1 rounded-lg bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                              {entry.duration_minutes} min
+                            </span>
+                          )}
+                          {entry.sets && entry.reps && (
+                            <span className="px-2 py-1 rounded-lg bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                              {entry.sets}x{entry.reps}
+                            </span>
+                          )}
+                          {entry.pain_level && (
+                            <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                              entry.pain_level <= 3 ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300' :
+                              entry.pain_level <= 7 ? 'bg-yellow-200 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300' :
+                              'bg-red-200 text-red-800 dark:bg-red-900/40 dark:text-red-300'
+                            }`}>
+                              Pain: {entry.pain_level}/10
+                            </span>
+                          )}
+                        </div>
+
+                        {entry.notes && (
+                          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2 line-clamp-2">
+                            {entry.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="py-8 text-center text-zinc-400">
+                    No sessions yet today. Select an exercise above to get started!
+                  </p>
+                );
+              })()}
+            </div>
+          </div>
+        </main>
+
+        <MobileBottomNav
+          currentView="physical"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenMore={() => setMenuOpen(true)}
+          gender={gender}
+        />
+      </div>
+    );
+  }
+
+  // PT History View
+  if (currentView === 'physical-history') {
+    const dayPTEntries = getPTEntriesForDate(ptSelectedDate);
+
+    return (
+      <div className="min-h-screen bg-zinc-50 pb-safe dark:bg-zinc-950">
+        <Menu
+          isOpen={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          onNavigate={(view) => setCurrentView(view)}
+          currentView="physical-history"
+        />
+
+        <DesktopNav
+          currentView="physical-history"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenSettings={() => setMenuOpen(true)}
+          gender={gender}
+          avatarUrl={profile?.avatar_url}
+          userName={profile?.first_name || undefined}
+        />
+
+        <header className="lg:hidden sticky top-0 z-10 bg-gradient-to-r from-green-500 to-emerald-600">
+          <div className="flex items-center justify-between px-4 py-5">
+            <button
+              onClick={() => setCurrentView('physical')}
+              className="flex items-center gap-1 text-white/90 hover:text-white"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+            <h1 className="text-2xl font-light text-white">
+              {gender === 'female' ? 'Herstory' : 'History'}
+            </h1>
+            <div className="w-14" />
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-lg px-4 py-4 pb-24 lg:pb-4">
+          <div className="space-y-4">
+            {/* Calendar */}
+            <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
+              <Calendar
+                selectedDate={ptSelectedDate}
+                onSelectDate={setPTSelectedDate}
+                hasEntries={hasPTEntriesOnDate}
+              />
+            </div>
+
+            {/* Entries for selected day */}
+            <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-zinc-800">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="font-semibold text-zinc-800 dark:text-zinc-200">
+                  {formatDateHeader(ptSelectedDate)}
+                </h2>
+                {!ptHistoryAddOpen && (
+                  <button
+                    onClick={() => setPTHistoryAddOpen(true)}
+                    className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-base font-semibold transition-colors bg-green-100 text-green-700 active:bg-green-200 dark:bg-green-900/30 dark:text-green-400"
+                  >
+                    + Add
+                  </button>
+                )}
+              </div>
+
+              {/* Add PT Form */}
+              {ptHistoryAddOpen && (
+                <div className="mb-4 rounded-2xl border-2 border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900 overflow-hidden">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <svg className="h-8 w-8 text-green-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path d="M2 12h1" />
+                        <path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" />
+                        <path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                        <path d="M9 12h6" />
+                        <path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                        <path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2" />
+                        <path d="M22 12h-1" />
+                      </svg>
+                      <span className="text-xl font-bold text-green-600 dark:text-green-400">
+                        Add PT Session
+                      </span>
+                    </div>
+                    <button
+                      onClick={handlePTHistoryCancel}
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Time Input */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Time</label>
+                      <div className="flex gap-2">
+                        <select
+                          value={ptHistoryHour}
+                          onChange={(e) => setPTHistoryHour(e.target.value)}
+                          className="flex-1 rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 focus:border-green-500"
+                        >
+                          <option value="">Hr</option>
+                          {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((h) => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                        <span className="flex items-center text-zinc-400 text-xl font-bold">:</span>
+                        <select
+                          value={ptHistoryMinute}
+                          onChange={(e) => setPTHistoryMinute(e.target.value)}
+                          className="flex-1 rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 focus:border-green-500"
+                        >
+                          <option value="">Min</option>
+                          {Array.from({ length: 60 }, (_, i) => (
+                            <option key={i} value={i}>{i.toString().padStart(2, '0')}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={ptHistoryAmPm}
+                          onChange={(e) => setPTHistoryAmPm(e.target.value as 'AM' | 'PM')}
+                          className="rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 focus:border-green-500"
+                        >
+                          <option value="AM">AM</option>
+                          <option value="PM">PM</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Exercise Name */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Exercise Name</label>
+                      <input
+                        type="text"
+                        value={ptHistoryExerciseName}
+                        onChange={(e) => setPTHistoryExerciseName(e.target.value)}
+                        placeholder="e.g., Hamstring Stretch"
+                        className="w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 placeholder-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500 focus:border-green-500"
+                      />
+                    </div>
+
+                    {/* Duration, Sets, Reps */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Minutes</label>
+                        <input
+                          type="number"
+                          value={ptHistoryDuration}
+                          onChange={(e) => setPTHistoryDuration(e.target.value)}
+                          placeholder="10"
+                          className="w-full rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 placeholder-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500 focus:border-green-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Sets</label>
+                        <input
+                          type="number"
+                          value={ptHistorySets}
+                          onChange={(e) => setPTHistorySets(e.target.value)}
+                          placeholder="3"
+                          className="w-full rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 placeholder-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500 focus:border-green-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Reps</label>
+                        <input
+                          type="number"
+                          value={ptHistoryReps}
+                          onChange={(e) => setPTHistoryReps(e.target.value)}
+                          placeholder="12"
+                          className="w-full rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-base text-zinc-900 placeholder-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500 focus:border-green-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Pain Level */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                        Pain Level (1-10) {ptHistoryPainLevel && `- ${ptHistoryPainLevel}`}
+                      </label>
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={ptHistoryPainLevel || '1'}
+                        onChange={(e) => setPTHistoryPainLevel(e.target.value)}
+                        className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                        style={{
+                          background: ptHistoryPainLevel
+                            ? `linear-gradient(to right, #22c55e 0%, #eab308 50%, #ef4444 100%)`
+                            : '#e5e7eb'
+                        }}
+                      />
+                    </div>
+
+                    {/* Notes */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Notes (optional)</label>
+                      <textarea
+                        value={ptHistoryNotes}
+                        onChange={(e) => setPTHistoryNotes(e.target.value)}
+                        placeholder="How did it feel?"
+                        rows={2}
+                        className="w-full rounded-xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 placeholder-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500 focus:border-green-500 resize-none"
+                      />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handlePTHistoryCancel}
+                        className="flex-1 cursor-pointer rounded-xl border-2 border-zinc-200 bg-white py-3 text-base font-semibold text-zinc-600 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handlePTHistoryAdd}
+                        disabled={!ptHistoryExerciseName || !ptHistoryHour || !ptHistoryMinute}
+                        className="flex-1 cursor-pointer rounded-xl py-3 text-base font-semibold text-white transition-colors disabled:opacity-50 bg-green-500 hover:bg-green-600 disabled:hover:bg-green-500"
+                      >
+                        Log Entry
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {dayPTEntries.length > 0 ? (
+                <div className="space-y-2">
+                  {dayPTEntries.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="flex items-center justify-between rounded-xl bg-zinc-50 px-4 py-3 dark:bg-zinc-700/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path d="M2 12h1" />
+                          <path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" />
+                          <path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                          <path d="M9 12h6" />
+                          <path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                          <path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2" />
+                          <path d="M22 12h-1" />
+                        </svg>
+                        <div>
+                          <p className="font-medium text-zinc-800 dark:text-zinc-200">
+                            {entry.exercise_name}
+                          </p>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                            {new Date(entry.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                            {entry.duration_minutes && ` • ${entry.duration_minutes} min`}
+                            {entry.sets && entry.reps && ` • ${entry.sets}×${entry.reps}`}
+                            {entry.pain_level && ` • Pain: ${entry.pain_level}/10`}
+                            {entry.notes && ` • ${entry.notes}`}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handlePTDelete(entry.id)}
+                        className="text-zinc-400 hover:text-red-500"
+                      >
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="py-4 text-center text-zinc-400">No entries</p>
+              )}
+
+              {/* Daily Summary */}
+              <div className={`flex items-center justify-center gap-2 rounded-xl bg-zinc-100 py-3 dark:bg-zinc-700/50 ${dayPTEntries.length > 0 ? 'mt-4' : 'mt-2'}`}>
+                <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path d="M2 12h1" />
+                  <path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" />
+                  <path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                  <path d="M9 12h6" />
+                  <path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                  <path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2" />
+                  <path d="M22 12h-1" />
+                </svg>
+                <span className="font-medium text-green-600 dark:text-green-400">Total Sessions</span>
+                <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+                  {dayPTEntries.length}
+                </span>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <MobileBottomNav
+          currentView="physical-history"
+          onNavigate={(view) => setCurrentView(view)}
+          onOpenMore={() => setMenuOpen(true)}
           gender={gender}
         />
       </div>

@@ -68,6 +68,18 @@ export interface FoodEntry {
   notes?: string;
 }
 
+export interface PhysicalTherapyEntry {
+  id: string;
+  user_id?: string;
+  exercise_name: string;
+  duration_minutes?: number;
+  sets?: number;
+  reps?: number;
+  pain_level?: number; // 1-10 scale
+  timestamp: number;
+  notes?: string;
+}
+
 export interface CustomFood {
   id: string;
   user_id?: string;

@@ -2,7 +2,7 @@
 
 import { Gender } from '@/lib/types';
 
-type ViewType = 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq';
+type ViewType = 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq' | 'physical' | 'physical-history' | 'physical-faq';
 
 interface MobileBottomNavProps {
   currentView: ViewType;
