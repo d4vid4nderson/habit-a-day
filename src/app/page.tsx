@@ -106,7 +106,7 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { entries, loading: entriesLoading, createEntry, deleteEntry } = useEntries();
-  const { profile, gender, loading: profileLoading } = useProfile();
+  const { profile, gender, isTherapist, loading: profileLoading } = useProfile();
   const { entries: waterEntries, loading: waterLoading, createEntry: createWaterEntry, deleteEntry: deleteWaterEntry, getTodayTotal } = useWaterIntake();
   const { entries: foodEntries, loading: foodLoading, createEntry: createFoodEntry, deleteEntry: deleteFoodEntry, getTodayTotal: getTodayCalories, getTodayCaloriesByMeal } = useFoodJournal();
   const {
@@ -1157,6 +1157,7 @@ function HomeContent() {
           gender={gender}
           avatarUrl={profile?.avatar_url}
           userName={profile?.first_name || undefined}
+          isTherapist={isTherapist}
         />
 
         <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
@@ -1305,6 +1306,7 @@ function HomeContent() {
           gender={gender}
           avatarUrl={profile?.avatar_url}
           userName={profile?.first_name || undefined}
+          isTherapist={isTherapist}
         />
 
         <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
@@ -1627,6 +1629,7 @@ function HomeContent() {
           gender={gender}
           avatarUrl={profile?.avatar_url}
           userName={profile?.first_name || undefined}
+          isTherapist={isTherapist}
         />
 
         <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
@@ -1878,6 +1881,7 @@ function HomeContent() {
           gender={gender}
           avatarUrl={profile?.avatar_url}
           userName={profile?.first_name || undefined}
+          isTherapist={isTherapist}
         />
 
         <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
@@ -2130,6 +2134,7 @@ function HomeContent() {
           gender={gender}
           avatarUrl={profile?.avatar_url}
           userName={profile?.first_name || undefined}
+          isTherapist={isTherapist}
         />
 
         <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
@@ -2552,6 +2557,7 @@ function HomeContent() {
           gender={gender}
           avatarUrl={profile?.avatar_url}
           userName={profile?.first_name || undefined}
+          isTherapist={isTherapist}
         />
 
         <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
@@ -2900,6 +2906,7 @@ function HomeContent() {
           gender={gender}
           avatarUrl={profile?.avatar_url}
           userName={profile?.first_name || undefined}
+          isTherapist={isTherapist}
         />
 
         <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
@@ -3026,6 +3033,7 @@ function HomeContent() {
           gender={gender}
           avatarUrl={profile?.avatar_url}
           userName={profile?.first_name || undefined}
+          isTherapist={isTherapist}
         />
 
         <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
@@ -3613,6 +3621,7 @@ function HomeContent() {
           gender={gender}
           avatarUrl={profile?.avatar_url}
           userName={profile?.first_name || undefined}
+          isTherapist={isTherapist}
         />
 
         <header className="lg:hidden sticky top-0 z-10 bg-gradient-to-r from-green-500 to-emerald-600">
@@ -4093,6 +4102,7 @@ function HomeContent() {
           gender={gender}
           avatarUrl={profile?.avatar_url}
           userName={profile?.first_name || undefined}
+          isTherapist={isTherapist}
         />
 
         <header className="lg:hidden sticky top-0 z-10 bg-gradient-to-r from-green-500 to-emerald-600">
@@ -4399,6 +4409,7 @@ function HomeContent() {
           gender={gender}
           avatarUrl={profile?.avatar_url}
           userName={profile?.first_name || undefined}
+          isTherapist={isTherapist}
         />
 
         <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
@@ -4898,6 +4909,7 @@ function HomeContent() {
           gender={gender}
           avatarUrl={profile?.avatar_url}
           userName={profile?.first_name || undefined}
+          isTherapist={isTherapist}
         />
 
         <header className={`lg:hidden sticky top-0 z-10 bg-gradient-to-r ${headerGradient}`}>
@@ -5017,6 +5029,7 @@ function HomeContent() {
         gender={gender}
         avatarUrl={profile?.avatar_url}
         userName={profile?.first_name || undefined}
+        isTherapist={isTherapist}
       />
 
       <main className="mx-auto max-w-6xl px-4 pt-6 pb-24 lg:pb-6">

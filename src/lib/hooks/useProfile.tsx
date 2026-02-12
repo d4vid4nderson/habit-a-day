@@ -42,6 +42,7 @@ interface ProfileContextType {
   profileCompleted: boolean;
   termsAccepted: boolean;
   termsVersion: string;
+  isTherapist: boolean;
   updateGender: (gender: Gender) => Promise<void>;
   updateTheme: (theme: Theme) => Promise<void>;
   acceptTerms: () => Promise<void>;
@@ -155,6 +156,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     profileCompleted: profile?.profile_completed ?? false,
     termsAccepted: hasAcceptedCurrentTerms(profile),
     termsVersion: CURRENT_TERMS_VERSION,
+    isTherapist: profile?.is_therapist ?? false,
     updateGender,
     updateTheme,
     acceptTerms,

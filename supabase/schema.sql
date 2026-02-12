@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   carbs_goal INTEGER CHECK (carbs_goal IS NULL OR carbs_goal >= 0),
   fat_goal INTEGER CHECK (fat_goal IS NULL OR fat_goal >= 0),
   water_goal INTEGER CHECK (water_goal IS NULL OR water_goal > 0),
+  is_therapist BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

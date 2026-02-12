@@ -105,7 +105,7 @@ function FemaleIcon({ className }: { className?: string }) {
 
 export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
   const { user, signOut } = useAuth();
-  const { profile, gender, theme, updateGender, updateTheme } = useProfile();
+  const { profile, gender, theme, isTherapist, updateGender, updateTheme } = useProfile();
   const [localTheme, setLocalTheme] = useState<Theme>(theme);
   const [showFoodJournal, setShowFoodJournal] = useState(false);
   const [showPhysicalTherapy, setShowPhysicalTherapy] = useState(false);
@@ -192,7 +192,7 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
     onClose();
   };
 
-  const handleNavigation = (view: 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq') => {
+  const handleNavigation = (view: 'home' | 'potty' | 'history' | 'faq' | 'water' | 'water-history' | 'water-faq' | 'food' | 'food-history' | 'food-faq' | 'physical' | 'physical-history' | 'physical-faq') => {
     onNavigate(view);
     onClose();
   };
@@ -372,40 +372,97 @@ export function Menu({ isOpen, onClose, onNavigate, currentView }: MenuProps) {
               </div>
             )}
 
-            {/* Physical Therapy - Expandable */}
-            <button
-              onClick={() => setShowPhysicalTherapy(!showPhysicalTherapy)}
-              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800"
-            >
-              <div className="flex items-center gap-3">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                  <path d="M2 12h1" />
-                  <path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" />
-                  <path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
-                  <path d="M9 12h6" />
-                  <path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
-                  <path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2" />
-                  <path d="M22 12h-1" />
-                </svg>
-                <span className="font-medium">Physical Therapy</span>
-              </div>
-              <svg
-                className={`h-5 w-5 transition-transform ${showPhysicalTherapy ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+            {/* Physical Therapy - Expandable (only visible for therapists) */}
+            {isTherapist && (
+              <>
+                <button
+                  onClick={() => setShowPhysicalTherapy(!showPhysicalTherapy)}
+                  className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-zinc-700 active:bg-zinc-100 dark:text-zinc-300 dark:active:bg-zinc-800"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                      <path d="M2 12h1" />
+                      <path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" />
+                      <path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                      <path d="M9 12h6" />
+                      <path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" />
+                      <path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2" />
+                      <path d="M22 12h-1" />
+                    </svg>
+                    <span className="font-medium">Physical Therapy</span>
+                  </div>
+                  <svg
+                    className={`h-5 w-5 transition-transform ${showPhysicalTherapy ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
 
-            {/* Physical Therapy Content */}
-            {showPhysicalTherapy && (
-              <div className="ml-4 pl-4">
-                <div className="rounded-xl bg-zinc-100 p-4 dark:bg-zinc-800">
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center">Coming Soon</p>
-                </div>
-              </div>
+                {/* Physical Therapy Content */}
+                {showPhysicalTherapy && (
+                  <div className="ml-4 space-y-2 pl-4">
+                    <button
+                      onClick={() => handleNavigation('physical')}
+                      className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                        currentView === 'physical'
+                          ? activeClass
+                          : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                      }`}
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span className="font-medium">Log PT</span>
+                      {currentView === 'physical' && (
+                        <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => handleNavigation('physical-history')}
+                      className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                        currentView === 'physical-history'
+                          ? activeClass
+                          : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                      }`}
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="font-medium">{gender === 'female' ? 'Herstory' : 'History'}</span>
+                      {currentView === 'physical-history' && (
+                        <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => handleNavigation('physical-faq')}
+                      className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+                        currentView === 'physical-faq'
+                          ? activeClass
+                          : 'bg-zinc-100 text-zinc-700 active:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                      }`}
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="font-medium">PT FAQs</span>
+                      {currentView === 'physical-faq' && (
+                        <svg className="ml-auto h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Potty Logger - Expandable */}

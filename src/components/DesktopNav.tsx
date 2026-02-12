@@ -12,9 +12,10 @@ interface DesktopNavProps {
   gender: Gender;
   avatarUrl?: string | null;
   userName?: string | null;
+  isTherapist?: boolean;
 }
 
-export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, avatarUrl, userName }: DesktopNavProps) {
+export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, avatarUrl, userName, isTherapist }: DesktopNavProps) {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -69,7 +70,7 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
         { label: 'Dietary FAQs', view: 'food-faq' as ViewType },
       ],
     },
-    {
+    ...(isTherapist ? [{
       id: 'physical-therapy',
       label: 'Physical Therapy',
       view: 'physical' as ViewType,
@@ -89,7 +90,7 @@ export function DesktopNav({ currentView, onNavigate, onOpenSettings, gender, av
         { label: gender === 'female' ? 'Herstory' : 'History', view: 'physical-history' as ViewType },
         { label: 'PT FAQs', view: 'physical-faq' as ViewType },
       ],
-    },
+    }] : []),
     {
       id: 'potty',
       label: 'Potty Logger',

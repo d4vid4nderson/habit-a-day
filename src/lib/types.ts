@@ -126,6 +126,7 @@ export interface UserProfile {
   carbs_goal: number | null;
   fat_goal: number | null;
   water_goal: number | null;
+  is_therapist: boolean;
   created_at: string;
   updated_at: string;
 }
